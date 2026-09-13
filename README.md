@@ -57,16 +57,16 @@ erDiagram
 
 ## Instalasi dengan Laragon
 
-Ekstrak proyek ke:
-
-```text
-D:\semester 5\basdat 2\proyek uts-uas
-```
-
-Nyalakan Apache dan MySQL di Laragon. Buka Terminal Laragon, lalu jalankan:
+Kloning repositori, lalu masuk ke direktori proyek:
 
 ```bash
-cd /d "D:\semester 5\basdat 2\proyek uts-uas"
+git clone https://github.com/Rhefanza/proyek-uts-uas-laravel.git
+cd proyek-uts-uas-laravel
+```
+
+Nyalakan Apache dan MySQL di Laragon, lalu jalankan:
+
+```bash
 copy .env.example .env
 composer install
 php artisan key:generate
