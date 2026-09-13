@@ -55,8 +55,8 @@ erDiagram
 Kloning repositori, lalu masuk ke direktori proyek:
 
 ```bash
-git clone https://github.com/Rhefanza/proyek-uts-uas-laravel.git
-cd proyek-uts-uas-laravel
+git clone https://github.com/Rhefanza/RS-database-system.git
+cd RS-database-system
 ```
 
 Nyalakan Apache dan MySQL di Laragon, lalu jalankan:
