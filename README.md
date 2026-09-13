@@ -11,6 +11,7 @@ Rujuk. adalah aplikasi direktori rumah sakit untuk proyek UTS Basis Data. Masyar
 - Login dan logout pengelola.
 - Tambah, lihat, ubah, dan hapus data rumah sakit.
 - Relasi many-to-many rumah sakit dengan fasilitas.
+- Relasi kecamatan, layanan medis, jadwal, loket, petugas, sesi antrean, dan lokasi pengguna.
 - Validasi Form Request, route model binding, CSRF, session regeneration, dan middleware autentikasi.
 - Seeder enam rumah sakit demonstrasi dan sembilan fasilitas.
 - Feature test untuk fungsi publik, autentikasi, validasi, dan CRUD.
@@ -25,35 +26,29 @@ Rujuk. adalah aplikasi direktori rumah sakit untuk proyek UTS Basis Data. Masyar
 
 ## Struktur database
 
+Penjelasan lengkap setiap relasi dan aturan integritas tersedia di [DATABASE.md](DATABASE.md).
+
 ```mermaid
 erDiagram
-    USERS {
-        bigint id PK
-        varchar name
-        varchar email UK
-        varchar password
-    }
-    HOSPITALS {
-        bigint id PK
-        varchar code UK
-        varchar name
-        enum class
-        enum ownership
-        decimal latitude
-        decimal longitude
-        boolean is_emergency
-    }
-    FACILITIES {
-        bigint id PK
-        varchar name UK
-    }
-    HOSPITAL_FACILITIES {
-        bigint hospital_id PK,FK
-        bigint facility_id PK,FK
-    }
+    DISTRICTS ||--o{ HOSPITALS : memiliki
+    HOSPITALS ||--o{ HOSPITAL_SERVICES : menyediakan
+    SERVICES ||--o{ HOSPITAL_SERVICES : tersedia_di
+    HOSPITAL_SERVICES ||--o{ SERVICE_SCHEDULES : memiliki
+    HOSPITAL_SERVICES ||--o{ SPECIAL_SERVICE_SCHEDULES : dikecualikan_oleh
+    HOSPITAL_SERVICES ||--o{ SERVICE_DESKS : dilayani_di
+    HOSPITAL_SERVICES ||--o{ QUEUE_SESSIONS : membuka
+    HOSPITAL_SERVICES ||--o{ QUEUE_SNAPSHOTS : direkam_dalam
+    USERS ||--o{ QUEUE_SESSIONS : membuka
+    USERS ||--o{ STAFF_ASSIGNMENTS : ditugaskan
+    HOSPITALS ||--o{ STAFF_ASSIGNMENTS : menempatkan
+    QUEUE_SESSIONS ||--o{ QUEUES : berisi
+    SERVICE_DESKS o|--o{ QUEUES : menangani
+    USERS ||--o{ SAVED_LOCATIONS : menyimpan
     HOSPITALS ||--o{ HOSPITAL_FACILITIES : memiliki
     FACILITIES ||--o{ HOSPITAL_FACILITIES : tersedia_di
 ```
+
+`services` menyimpan layanan medis yang dapat memiliki jadwal dan antrean. `facilities` tetap dipisahkan untuk sarana penunjang seperti ICU, CT Scan, ambulans, dan ruang operasi.
 
 ## Instalasi dengan Laragon
 

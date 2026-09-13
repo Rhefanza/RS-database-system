@@ -2,8 +2,11 @@
 
 namespace Database\Seeders;
 
+use App\Models\District;
 use App\Models\Facility;
 use App\Models\Hospital;
+use App\Models\HospitalService;
+use App\Models\Service;
 use App\Models\User;
 use Illuminate\Database\Seeder;
 use Illuminate\Support\Facades\Hash;
@@ -14,8 +17,18 @@ class DatabaseSeeder extends Seeder
     {
         User::updateOrCreate(
             ['email' => 'admin@rujuk.test'],
-            ['name' => 'Admin Rujuk', 'password' => Hash::make('password')]
+            ['name' => 'Admin Rujuk', 'password' => Hash::make('password'), 'role' => 'ADMIN', 'account_status' => 'ACTIVE']
         );
+
+        $districtNames = ['Tambaksari', 'Mulyorejo', 'Pabean Cantian', 'Sukolilo', 'Pakal', 'Wonokromo'];
+        foreach ($districtNames as $name) {
+            District::firstOrCreate(['name' => $name]);
+        }
+
+        $serviceNames = ['Instalasi Gawat Darurat', 'Rawat Jalan', 'Rawat Inap', 'Laboratorium', 'Radiologi', 'Hemodialisis'];
+        foreach ($serviceNames as $name) {
+            Service::firstOrCreate(['name' => $name]);
+        }
 
         $facilityNames = [
             'Ambulans', 'ICU', 'Laboratorium', 'Radiologi', 'Farmasi 24 Jam',
@@ -34,6 +47,7 @@ class DatabaseSeeder extends Seeder
                 'latitude' => -7.2675000, 'longitude' => 112.7580000,
                 'description' => 'Rumah sakit rujukan dengan layanan spesialistik dan subspesialistik untuk wilayah Jawa Timur.',
                 'is_emergency' => true, 'facilities' => $facilityNames,
+                'district' => 'Tambaksari', 'services' => $serviceNames,
             ],
             [
                 'name' => 'RS Universitas Airlangga', 'code' => 'RS-SBY-002', 'class' => 'B',
@@ -43,6 +57,7 @@ class DatabaseSeeder extends Seeder
                 'description' => 'Rumah sakit pendidikan dengan pelayanan umum, spesialistik, serta dukungan kegiatan akademik dan penelitian.',
                 'is_emergency' => true,
                 'facilities' => ['Ambulans', 'ICU', 'Laboratorium', 'Radiologi', 'Farmasi 24 Jam', 'CT Scan', 'Ruang Operasi', 'Poliklinik Spesialis'],
+                'district' => 'Mulyorejo', 'services' => ['Instalasi Gawat Darurat', 'Rawat Jalan', 'Rawat Inap', 'Laboratorium', 'Radiologi'],
             ],
             [
                 'name' => 'RS PHC Surabaya', 'code' => 'RS-SBY-003', 'class' => 'B',
@@ -52,6 +67,7 @@ class DatabaseSeeder extends Seeder
                 'description' => 'Rumah sakit milik BUMN dengan layanan kegawatdaruratan, rawat inap, dan poliklinik spesialis.',
                 'is_emergency' => true,
                 'facilities' => ['Ambulans', 'ICU', 'Laboratorium', 'Radiologi', 'Farmasi 24 Jam', 'Hemodialisis', 'Ruang Operasi', 'Poliklinik Spesialis'],
+                'district' => 'Pabean Cantian', 'services' => $serviceNames,
             ],
             [
                 'name' => 'RS Premier Surabaya', 'code' => 'RS-SBY-004', 'class' => 'B',
@@ -61,6 +77,7 @@ class DatabaseSeeder extends Seeder
                 'description' => 'Rumah sakit swasta dengan layanan terpadu dan sejumlah pusat layanan spesialis.',
                 'is_emergency' => true,
                 'facilities' => ['Ambulans', 'ICU', 'Laboratorium', 'Farmasi 24 Jam', 'CT Scan', 'Ruang Operasi', 'Poliklinik Spesialis'],
+                'district' => 'Sukolilo', 'services' => ['Instalasi Gawat Darurat', 'Rawat Jalan', 'Rawat Inap', 'Laboratorium', 'Radiologi'],
             ],
             [
                 'name' => 'RSUD Bhakti Dharma Husada', 'code' => 'RS-SBY-005', 'class' => 'B',
@@ -70,6 +87,7 @@ class DatabaseSeeder extends Seeder
                 'description' => 'Rumah sakit umum daerah yang melayani masyarakat Surabaya bagian barat dan sekitarnya.',
                 'is_emergency' => true,
                 'facilities' => ['Ambulans', 'ICU', 'Laboratorium', 'Radiologi', 'Farmasi 24 Jam', 'Ruang Operasi', 'Poliklinik Spesialis'],
+                'district' => 'Pakal', 'services' => ['Instalasi Gawat Darurat', 'Rawat Jalan', 'Rawat Inap', 'Laboratorium', 'Radiologi'],
             ],
             [
                 'name' => 'RS Islam Surabaya A. Yani', 'code' => 'RS-SBY-006', 'class' => 'B',
@@ -79,14 +97,24 @@ class DatabaseSeeder extends Seeder
                 'description' => 'Rumah sakit umum swasta dengan pelayanan rawat jalan, rawat inap, penunjang, dan kegawatdaruratan.',
                 'is_emergency' => true,
                 'facilities' => ['Ambulans', 'ICU', 'Laboratorium', 'Radiologi', 'Farmasi 24 Jam', 'Hemodialisis', 'Ruang Operasi', 'Poliklinik Spesialis'],
+                'district' => 'Wonokromo', 'services' => $serviceNames,
             ],
         ];
 
         foreach ($hospitals as $data) {
             $facilityIds = Facility::whereIn('name', $data['facilities'])->pluck('id');
-            unset($data['facilities']);
+            $serviceIds = Service::whereIn('name', $data['services'])->pluck('id');
+            $data['district_id'] = District::where('name', $data['district'])->value('id');
+            unset($data['facilities'], $data['services'], $data['district']);
             $hospital = Hospital::updateOrCreate(['code' => $data['code']], $data);
             $hospital->facilities()->sync($facilityIds);
+
+            foreach ($serviceIds as $serviceId) {
+                HospitalService::updateOrCreate(
+                    ['hospital_id' => $hospital->id, 'service_id' => $serviceId],
+                    ['initial_service_duration' => 20, 'availability_status' => 'ACTIVE']
+                );
+            }
         }
     }
 }

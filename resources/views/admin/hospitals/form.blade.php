@@ -43,6 +43,11 @@
                     @foreach (['Pemerintah', 'BUMN', 'Swasta'] as $ownership)<option value="{{ $ownership }}" @selected(old('ownership', $hospital->ownership) === $ownership)>{{ $ownership }}</option>@endforeach</select>
                     @error('ownership')<small>{{ $message }}</small>@enderror
                 </label>
+                <label class="field @error('district_id') has-error @enderror">
+                    <span>Kecamatan</span><select name="district_id"><option value="">Belum ditentukan</option>
+                    @foreach ($districts as $district)<option value="{{ $district->id }}" @selected((string) old('district_id', $hospital->district_id) === (string) $district->id)>{{ $district->name }}</option>@endforeach</select>
+                    @error('district_id')<small>{{ $message }}</small>@enderror
+                </label>
                 <label class="check-field field-wide">
                     <input type="checkbox" name="is_emergency" value="1" @checked(old('is_emergency', $hospital->is_emergency))>
                     <span><strong>Memiliki IGD 24 jam</strong><small>Tampilkan status layanan darurat pada halaman publik.</small></span>
@@ -67,10 +72,22 @@
         <section class="form-section">
             <div class="form-section-title"><span>03</span><div><h2>Fasilitas</h2><p>Pilih layanan penting yang tersedia.</p></div></div>
             <div class="form-fields">
+                <div class="field-wide">
+                    <p class="field-group-label">Layanan medis</p>
+                    <div class="facility-checks">
+                        @foreach ($services as $service)
+                            <label><input type="checkbox" name="services[]" value="{{ $service->id }}" @checked(in_array($service->id, old('services', $selectedServices)))><span>{{ $service->name }}</span></label>
+                        @endforeach
+                    </div>
+                </div>
+                @error('services.*')<small class="field-error field-wide">{{ $message }}</small>@enderror
+                <div class="field-wide">
+                    <p class="field-group-label">Fasilitas penunjang</p>
                 <div class="facility-checks field-wide">
                     @foreach ($facilities as $facility)
                         <label><input type="checkbox" name="facilities[]" value="{{ $facility->id }}" @checked(in_array($facility->id, old('facilities', $selectedFacilities)))><span>{{ $facility->name }}</span></label>
                     @endforeach
+                </div>
                 </div>
                 @error('facilities.*')<small class="field-error field-wide">{{ $message }}</small>@enderror
                 <label class="field field-wide @error('description') has-error @enderror"><span>Deskripsi singkat</span><textarea name="description" rows="5" maxlength="1000" placeholder="Tuliskan profil dan layanan unggulan secara ringkas.">{{ old('description', $hospital->description) }}</textarea>@error('description')<small>{{ $message }}</small>@enderror</label>

@@ -26,6 +26,7 @@ class HospitalRequest extends FormRequest
 
         return [
             'name' => ['required', 'string', 'max:150'],
+            'district_id' => ['nullable', 'integer', 'exists:districts,id'],
             'code' => [
                 'required',
                 'string',
@@ -44,6 +45,8 @@ class HospitalRequest extends FormRequest
             'is_emergency' => ['required', 'boolean'],
             'facilities' => ['nullable', 'array'],
             'facilities.*' => ['integer', 'exists:facilities,id'],
+            'services' => ['nullable', 'array'],
+            'services.*' => ['integer', 'exists:services,id'],
         ];
     }
 
@@ -51,6 +54,7 @@ class HospitalRequest extends FormRequest
     {
         return [
             'name' => 'nama rumah sakit',
+            'district_id' => 'kecamatan',
             'code' => 'kode rumah sakit',
             'class' => 'kelas rumah sakit',
             'ownership' => 'kepemilikan',
@@ -62,6 +66,7 @@ class HospitalRequest extends FormRequest
             'longitude' => 'longitude',
             'description' => 'deskripsi',
             'facilities' => 'fasilitas',
+            'services' => 'layanan medis',
         ];
     }
 }

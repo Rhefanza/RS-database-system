@@ -21,12 +21,14 @@ class PublicHospitalController extends Controller
         ];
 
         $items = Hospital::query()
-            ->with('facilities:id,name')
+            ->with(['district:id,name', 'facilities:id,name', 'services:id,name'])
             ->when($filters['q'] ?? null, function ($query, string $search) {
                 $query->where(function ($nested) use ($search) {
                     $nested->where('name', 'like', "%{$search}%")
                         ->orWhere('city', 'like', "%{$search}%")
-                        ->orWhere('address', 'like', "%{$search}%");
+                        ->orWhere('address', 'like', "%{$search}%")
+                        ->orWhereHas('district', fn ($district) => $district->where('name', 'like', "%{$search}%"))
+                        ->orWhereHas('services', fn ($service) => $service->where('name', 'like', "%{$search}%"));
                 });
             })
             ->when($filters['class'] ?? null, fn ($query, string $class) => $query->where('class', $class))
@@ -40,7 +42,7 @@ class PublicHospitalController extends Controller
 
     public function show(Hospital $hospital): View
     {
-        $hospital->load('facilities:id,name');
+        $hospital->load(['district:id,name', 'facilities:id,name', 'services:id,name']);
 
         return view('hospital-detail', compact('hospital'));
     }
