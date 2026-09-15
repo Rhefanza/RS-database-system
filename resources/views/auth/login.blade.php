@@ -7,7 +7,7 @@
     <div class="auth-card">
         <p class="eyebrow">Akses internal</p>
         <h1>Masuk sebagai pengelola</h1>
-        <p>Kelola data rumah sakit yang tampil pada direktori publik.</p>
+        <p>Masuk sebagai admin data master atau petugas operasional antrean.</p>
         <form method="post" action="{{ route('login.store') }}" class="stack-form">
             @csrf
             <label>
@@ -23,7 +23,7 @@
             <label class="remember-field"><input type="checkbox" name="remember" value="1"><span>Ingat saya</span></label>
             <button class="button button-primary button-block" type="submit">Masuk ke panel</button>
         </form>
-        <div class="demo-credential"><span>Akun demo</span><code>admin@rujuk.test / password</code></div>
+        <div class="demo-credential"><span>Akun demo</span><div><code>Admin: admin@rujuk.test / password</code><code>Petugas: petugas@rujuk.test / password</code></div></div>
     </div>
 </section>
 @endsection

@@ -33,6 +33,8 @@ Rancangan ini mengadaptasi sistem antrean puskesmas menjadi sistem informasi dan
 - Loket pada antrean menjadi `NULL` jika loket dihapus.
 - Akun penutup sesi boleh `NULL` selama sesi masih berlangsung atau jika akun penutup dihapus.
 - Penghapusan rumah sakit membersihkan relasi layanan dan data operasional turunannya, tetapi riwayat penugasan petugas menggunakan pembatasan penghapusan.
+- Akun berstatus `INACTIVE` tidak dapat masuk ke sistem.
+- Admin dapat mengelola seluruh data master; petugas hanya dapat mengelola antrean rumah sakit yang memiliki penugasan aktif dan masih berlaku.
 
 ## Perbedaan layanan dan fasilitas
 

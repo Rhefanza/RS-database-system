@@ -9,6 +9,8 @@ use App\Models\HospitalService;
 use App\Models\QueueSession;
 use App\Models\Service;
 use App\Models\ServiceDesk;
+use App\Models\ServiceSchedule;
+use App\Models\StaffAssignment;
 use App\Models\User;
 use Illuminate\Database\Seeder;
 use Illuminate\Support\Facades\Hash;
@@ -20,6 +22,10 @@ class DatabaseSeeder extends Seeder
         $admin = User::updateOrCreate(
             ['email' => 'admin@rujuk.test'],
             ['name' => 'Admin Rujuk', 'password' => Hash::make('password'), 'role' => 'ADMIN', 'account_status' => 'ACTIVE']
+        );
+        $officer = User::updateOrCreate(
+            ['email' => 'petugas@rujuk.test'],
+            ['name' => 'Petugas Rujuk', 'password' => Hash::make('password'), 'role' => 'OFFICER', 'account_status' => 'ACTIVE']
         );
 
         $districtNames = ['Tambaksari', 'Mulyorejo', 'Pabean Cantian', 'Sukolilo', 'Pakal', 'Wonokromo'];
@@ -125,6 +131,13 @@ class DatabaseSeeder extends Seeder
                 );
 
                 if ($serviceId === $rawatJalanId) {
+                    foreach (['MONDAY', 'TUESDAY', 'WEDNESDAY', 'THURSDAY', 'FRIDAY'] as $day) {
+                        ServiceSchedule::firstOrCreate(
+                            ['hospital_service_id' => $hospitalService->id, 'day' => $day],
+                            ['opens_at' => '08:00', 'closes_at' => '14:00', 'quota' => 50, 'schedule_status' => 'ACTIVE']
+                        );
+                    }
+
                     QueueSession::firstOrCreate(
                         ['hospital_service_id' => $hospitalService->id, 'session_date' => today()],
                         [
@@ -134,6 +147,13 @@ class DatabaseSeeder extends Seeder
                         ]
                     );
                 }
+            }
+
+            if ($hospital->code === 'RS-SBY-001') {
+                StaffAssignment::firstOrCreate(
+                    ['user_id' => $officer->id, 'hospital_id' => $hospital->id, 'starts_on' => today()],
+                    ['employee_code' => 'PGW-001', 'assignment_status' => 'ACTIVE']
+                );
             }
         }
     }

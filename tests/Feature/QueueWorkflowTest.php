@@ -9,6 +9,7 @@ use App\Models\QueueSession;
 use App\Models\QueueSnapshot;
 use App\Models\Service;
 use App\Models\ServiceDesk;
+use App\Models\StaffAssignment;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\TestCase;
@@ -158,5 +159,31 @@ class QueueWorkflowTest extends TestCase
             ->assertSee('RS Uji Antrean')
             ->assertSee('Rawat Jalan')
             ->assertSee('Loket 1');
+    }
+
+    public function test_officer_only_sees_and_manages_the_assigned_hospital(): void
+    {
+        $officer = User::factory()->create(['role' => 'OFFICER', 'account_status' => 'ACTIVE']);
+        StaffAssignment::create([
+            'user_id' => $officer->id,
+            'hospital_id' => $this->hospitalService->hospital_id,
+            'starts_on' => today(),
+            'assignment_status' => 'ACTIVE',
+        ]);
+        $otherHospital = Hospital::factory()->create(['name' => 'RS Di Luar Penugasan']);
+        $otherService = Service::create(['name' => 'Radiologi']);
+        $otherHospitalService = HospitalService::create([
+            'hospital_id' => $otherHospital->id,
+            'service_id' => $otherService->id,
+            'initial_service_duration' => 15,
+            'availability_status' => 'ACTIVE',
+        ]);
+
+        $this->actingAs($officer)->get(route('admin.queues.index'))
+            ->assertOk()
+            ->assertSee('RS Uji Antrean')
+            ->assertDontSee('RS Di Luar Penugasan');
+        $this->post(route('admin.queues.sessions.store'), ['hospital_service_id' => $otherHospitalService->id])
+            ->assertForbidden();
     }
 }

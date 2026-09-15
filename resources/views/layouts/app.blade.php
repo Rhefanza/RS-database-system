@@ -27,8 +27,13 @@
             <nav class="main-nav" aria-label="Navigasi utama">
                 <a class="{{ request()->routeIs('home') ? 'is-active' : '' }}" href="{{ route('home') }}">Beranda</a>
                 @auth
-                    <a class="{{ request()->routeIs('admin.index', 'admin.hospitals.*') ? 'is-active' : '' }}" href="{{ route('admin.index') }}">Panel data</a>
-                    <a class="{{ request()->routeIs('admin.queues.*') ? 'is-active' : '' }}" href="{{ route('admin.queues.index') }}">Antrean</a>
+                    @if (auth()->user()->role === 'ADMIN')
+                        <a class="{{ request()->routeIs('admin.index', 'admin.hospitals.*') ? 'is-active' : '' }}" href="{{ route('admin.index') }}">Rumah sakit</a>
+                        <a class="{{ request()->routeIs('admin.master.*') ? 'is-active' : '' }}" href="{{ route('admin.master.index') }}">Data master</a>
+                    @endif
+                    @if (in_array(auth()->user()->role, ['ADMIN', 'OFFICER'], true))
+                        <a class="{{ request()->routeIs('admin.queues.*') ? 'is-active' : '' }}" href="{{ route('admin.queues.index') }}">Antrean</a>
+                    @endif
                     <form action="{{ route('logout') }}" method="post">
                         @csrf
                         <button class="nav-button" type="submit">Keluar</button>

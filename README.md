@@ -10,8 +10,10 @@ Rujuk. adalah aplikasi direktori rumah sakit untuk proyek UTS Basis Data. Masyar
 - Detail rumah sakit, fasilitas, kontak, dan tautan Google Maps.
 - Pengambilan nomor antrean publik untuk layanan yang sedang membuka sesi.
 - Tiket antrean digital dengan status, jumlah antrean di depan, estimasi waktu tunggu, nomor yang dipanggil, dan loket.
-- Login dan logout pengelola.
+- Login dan logout admin maupun petugas, termasuk penolakan akun nonaktif.
 - Tambah, lihat, ubah, dan hapus data rumah sakit.
+- Panel data master UTS untuk CRUD kecamatan, layanan, relasi rumah sakit–layanan, jadwal rutin, jadwal khusus, loket, akun, dan penugasan petugas.
+- Hak akses berbasis peran: admin mengelola data master, sedangkan petugas hanya mengoperasikan antrean rumah sakit aktif dalam penugasannya.
 - Dashboard antrean untuk membuat loket, membuka sesi, memanggil antrean berikutnya, memulai dan menyelesaikan layanan, membatalkan antrean, serta menutup sesi.
 - Snapshot statistik antrean otomatis pada setiap perubahan status operasional.
 - Relasi many-to-many rumah sakit dengan fasilitas.
@@ -85,6 +87,9 @@ Buka `http://127.0.0.1:8000`.
 ```text
 Email: admin@rujuk.test
 Password: password
+
+Email petugas: petugas@rujuk.test
+Password: password
 ```
 
 ## Menjalankan pengujian
@@ -95,6 +100,8 @@ php artisan test
 
 Pengujian mencakup halaman publik, detail dan 404, filter, proteksi halaman admin, login, logout, password salah, CRUD rumah sakit, validasi, pengambilan tiket, penomoran berurutan, pemanggilan, pelayanan, penyelesaian, pembatalan, dan penutupan sesi antrean.
 
-## Batas tahap UTS
+## Cakupan tahap UTS
 
-Data rumah sakit masih berupa data demonstrasi. Jarak yang ditampilkan adalah jarak garis lurus, bukan waktu tempuh jalan. Dashboard analitik lanjutan, peta interaktif penuh, dan sistem rekomendasi berbobot disiapkan sebagai pengembangan berikutnya.
+Tahap UTS telah mencakup ERD dan relational database MySQL, autentikasi admin/petugas, seluruh CRUD entitas operasional, relasi dan constraint, serta operasional antrean dasar. Data rumah sakit tetap berupa data demonstrasi.
+
+Dashboard analitik lanjutan, peta interaktif penuh, estimasi perjalanan, rekomendasi berbobot, ETL, dan Data Warehouse tidak termasuk tahap ini dan disiapkan untuk UAS.

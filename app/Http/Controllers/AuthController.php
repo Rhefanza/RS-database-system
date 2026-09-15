@@ -12,7 +12,7 @@ class AuthController extends Controller
     public function create(): View|RedirectResponse
     {
         if (Auth::check()) {
-            return redirect()->route('admin.index');
+            return redirect()->to($this->destinationFor(Auth::user()->role));
         }
 
         return view('auth.login');
@@ -25,7 +25,7 @@ class AuthController extends Controller
             'password' => ['required', 'string'],
         ]);
 
-        if (! Auth::attempt($credentials, $request->boolean('remember'))) {
+        if (! Auth::attempt([...$credentials, 'account_status' => 'ACTIVE'], $request->boolean('remember'))) {
             return back()->withErrors([
                 'email' => 'Email atau kata sandi tidak sesuai.',
             ])->onlyInput('email');
@@ -33,7 +33,9 @@ class AuthController extends Controller
 
         $request->session()->regenerate();
 
-        return redirect()->intended(route('admin.index'))
+        $destination = $this->destinationFor($request->user()->role);
+
+        return redirect()->intended($destination)
             ->with('success', 'Selamat datang, '.$request->user()->name.'.');
     }
 
@@ -44,5 +46,14 @@ class AuthController extends Controller
         $request->session()->regenerateToken();
 
         return redirect()->route('home')->with('success', 'Anda telah keluar dari panel pengelola.');
+    }
+
+    private function destinationFor(string $role): string
+    {
+        return match ($role) {
+            'ADMIN' => route('admin.index'),
+            'OFFICER' => route('admin.queues.index'),
+            default => route('home'),
+        };
     }
 }

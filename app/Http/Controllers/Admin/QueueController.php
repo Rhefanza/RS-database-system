@@ -18,9 +18,12 @@ class QueueController extends Controller
 {
     public function index(): View
     {
+        $user = request()->user();
+        $hospitalIds = $this->manageableHospitalIds($user);
         $hospitalServices = HospitalService::query()
             ->with(['hospital:id,name', 'service:id,name', 'desks'])
             ->where('availability_status', 'ACTIVE')
+            ->when($user->role === 'OFFICER', fn ($query) => $query->whereIn('hospital_id', $hospitalIds))
             ->get()
             ->sortBy(fn ($item) => $item->hospital->name.' '.$item->service->name)
             ->values();
@@ -33,6 +36,7 @@ class QueueController extends Controller
                 'queues' => fn ($query) => $query->with('serviceDesk')->orderBy('queue_number'),
             ])
             ->whereDate('session_date', today())
+            ->when($user->role === 'OFFICER', fn ($query) => $query->whereHas('hospitalService', fn ($serviceQuery) => $serviceQuery->whereIn('hospital_id', $hospitalIds)))
             ->orderByDesc('started_at')
             ->get();
 
@@ -48,6 +52,7 @@ class QueueController extends Controller
                 Rule::unique('service_desks')->where('hospital_service_id', $request->input('hospital_service_id')),
             ],
         ]);
+        $this->ensureCanManage(HospitalService::findOrFail($validated['hospital_service_id']));
         ServiceDesk::create($validated);
 
         return back()->with('success', 'Loket layanan berhasil ditambahkan.');
@@ -56,6 +61,7 @@ class QueueController extends Controller
     public function storeSession(Request $request): RedirectResponse
     {
         $validated = $request->validate(['hospital_service_id' => ['required', 'exists:hospital_services,id']]);
+        $this->ensureCanManage(HospitalService::findOrFail($validated['hospital_service_id']));
         $exists = QueueSession::query()
             ->where('hospital_service_id', $validated['hospital_service_id'])
             ->whereDate('session_date', today())
@@ -79,6 +85,7 @@ class QueueController extends Controller
 
     public function callNext(Request $request, QueueSession $queueSession): RedirectResponse
     {
+        $this->ensureCanManage($queueSession->hospitalService);
         $validated = $request->validate([
             'service_desk_id' => [
                 'required',
@@ -117,6 +124,7 @@ class QueueController extends Controller
 
     public function start(Queue $queue): RedirectResponse
     {
+        $this->ensureCanManage($queue->queueSession->hospitalService);
         abort_unless($queue->queue_status === 'CALLED', 409);
         $queue->update(['queue_status' => 'SERVING', 'service_started_at' => now()]);
         $this->captureSnapshot($queue->queueSession);
@@ -126,6 +134,7 @@ class QueueController extends Controller
 
     public function complete(Queue $queue): RedirectResponse
     {
+        $this->ensureCanManage($queue->queueSession->hospitalService);
         abort_unless($queue->queue_status === 'SERVING', 409);
         $queue->update(['queue_status' => 'COMPLETED', 'service_ended_at' => now()]);
         $this->captureSnapshot($queue->queueSession);
@@ -135,6 +144,7 @@ class QueueController extends Controller
 
     public function cancel(Queue $queue): RedirectResponse
     {
+        $this->ensureCanManage($queue->queueSession->hospitalService);
         abort_unless(in_array($queue->queue_status, ['WAITING', 'CALLED'], true), 409);
         $queue->update(['queue_status' => 'CANCELLED', 'service_ended_at' => now()]);
         $this->captureSnapshot($queue->queueSession);
@@ -144,6 +154,7 @@ class QueueController extends Controller
 
     public function close(Request $request, QueueSession $queueSession): RedirectResponse
     {
+        $this->ensureCanManage($queueSession->hospitalService);
         if ($queueSession->queues()->whereIn('queue_status', ['WAITING', 'CALLED', 'SERVING'])->exists()) {
             return back()->withErrors(['session' => 'Selesaikan atau batalkan seluruh antrean aktif sebelum menutup sesi.']);
         }
@@ -177,5 +188,28 @@ class QueueController extends Controller
             'active_desk_count' => $activeDesks,
             'estimated_wait_minutes' => (int) ceil(($counts->get('WAITING', 0) * $duration) / max($activeDesks, 1)),
         ]);
+    }
+
+    private function manageableHospitalIds($user)
+    {
+        if ($user->role === 'ADMIN') {
+            return collect();
+        }
+
+        return $user->staffAssignments()
+            ->where('assignment_status', 'ACTIVE')
+            ->whereDate('starts_on', '<=', today())
+            ->where(fn ($query) => $query->whereNull('ends_on')->orWhereDate('ends_on', '>=', today()))
+            ->pluck('hospital_id');
+    }
+
+    private function ensureCanManage(HospitalService $hospitalService): void
+    {
+        $user = request()->user();
+        if ($user->role === 'ADMIN') {
+            return;
+        }
+
+        abort_unless($this->manageableHospitalIds($user)->contains($hospitalService->hospital_id), 403);
     }
 }
