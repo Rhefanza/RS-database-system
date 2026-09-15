@@ -42,3 +42,5 @@ Rancangan ini mengadaptasi sistem antrean puskesmas menjadi sistem informasi dan
 - `facilities`: sarana pendukung yang dimiliki rumah sakit, misalnya ICU, ambulans, CT Scan, dan ruang operasi.
 
 Implementasi fisik terdapat dalam migration `2026_09_13_000003` sampai `2026_09_13_000005`, sedangkan relasi aplikasinya berada pada model Eloquent di `app/Models`.
+
+Seluruh record bawaan dari `DatabaseSeeder` adalah data synthetic untuk demonstrasi. Email masyarakat memakai domain `.test`, nomor telepon dan alamat diberi pola demo, dan transaksi antrean tidak merepresentasikan pasien sebenarnya.

@@ -6,27 +6,59 @@ use App\Models\District;
 use App\Models\Facility;
 use App\Models\Hospital;
 use App\Models\HospitalService;
+use App\Models\Queue;
 use App\Models\QueueSession;
+use App\Models\QueueSnapshot;
+use App\Models\SavedLocation;
 use App\Models\Service;
 use App\Models\ServiceDesk;
 use App\Models\ServiceSchedule;
+use App\Models\SpecialServiceSchedule;
 use App\Models\StaffAssignment;
 use App\Models\User;
 use Illuminate\Database\Seeder;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Str;
 
 class DatabaseSeeder extends Seeder
 {
     public function run(): void
     {
+        $demoPassword = Hash::make('password');
         $admin = User::updateOrCreate(
             ['email' => 'admin@rujuk.test'],
-            ['name' => 'Admin Rujuk', 'password' => Hash::make('password'), 'role' => 'ADMIN', 'account_status' => 'ACTIVE']
+            ['name' => 'Admin Rujuk', 'password' => $demoPassword, 'role' => 'ADMIN', 'account_status' => 'ACTIVE']
         );
-        $officer = User::updateOrCreate(
-            ['email' => 'petugas@rujuk.test'],
-            ['name' => 'Petugas Rujuk', 'password' => Hash::make('password'), 'role' => 'OFFICER', 'account_status' => 'ACTIVE']
-        );
+        $officers = collect(range(1, 6))->mapWithKeys(function (int $number) use ($demoPassword) {
+            $suffix = str_pad((string) $number, 2, '0', STR_PAD_LEFT);
+            $email = $number === 1 ? 'petugas@rujuk.test' : "petugas{$suffix}@rujuk.test";
+
+            return [$number => User::updateOrCreate(
+                ['email' => $email],
+                [
+                    'name' => "Petugas Demo {$suffix}",
+                    'phone' => "08000000{$suffix}",
+                    'password' => $demoPassword,
+                    'role' => 'OFFICER',
+                    'account_status' => 'ACTIVE',
+                ]
+            )];
+        });
+
+        $publicUsers = collect(range(1, 5))->mapWithKeys(function (int $number) use ($demoPassword) {
+            $suffix = str_pad((string) $number, 2, '0', STR_PAD_LEFT);
+
+            return [$number => User::updateOrCreate(
+                ['email' => "masyarakat{$suffix}@example.test"],
+                [
+                    'name' => "Masyarakat Demo {$suffix}",
+                    'phone' => "08990000{$suffix}",
+                    'password' => $demoPassword,
+                    'role' => 'PUBLIC',
+                    'account_status' => 'ACTIVE',
+                ]
+            )];
+        });
 
         $districtNames = ['Tambaksari', 'Mulyorejo', 'Pabean Cantian', 'Sukolilo', 'Pakal', 'Wonokromo'];
         foreach ($districtNames as $name) {
@@ -111,7 +143,7 @@ class DatabaseSeeder extends Seeder
             ],
         ];
 
-        foreach ($hospitals as $data) {
+        foreach ($hospitals as $hospitalIndex => $data) {
             $facilityIds = Facility::whereIn('name', $data['facilities'])->pluck('id');
             $serviceIds = Service::whereIn('name', $data['services'])->pluck('id');
             $data['district_id'] = District::where('name', $data['district'])->value('id');
@@ -131,6 +163,11 @@ class DatabaseSeeder extends Seeder
                 );
 
                 if ($serviceId === $rawatJalanId) {
+                    $secondDesk = ServiceDesk::firstOrCreate(
+                        ['hospital_service_id' => $hospitalService->id, 'name' => 'Loket 2'],
+                        ['desk_status' => 'ACTIVE']
+                    );
+
                     foreach (['MONDAY', 'TUESDAY', 'WEDNESDAY', 'THURSDAY', 'FRIDAY'] as $day) {
                         ServiceSchedule::firstOrCreate(
                             ['hospital_service_id' => $hospitalService->id, 'day' => $day],
@@ -138,7 +175,13 @@ class DatabaseSeeder extends Seeder
                         );
                     }
 
-                    QueueSession::firstOrCreate(
+                    $holiday = now()->setDate(now()->year, 12, 25)->startOfDay();
+                    SpecialServiceSchedule::updateOrCreate(
+                        ['hospital_service_id' => $hospitalService->id, 'date' => $holiday],
+                        ['status' => 'CLOSED', 'reason' => 'Hari libur nasional — data dummy']
+                    );
+
+                    $session = QueueSession::firstOrCreate(
                         ['hospital_service_id' => $hospitalService->id, 'session_date' => today()],
                         [
                             'opened_by_user_id' => $admin->id,
@@ -146,15 +189,71 @@ class DatabaseSeeder extends Seeder
                             'session_status' => 'OPEN',
                         ]
                     );
+
+                    $firstDesk = ServiceDesk::where('hospital_service_id', $hospitalService->id)
+                        ->where('name', 'Loket 1')->firstOrFail();
+                    $this->seedQueues($session, $firstDesk, $secondDesk);
                 }
             }
 
-            if ($hospital->code === 'RS-SBY-001') {
-                StaffAssignment::firstOrCreate(
-                    ['user_id' => $officer->id, 'hospital_id' => $hospital->id, 'starts_on' => today()],
-                    ['employee_code' => 'PGW-001', 'assignment_status' => 'ACTIVE']
-                );
-            }
+            $officerNumber = $hospitalIndex + 1;
+            StaffAssignment::updateOrCreate(
+                ['user_id' => $officers[$officerNumber]->id, 'hospital_id' => $hospital->id],
+                [
+                    'employee_code' => 'PGW-'.str_pad((string) $officerNumber, 3, '0', STR_PAD_LEFT),
+                    'starts_on' => today()->subMonths(3),
+                    'ends_on' => null,
+                    'assignment_status' => 'ACTIVE',
+                ]
+            );
         }
+
+        foreach ($publicUsers as $number => $publicUser) {
+            SavedLocation::updateOrCreate(
+                ['user_id' => $publicUser->id, 'label' => 'Rumah Demo'],
+                [
+                    'address' => "Alamat sintetis masyarakat {$number}, Surabaya",
+                    'latitude' => -7.25 - ($number * 0.005),
+                    'longitude' => 112.73 + ($number * 0.005),
+                    'is_primary' => true,
+                ]
+            );
+        }
+    }
+
+    private function seedQueues(QueueSession $session, ServiceDesk $firstDesk, ServiceDesk $secondDesk): void
+    {
+        $startedAt = today()->setTime(8, 0);
+        $definitions = [
+            1 => ['queue_status' => 'COMPLETED', 'service_desk_id' => $firstDesk->id, 'called_at' => $startedAt->copy()->addMinutes(2), 'service_started_at' => $startedAt->copy()->addMinutes(3), 'service_ended_at' => $startedAt->copy()->addMinutes(18)],
+            2 => ['queue_status' => 'COMPLETED', 'service_desk_id' => $secondDesk->id, 'called_at' => $startedAt->copy()->addMinutes(5), 'service_started_at' => $startedAt->copy()->addMinutes(6), 'service_ended_at' => $startedAt->copy()->addMinutes(22)],
+            3 => ['queue_status' => 'SERVING', 'service_desk_id' => $firstDesk->id, 'called_at' => $startedAt->copy()->addMinutes(20), 'service_started_at' => $startedAt->copy()->addMinutes(22)],
+            4 => ['queue_status' => 'CALLED', 'service_desk_id' => $secondDesk->id, 'called_at' => $startedAt->copy()->addMinutes(24)],
+            5 => ['queue_status' => 'WAITING'],
+            6 => ['queue_status' => 'WAITING'],
+            7 => ['queue_status' => 'WAITING'],
+            8 => ['queue_status' => 'CANCELLED', 'service_ended_at' => $startedAt->copy()->addMinutes(15)],
+        ];
+
+        foreach ($definitions as $number => $attributes) {
+            Queue::firstOrCreate(
+                ['queue_session_id' => $session->id, 'queue_number' => $number],
+                ['public_token' => (string) Str::uuid(), ...$attributes]
+            );
+        }
+
+        $counts = $session->queues()->selectRaw('queue_status, count(*) as total')
+            ->groupBy('queue_status')->pluck('total', 'queue_status');
+        $activeDesks = $session->hospitalService->desks()->where('desk_status', 'ACTIVE')->count();
+        QueueSnapshot::updateOrCreate(
+            ['hospital_service_id' => $session->hospital_service_id, 'captured_at' => today()->setTime(9, 0)],
+            [
+                'waiting_count' => $counts->get('WAITING', 0),
+                'serving_count' => $counts->get('SERVING', 0) + $counts->get('CALLED', 0),
+                'completed_count' => $counts->get('COMPLETED', 0),
+                'active_desk_count' => $activeDesks,
+                'estimated_wait_minutes' => (int) ceil(($counts->get('WAITING', 0) * 20) / max($activeDesks, 1)),
+            ]
+        );
     }
 }

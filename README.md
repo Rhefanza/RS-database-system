@@ -92,6 +92,18 @@ Email petugas: petugas@rujuk.test
 Password: password
 ```
 
+## Data dummy
+
+Perintah `php artisan db:seed` menghasilkan dataset synthetic yang saling terhubung dan aman dijalankan berulang:
+
+- 6 rumah sakit, 6 kecamatan, 6 master layanan, dan 33 relasi rumah sakit–layanan.
+- 30 jadwal rutin, 6 jadwal khusus hari libur, dan 39 loket pada database baru.
+- 1 admin, 6 petugas, 5 akun masyarakat demo, 6 penugasan, dan 5 lokasi tersimpan.
+- 6 sesi antrean harian, 48 transaksi antrean pada database baru, serta 6 snapshot kondisi antrean.
+- Status transaksi mencakup `WAITING`, `CALLED`, `SERVING`, `COMPLETED`, dan `CANCELLED`.
+
+Seeder tidak menghapus data yang sudah ada. Karena itu, jumlah pada database pengembangan dapat lebih besar daripada baseline tersebut.
+
 ## Menjalankan pengujian
 
 ```bash
