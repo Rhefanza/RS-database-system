@@ -58,6 +58,7 @@ a { color: inherit; }
 .flash-wrap { position: fixed; z-index: 50; top: 140px; left: 50%; transform: translateX(-50%); }
 .flash { padding: 14px 18px; display: flex; gap: 24px; justify-content: space-between; background: var(--white); box-shadow: var(--shadow); border-left: 4px solid var(--success); }
 .flash button { border: 0; background: none; font-size: 20px; cursor: pointer; }
+.flash-error { border-left-color: var(--danger); }
 .search-stage {
     min-height: 610px;
     display: flex;
@@ -178,7 +179,66 @@ input:focus, select:focus, textarea:focus, button:focus-visible, a:focus-visible
 .facility-grid div { min-height: 54px; padding: 15px; display: flex; align-items: center; gap: 11px; background: var(--white); border: 1px solid var(--line); font-size: 12px; }
 .facility-grid span { color: var(--gold-dark); font-size: 20px; }
 .service-list { margin-bottom: 50px; }
+.queue-service-list { margin-bottom: 50px; display: grid; gap: 12px; }
+.queue-service-card { padding: 21px 22px; display: flex; justify-content: space-between; align-items: center; gap: 24px; background: var(--white); border: 1px solid var(--line); border-left: 3px solid var(--gold); }
+.queue-service-kicker { color: var(--gold-dark); font-size: 8px; font-weight: 700; letter-spacing: .12em; text-transform: uppercase; }
+.queue-service-card h3 { margin: 2px 0 4px; font: 600 20px/1.3 "Playfair Display", serif; }
+.queue-service-card p { margin: 0; color: var(--muted); font-size: 10px; }
+.queue-closed { padding: 6px 11px; border-radius: 20px; background: #ece9e2; color: var(--muted); font-size: 9px; font-weight: 700; text-transform: uppercase; }
 .field-group-label { margin: 0 0 9px; font-size: 11px; font-weight: 700; letter-spacing: .06em; text-transform: uppercase; }
+.ticket-stage { min-height: 690px; padding: 58px 0 90px; background: linear-gradient(110deg, rgba(18,21,22,.97), rgba(18,21,22,.72)), url("/assets/hero-hospital-original.png") center / cover; }
+.ticket-shell { max-width: 780px; }
+.ticket-stage .back-link { color: var(--gold); }
+.queue-ticket { margin-top: 32px; padding: 38px; background: rgba(255,255,255,.98); border-top: 5px solid var(--gold); box-shadow: var(--shadow); }
+.ticket-heading { display: flex; justify-content: space-between; align-items: flex-start; gap: 25px; }
+.ticket-heading h1 { margin: 0; font: 700 clamp(68px, 12vw, 112px)/.95 "Playfair Display", serif; }
+.ticket-provider { margin-top: 25px; padding: 20px 0; display: flex; flex-direction: column; border-block: 1px solid var(--line); }
+.ticket-provider strong { font: 600 23px/1.3 "Playfair Display", serif; }
+.ticket-provider span { color: var(--gold-dark); font-size: 11px; font-weight: 700; }
+.ticket-metrics { display: grid; grid-template-columns: repeat(4,1fr); margin-top: 24px; }
+.ticket-metrics div { padding: 0 16px; border-right: 1px solid var(--line); }
+.ticket-metrics div:first-child { padding-left: 0; }
+.ticket-metrics div:last-child { border: 0; }
+.ticket-metrics small, .ticket-metrics strong { display: block; }
+.ticket-metrics small { color: var(--muted); font-size: 8px; text-transform: uppercase; }
+.ticket-metrics strong { margin-top: 5px; font-size: 12px; }
+.ticket-note { margin: 28px 0 0; color: var(--muted); font-size: 10px; }
+.queue-status { display: inline-flex; padding: 5px 9px; border-radius: 20px; background: #ece9e2; color: #686b69; font-size: 8px; font-weight: 700; letter-spacing: .06em; }
+.status-open, .status-waiting { background: #eef6e9; color: #3d7136; }
+.status-called { background: #fff3d8; color: #8a671e; }
+.status-serving { background: #e4f0fb; color: #24618e; }
+.status-completed { background: #e3f2ec; color: var(--success); }
+.status-cancelled, .status-closed { background: #f6e7e5; color: var(--danger); }
+.queue-admin-content { padding-block: 42px 90px; }
+.today-chip { padding: 9px 14px; border: 1px solid rgba(201,164,95,.55); color: var(--gold); font-size: 10px; }
+.queue-setup-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
+.setup-card { padding: 27px; display: grid; gap: 15px; background: var(--white); border-top: 4px solid var(--gold); box-shadow: 0 8px 30px rgba(20,20,20,.06); }
+.setup-card h2, .queue-section-heading h2 { margin: 0; font: 600 27px/1.2 "Playfair Display", serif; }
+.setup-card label { display: flex; flex-direction: column; gap: 6px; }
+.setup-card label > span { font-size: 9px; font-weight: 700; text-transform: uppercase; }
+.queue-section-heading { margin: 52px 0 20px; display: flex; justify-content: space-between; align-items: end; gap: 25px; }
+.queue-section-heading span { color: var(--muted); font-size: 10px; }
+.queue-session-list { display: grid; gap: 20px; }
+.queue-session-card { background: var(--white); border: 1px solid var(--line); }
+.queue-session-card > header { padding: 22px 25px; display: flex; align-items: center; justify-content: space-between; gap: 20px; background: var(--charcoal-soft); color: var(--white); }
+.queue-session-card > header span:first-child { color: var(--gold); font-size: 9px; font-weight: 700; }
+.queue-session-card > header h3 { margin: 3px 0 0; font: 600 24px/1.2 "Playfair Display", serif; }
+.session-metrics { display: grid; grid-template-columns: repeat(4,1fr); border-bottom: 1px solid var(--line); }
+.session-metrics div { padding: 17px 24px; border-right: 1px solid var(--line); }
+.session-metrics small, .session-metrics strong { display: block; }
+.session-metrics small { color: var(--muted); font-size: 8px; text-transform: uppercase; }
+.session-metrics strong { font: 600 24px/1.2 "Playfair Display", serif; }
+.session-controls { padding: 17px 24px; display: flex; justify-content: space-between; gap: 14px; background: #f8f6f1; border-bottom: 1px solid var(--line); }
+.session-controls form:first-child { display: flex; gap: 9px; }
+.session-controls select { min-width: 180px; }
+.queue-table-wrap { overflow-x: auto; }
+.queue-table { width: 100%; border-collapse: collapse; font-size: 10px; }
+.queue-table th { padding: 11px 17px; background: #eeeae1; color: var(--muted); text-align: left; text-transform: uppercase; }
+.queue-table td { padding: 14px 17px; border-top: 1px solid var(--line); }
+.queue-actions { display: flex; align-items: center; gap: 9px; }
+.queue-actions form { margin: 0; }
+.queue-actions button { border: 0; background: transparent; color: var(--gold-dark); font-size: 10px; font-weight: 700; cursor: pointer; }
+.queue-actions .danger-link { color: var(--danger); }
 .fact-sheet { padding: 29px; align-self: start; background: var(--white); border-top: 4px solid var(--gold); box-shadow: 0 12px 36px rgba(30,30,25,.08); }
 .fact-sheet dl { margin: 0 0 25px; }
 .fact-sheet dl div { padding: 13px 0; display: flex; justify-content: space-between; gap: 20px; border-bottom: 1px solid var(--line); }
@@ -299,6 +359,12 @@ input:focus, select:focus, textarea:focus, button:focus-visible, a:focus-visible
     .form-section { padding: 25px 20px; }
     .form-actions { padding: 20px; }
     .footer-row { flex-direction: column; }
+    .queue-service-card, .queue-section-heading, .session-controls { align-items: flex-start; flex-direction: column; }
+    .ticket-metrics, .session-metrics { grid-template-columns: repeat(2,1fr); }
+    .ticket-metrics div { padding: 12px; border-bottom: 1px solid var(--line); }
+    .queue-setup-grid { grid-template-columns: 1fr; }
+    .session-controls form:first-child { width: 100%; flex-direction: column; }
+    .session-controls select { min-width: 0; }
 }
 @media (prefers-reduced-motion: reduce) {
     *, *::before, *::after { scroll-behavior: auto !important; transition: none !important; }

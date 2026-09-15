@@ -27,7 +27,8 @@
             <nav class="main-nav" aria-label="Navigasi utama">
                 <a class="{{ request()->routeIs('home') ? 'is-active' : '' }}" href="{{ route('home') }}">Beranda</a>
                 @auth
-                    <a class="{{ request()->routeIs('admin.*') ? 'is-active' : '' }}" href="{{ route('admin.index') }}">Panel data</a>
+                    <a class="{{ request()->routeIs('admin.index', 'admin.hospitals.*') ? 'is-active' : '' }}" href="{{ route('admin.index') }}">Panel data</a>
+                    <a class="{{ request()->routeIs('admin.queues.*') ? 'is-active' : '' }}" href="{{ route('admin.queues.index') }}">Antrean</a>
                     <form action="{{ route('logout') }}" method="post">
                         @csrf
                         <button class="nav-button" type="submit">Keluar</button>
@@ -43,6 +44,15 @@
         <div class="shell flash-wrap">
             <div class="flash flash-success" role="status">
                 <span>{{ session('success') }}</span>
+                <button type="button" data-dismiss aria-label="Tutup pemberitahuan">×</button>
+            </div>
+        </div>
+    @endif
+
+    @if ($errors->any())
+        <div class="shell flash-wrap flash-errors">
+            <div class="flash flash-error" role="alert">
+                <span>{{ $errors->first() }}</span>
                 <button type="button" data-dismiss aria-label="Tutup pemberitahuan">×</button>
             </div>
         </div>

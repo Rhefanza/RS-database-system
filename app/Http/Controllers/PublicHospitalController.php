@@ -42,7 +42,24 @@ class PublicHospitalController extends Controller
 
     public function show(Hospital $hospital): View
     {
-        $hospital->load(['district:id,name', 'facilities:id,name', 'services:id,name']);
+        $hospital->load([
+            'district:id,name',
+            'facilities:id,name',
+            'services:id,name',
+            'hospitalServices' => fn ($query) => $query
+                ->where('availability_status', 'ACTIVE')
+                ->with([
+                    'service:id,name',
+                    'desks' => fn ($desks) => $desks->where('desk_status', 'ACTIVE'),
+                    'queueSessions' => fn ($sessions) => $sessions
+                        ->whereDate('session_date', today())
+                        ->where('session_status', 'OPEN')
+                        ->withCount([
+                            'queues as waiting_count' => fn ($queues) => $queues->where('queue_status', 'WAITING'),
+                            'queues as active_count' => fn ($queues) => $queues->whereIn('queue_status', ['CALLED', 'SERVING']),
+                        ]),
+                ]),
+        ]);
 
         return view('hospital-detail', compact('hospital'));
     }

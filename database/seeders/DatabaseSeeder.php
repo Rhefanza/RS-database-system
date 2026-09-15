@@ -6,7 +6,9 @@ use App\Models\District;
 use App\Models\Facility;
 use App\Models\Hospital;
 use App\Models\HospitalService;
+use App\Models\QueueSession;
 use App\Models\Service;
+use App\Models\ServiceDesk;
 use App\Models\User;
 use Illuminate\Database\Seeder;
 use Illuminate\Support\Facades\Hash;
@@ -15,7 +17,7 @@ class DatabaseSeeder extends Seeder
 {
     public function run(): void
     {
-        User::updateOrCreate(
+        $admin = User::updateOrCreate(
             ['email' => 'admin@rujuk.test'],
             ['name' => 'Admin Rujuk', 'password' => Hash::make('password'), 'role' => 'ADMIN', 'account_status' => 'ACTIVE']
         );
@@ -29,6 +31,8 @@ class DatabaseSeeder extends Seeder
         foreach ($serviceNames as $name) {
             Service::firstOrCreate(['name' => $name]);
         }
+
+        $rawatJalanId = Service::where('name', 'Rawat Jalan')->value('id');
 
         $facilityNames = [
             'Ambulans', 'ICU', 'Laboratorium', 'Radiologi', 'Farmasi 24 Jam',
@@ -110,10 +114,26 @@ class DatabaseSeeder extends Seeder
             $hospital->facilities()->sync($facilityIds);
 
             foreach ($serviceIds as $serviceId) {
-                HospitalService::updateOrCreate(
+                $hospitalService = HospitalService::updateOrCreate(
                     ['hospital_id' => $hospital->id, 'service_id' => $serviceId],
                     ['initial_service_duration' => 20, 'availability_status' => 'ACTIVE']
                 );
+
+                ServiceDesk::firstOrCreate(
+                    ['hospital_service_id' => $hospitalService->id, 'name' => 'Loket 1'],
+                    ['desk_status' => 'ACTIVE']
+                );
+
+                if ($serviceId === $rawatJalanId) {
+                    QueueSession::firstOrCreate(
+                        ['hospital_service_id' => $hospitalService->id, 'session_date' => today()],
+                        [
+                            'opened_by_user_id' => $admin->id,
+                            'started_at' => now(),
+                            'session_status' => 'OPEN',
+                        ]
+                    );
+                }
             }
         }
     }

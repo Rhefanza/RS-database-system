@@ -7,7 +7,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 class Queue extends Model
 {
-    protected $fillable = ['queue_session_id', 'queue_number', 'service_desk_id', 'queue_status', 'called_at', 'service_started_at', 'service_ended_at'];
+    protected $fillable = ['public_token', 'queue_session_id', 'queue_number', 'service_desk_id', 'queue_status', 'called_at', 'service_started_at', 'service_ended_at'];
 
     protected function casts(): array
     {

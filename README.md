@@ -8,13 +8,17 @@ Rujuk. adalah aplikasi direktori rumah sakit untuk proyek UTS Basis Data. Masyar
 - Filter kelas dan kepemilikan rumah sakit.
 - Pengurutan jarak terdekat memakai lokasi peramban dan rumus Haversine.
 - Detail rumah sakit, fasilitas, kontak, dan tautan Google Maps.
+- Pengambilan nomor antrean publik untuk layanan yang sedang membuka sesi.
+- Tiket antrean digital dengan status, jumlah antrean di depan, estimasi waktu tunggu, nomor yang dipanggil, dan loket.
 - Login dan logout pengelola.
 - Tambah, lihat, ubah, dan hapus data rumah sakit.
+- Dashboard antrean untuk membuat loket, membuka sesi, memanggil antrean berikutnya, memulai dan menyelesaikan layanan, membatalkan antrean, serta menutup sesi.
+- Snapshot statistik antrean otomatis pada setiap perubahan status operasional.
 - Relasi many-to-many rumah sakit dengan fasilitas.
 - Relasi kecamatan, layanan medis, jadwal, loket, petugas, sesi antrean, dan lokasi pengguna.
 - Validasi Form Request, route model binding, CSRF, session regeneration, dan middleware autentikasi.
-- Seeder enam rumah sakit demonstrasi dan sembilan fasilitas.
-- Feature test untuk fungsi publik, autentikasi, validasi, dan CRUD.
+- Seeder enam rumah sakit demonstrasi, sembilan fasilitas, loket layanan, dan sesi Rawat Jalan harian.
+- Feature test untuk fungsi publik, autentikasi, validasi, CRUD, dan alur antrean penuh.
 
 ## Teknologi
 
@@ -89,8 +93,8 @@ Password: password
 php artisan test
 ```
 
-Pengujian mencakup halaman publik, detail dan 404, filter, proteksi halaman admin, login, logout, password salah, create, update, sinkronisasi fasilitas, delete, cascade pivot, serta validasi.
+Pengujian mencakup halaman publik, detail dan 404, filter, proteksi halaman admin, login, logout, password salah, CRUD rumah sakit, validasi, pengambilan tiket, penomoran berurutan, pemanggilan, pelayanan, penyelesaian, pembatalan, dan penutupan sesi antrean.
 
 ## Batas tahap UTS
 
-Data rumah sakit masih berupa data demonstrasi. Jarak yang ditampilkan adalah jarak garis lurus, bukan waktu tempuh jalan. Dashboard analitik, peta interaktif penuh, dan sistem rekomendasi berbobot disiapkan sebagai pengembangan UAS.
+Data rumah sakit masih berupa data demonstrasi. Jarak yang ditampilkan adalah jarak garis lurus, bukan waktu tempuh jalan. Dashboard analitik lanjutan, peta interaktif penuh, dan sistem rekomendasi berbobot disiapkan sebagai pengembangan berikutnya.

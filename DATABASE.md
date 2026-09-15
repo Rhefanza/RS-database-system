@@ -24,6 +24,9 @@ Rancangan ini mengadaptasi sistem antrean puskesmas menjadi sistem informasi dan
 
 - Kombinasi `hospital_id` dan `service_id` pada `hospital_services` harus unik.
 - Kombinasi `queue_session_id` dan `queue_number` pada `queues` harus unik.
+- `queues.public_token` berupa UUID unik agar tiket dapat dipantau tanpa mengekspos ID antrean berurutan.
+- Sesi hanya dapat ditutup setelah seluruh antrean berstatus selesai atau dibatalkan.
+- Status antrean operasional berjalan berurutan dari `WAITING`, `CALLED`, `SERVING`, hingga `COMPLETED`; `WAITING` dan `CALLED` juga dapat dibatalkan.
 - Jadwal khusus hanya boleh satu untuk setiap layanan rumah sakit pada satu tanggal.
 - Nama loket unik di dalam satu layanan rumah sakit.
 - Antrean terhapus ketika sesi induknya dihapus.

@@ -26,10 +26,29 @@
         <div class="detail-body">
             <h2>Tentang rumah sakit</h2>
             <p>{{ $hospital->description ?: 'Informasi deskripsi rumah sakit belum tersedia.' }}</p>
-            <h2>Layanan medis</h2>
-            <div class="facility-grid service-list">
-                @forelse ($hospital->services as $service)
-                    <div><span aria-hidden="true">•</span>{{ $service->name }}</div>
+            <h2>Layanan & antrean hari ini</h2>
+            <div class="queue-service-list">
+                @forelse ($hospital->hospitalServices as $hospitalService)
+                    @php($activeSession = $hospitalService->queueSessions->first())
+                    <article class="queue-service-card">
+                        <div>
+                            <span class="queue-service-kicker">Layanan medis</span>
+                            <h3>{{ $hospitalService->service->name }}</h3>
+                            @if ($activeSession)
+                                <p><strong>{{ $activeSession->waiting_count }}</strong> menunggu · <strong>{{ $activeSession->active_count }}</strong> sedang dipanggil/dilayani</p>
+                            @else
+                                <p>Antrean layanan belum dibuka hari ini.</p>
+                            @endif
+                        </div>
+                        @if ($activeSession)
+                            <form method="post" action="{{ route('queues.store', $hospitalService) }}">
+                                @csrf
+                                <button class="button button-primary" type="submit">Ambil nomor</button>
+                            </form>
+                        @else
+                            <span class="queue-closed">Tutup</span>
+                        @endif
+                    </article>
                 @empty
                     <p>Data layanan medis belum ditambahkan.</p>
                 @endforelse
