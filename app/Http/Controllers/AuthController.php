@@ -11,32 +11,21 @@ class AuthController extends Controller
 {
     public function create(): View|RedirectResponse
     {
-        if (Auth::check()) {
-            return redirect()->to($this->destinationFor(Auth::user()->role));
-        }
-
-        return view('auth.login');
+        return Auth::check() ? redirect()->to($this->destination(Auth::user()->role)) : view('auth.login');
     }
 
     public function store(Request $request): RedirectResponse
     {
-        $credentials = $request->validate([
-            'email' => ['required', 'email'],
-            'password' => ['required', 'string'],
-        ]);
+        $credentials = $request->validate(['email' => ['required', 'email'], 'password' => ['required', 'string']]);
 
-        if (! Auth::attempt([...$credentials, 'account_status' => 'ACTIVE'], $request->boolean('remember'))) {
-            return back()->withErrors([
-                'email' => 'Email atau kata sandi tidak sesuai.',
-            ])->onlyInput('email');
+        if (! Auth::attempt([...$credentials, 'status_akun' => 'AKTIF'])) {
+            return back()->withErrors(['email' => 'Email, kata sandi, atau status akun tidak sesuai.'])->onlyInput('email');
         }
 
         $request->session()->regenerate();
 
-        $destination = $this->destinationFor($request->user()->role);
-
-        return redirect()->intended($destination)
-            ->with('success', 'Selamat datang, '.$request->user()->name.'.');
+        return redirect()->intended($this->destination($request->user()->role))
+            ->with('success', 'Selamat datang, '.$request->user()->nama_lengkap.'.');
     }
 
     public function destroy(Request $request): RedirectResponse
@@ -45,14 +34,14 @@ class AuthController extends Controller
         $request->session()->invalidate();
         $request->session()->regenerateToken();
 
-        return redirect()->route('home')->with('success', 'Anda telah keluar dari panel pengelola.');
+        return redirect()->route('home')->with('success', 'Anda telah keluar.');
     }
 
-    private function destinationFor(string $role): string
+    private function destination(string $role): string
     {
         return match ($role) {
-            'ADMIN' => route('admin.index'),
-            'OFFICER' => route('admin.queues.index'),
+            'ADMIN' => route('admin.master.index'),
+            'PETUGAS' => route('officer.schedules.index'),
             default => route('home'),
         };
     }

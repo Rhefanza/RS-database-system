@@ -7,20 +7,24 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 class Queue extends Model
 {
-    protected $fillable = ['public_token', 'queue_session_id', 'queue_number', 'service_desk_id', 'queue_status', 'called_at', 'service_started_at', 'service_ended_at'];
+    protected $table = 'antrean';
+
+    protected $primaryKey = 'antrean_id';
+
+    protected $fillable = ['nik', 'jadwal_id', 'nomor_antrean', 'tanggal_daftar', 'status_antrean'];
 
     protected function casts(): array
     {
-        return ['queue_number' => 'integer', 'called_at' => 'datetime', 'service_started_at' => 'datetime', 'service_ended_at' => 'datetime'];
+        return ['nomor_antrean' => 'integer', 'tanggal_daftar' => 'date'];
     }
 
-    public function queueSession(): BelongsTo
+    public function citizen(): BelongsTo
     {
-        return $this->belongsTo(QueueSession::class);
+        return $this->belongsTo(Citizen::class, 'nik', 'nik');
     }
 
-    public function serviceDesk(): BelongsTo
+    public function schedule(): BelongsTo
     {
-        return $this->belongsTo(ServiceDesk::class);
+        return $this->belongsTo(Schedule::class, 'jadwal_id', 'jadwal_id');
     }
 }

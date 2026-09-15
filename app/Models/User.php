@@ -2,10 +2,9 @@
 
 namespace App\Models;
 
-// use Illuminate\Contracts\Auth\MustVerifyEmail;
 use Database\Factories\UserFactory;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
-use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 
@@ -14,60 +13,36 @@ class User extends Authenticatable
     /** @use HasFactory<UserFactory> */
     use HasFactory, Notifiable;
 
-    /**
-     * The attributes that are mass assignable.
-     *
-     * @var list<string>
-     */
-    protected $fillable = [
-        'name',
-        'email',
-        'phone',
-        'password',
-        'role',
-        'account_status',
-    ];
+    protected $table = 'akun';
 
-    /**
-     * The attributes that should be hidden for serialization.
-     *
-     * @var list<string>
-     */
-    protected $hidden = [
-        'password',
-        'remember_token',
-    ];
+    protected $primaryKey = 'akun_id';
 
-    /**
-     * Get the attributes that should be cast.
-     *
-     * @return array<string, string>
-     */
+    protected $fillable = ['nik', 'puskesmas_id', 'nama_lengkap', 'email', 'password_hash', 'role', 'status_akun'];
+
+    protected $hidden = ['password_hash'];
+
     protected function casts(): array
     {
-        return [
-            'email_verified_at' => 'datetime',
-            'password' => 'hashed',
-        ];
+        return ['password_hash' => 'hashed'];
     }
 
-    public function staffAssignments(): HasMany
+    public function getAuthPasswordName(): string
     {
-        return $this->hasMany(StaffAssignment::class);
+        return 'password_hash';
     }
 
-    public function openedQueueSessions(): HasMany
+    public function getAuthPassword(): string
     {
-        return $this->hasMany(QueueSession::class, 'opened_by_user_id');
+        return $this->password_hash;
     }
 
-    public function closedQueueSessions(): HasMany
+    public function citizen(): BelongsTo
     {
-        return $this->hasMany(QueueSession::class, 'closed_by_user_id');
+        return $this->belongsTo(Citizen::class, 'nik', 'nik');
     }
 
-    public function savedLocations(): HasMany
+    public function puskesmas(): BelongsTo
     {
-        return $this->hasMany(SavedLocation::class);
+        return $this->belongsTo(Puskesmas::class, 'puskesmas_id', 'puskesmas_id');
     }
 }

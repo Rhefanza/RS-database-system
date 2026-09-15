@@ -8,17 +8,20 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class Service extends Model
 {
-    protected $fillable = ['name', 'description'];
+    protected $table = 'layanan';
 
-    public function hospitals(): BelongsToMany
+    protected $primaryKey = 'layanan_id';
+
+    protected $fillable = ['nama_layanan', 'deskripsi', 'status'];
+
+    public function puskesmas(): BelongsToMany
     {
-        return $this->belongsToMany(Hospital::class, 'hospital_services')
-            ->withPivot(['id', 'initial_service_duration', 'availability_status'])
-            ->withTimestamps();
+        return $this->belongsToMany(Puskesmas::class, 'puskesmas_layanan', 'layanan_id', 'puskesmas_id')
+            ->withPivot(['puskesmas_layanan_id', 'status'])->withTimestamps();
     }
 
-    public function hospitalServices(): HasMany
+    public function puskesmasServices(): HasMany
     {
-        return $this->hasMany(HospitalService::class);
+        return $this->hasMany(PuskesmasService::class, 'layanan_id', 'layanan_id');
     }
 }

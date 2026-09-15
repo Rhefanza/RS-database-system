@@ -2,8 +2,8 @@
     "$schema": "https://getcomposer.org/schema.json",
     "name": "rujuk/proyek-uts",
     "type": "project",
-    "description": "Aplikasi CRUD direktori rumah sakit untuk proyek UTS basis data.",
-    "keywords": ["laravel", "rumah-sakit", "basis-data"],
+    "description": "Sistem CRUD antrean puskesmas untuk proyek UTS basis data.",
+    "keywords": ["laravel", "puskesmas", "antrean", "basis-data"],
     "license": "MIT",
     "require": {
         "php": "^8.2",

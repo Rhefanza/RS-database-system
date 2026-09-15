@@ -1,0 +1,15 @@
+@extends('layouts.app')
+@section('title', 'Kelola Jadwal')
+@section('content')
+<div class="page-title"><div><p class="eyebrow">Petugas / Admin</p><h1>Jadwal & kapasitas</h1><p>Petugas hanya dapat mengelola layanan di puskesmas tempat bertugas.</p></div><a class="button secondary" href="{{ route('officer.queues.index') }}">Kelola antrean</a></div>
+<section class="panel"><h2>Tambah jadwal</h2><form method="post" action="{{ route('officer.schedules.store') }}" class="form-grid">@csrf
+    <label class="span-2">Puskesmas · layanan<select name="puskesmas_layanan_id" required><option value="">Pilih layanan</option>@foreach ($relations as $relation)<option value="{{ $relation->puskesmas_layanan_id }}">{{ $relation->puskesmas->nama_puskesmas }} · {{ $relation->service->nama_layanan }}</option>@endforeach</select></label>
+    <label>Hari<select name="hari" required>@foreach (['SENIN','SELASA','RABU','KAMIS','JUMAT','SABTU','MINGGU'] as $day)<option>{{ $day }}</option>@endforeach</select></label>
+    <label>Kapasitas<input type="number" name="kapasitas" value="50" min="1" max="1000" required></label>
+    <label>Jam buka<input type="time" name="jam_buka" value="08:00" required></label><label>Jam tutup<input type="time" name="jam_tutup" value="12:00" required></label>
+    <input type="hidden" name="status" value="AKTIF"><button class="button primary" type="submit">Simpan jadwal</button>
+</form></section>
+<section><div class="section-heading"><div><p class="eyebrow">CRUD jadwal</p><h2>{{ $schedules->count() }} jadwal</h2></div></div><div class="stack-list">
+@forelse ($schedules as $schedule)<article class="record"><div><span class="status {{ strtolower($schedule->status) }}">{{ $schedule->status }}</span><h3>{{ $schedule->puskesmasService->service->nama_layanan }}</h3><p>{{ $schedule->puskesmasService->puskesmas->nama_puskesmas }} · {{ $schedule->hari }} · {{ substr($schedule->jam_buka,0,5) }}–{{ substr($schedule->jam_tutup,0,5) }} · kapasitas {{ $schedule->kapasitas }}</p></div><details><summary>Edit</summary><form method="post" action="{{ route('officer.schedules.update', $schedule) }}" class="inline-form">@csrf @method('put')<input type="hidden" name="puskesmas_layanan_id" value="{{ $schedule->puskesmas_layanan_id }}"><select name="hari">@foreach (['SENIN','SELASA','RABU','KAMIS','JUMAT','SABTU','MINGGU'] as $day)<option @selected($schedule->hari===$day)>{{ $day }}</option>@endforeach</select><input type="time" name="jam_buka" value="{{ substr($schedule->jam_buka,0,5) }}"><input type="time" name="jam_tutup" value="{{ substr($schedule->jam_tutup,0,5) }}"><input type="number" name="kapasitas" value="{{ $schedule->kapasitas }}"><select name="status"><option @selected($schedule->status==='AKTIF')>AKTIF</option><option @selected($schedule->status==='NONAKTIF')>NONAKTIF</option></select><button class="button primary">Simpan</button></form><form method="post" action="{{ route('officer.schedules.destroy', $schedule) }}">@csrf @method('delete')<button class="button danger">Hapus jadwal</button></form></details></article>@empty <div class="empty">Belum ada jadwal.</div>@endforelse
+</div></section>
+@endsection

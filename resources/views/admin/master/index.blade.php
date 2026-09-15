@@ -1,151 +1,33 @@
 @extends('layouts.app')
-
-@section('title', 'Data master UTS')
-
+@section('title', 'Data Master')
 @section('content')
-<section class="admin-heading">
-    <div class="shell heading-row">
-        <div><p class="eyebrow">Cakupan UTS</p><h1>Pengisian data</h1><p>Pilih satu pekerjaan, isi formulir singkat, lalu simpan.</p></div>
-        <span class="today-chip">{{ $districts->count() + $services->count() + $hospitalServices->count() }} data inti</span>
-    </div>
+<div class="page-title"><div><p class="eyebrow">Admin / Dinas Kesehatan</p><h1>Data master UTS</h1><p>Kelola hanya empat master dan satu relasi. Jadwal dikerjakan petugas.</p></div><a class="button secondary" href="{{ route('officer.schedules.index') }}">Lihat jadwal</a></div>
+<nav class="tabs" aria-label="Kategori data">
+    <a href="#masyarakat" data-master-tab="masyarakat">Masyarakat</a><a href="#akun" data-master-tab="akun">Petugas & akun</a><a href="#puskesmas" data-master-tab="puskesmas">Puskesmas</a><a href="#layanan" data-master-tab="layanan">Layanan</a><a href="#relasi" data-master-tab="relasi">Relasi layanan</a>
+</nav>
+
+<section id="masyarakat" data-master-panel class="panel-section active"><div class="section-heading"><div><p class="eyebrow">Data dari Dinkes</p><h2>Masyarakat</h2><p>NIK yang belum memiliki akun dapat dipakai pada halaman aktivasi.</p></div><span class="count">{{ $citizens->count() }} data</span></div>
+    <div class="split"><form method="post" action="{{ route('admin.citizens.store') }}" class="panel form-grid one">@csrf<h3>Tambah masyarakat</h3><label>NIK<input name="nik" maxlength="16" required></label><label>Nama lengkap<input name="nama_lengkap" required></label><label>Nomor telepon<input name="nomor_telepon"></label><label>Alamat<textarea name="alamat"></textarea></label><input type="hidden" name="status_data" value="AKTIF"><button class="button primary">Simpan masyarakat</button></form>
+    <div class="stack-list">@foreach($citizens as $citizen)<article class="record"><div><span class="status {{ strtolower($citizen->status_data) }}">{{ $citizen->status_data }}</span><h3>{{ $citizen->nama_lengkap }}</h3><p>{{ $citizen->nik }} · {{ $citizen->account ? 'Sudah aktivasi' : 'Belum aktivasi' }}</p></div><details><summary>Edit</summary><form method="post" action="{{ route('admin.citizens.update',$citizen) }}" class="inline-form">@csrf @method('put')<input name="nik" value="{{ $citizen->nik }}" readonly><input name="nama_lengkap" value="{{ $citizen->nama_lengkap }}" required><input name="nomor_telepon" value="{{ $citizen->nomor_telepon }}"><input name="alamat" value="{{ $citizen->alamat }}"><select name="status_data"><option @selected($citizen->status_data==='AKTIF')>AKTIF</option><option @selected($citizen->status_data==='NONAKTIF')>NONAKTIF</option></select><button class="button primary">Simpan</button></form><form method="post" action="{{ route('admin.citizens.destroy',$citizen) }}">@csrf @method('delete')<button class="button danger">Hapus</button></form></details></article>@endforeach</div></div>
 </section>
 
-<div class="shell master-workflow">
-    <p><strong>Urutan yang disarankan:</strong> Kecamatan → Rumah sakit → Layanan → Hubungkan layanan → Petugas. Jadwal dan kapasitas dapat dilanjutkan oleh petugas.</p>
-    <nav class="master-jump" aria-label="Bagian data master" data-master-tabs>
-        <a href="#kecamatan" data-master-tab>Kecamatan</a><a href="{{ route('admin.index') }}">Rumah sakit</a><a href="#layanan" data-master-tab>Layanan</a>
-        <a href="#rumah-sakit-layanan" data-master-tab>Hubungkan layanan</a><a href="#akun" data-master-tab>Pengguna</a><a href="#jadwal" data-master-tab>Jadwal & kapasitas</a>
-        <details><summary>Pengaturan lanjutan</summary><div><a href="#jadwal-khusus" data-master-tab>Jadwal khusus</a><a href="#loket" data-master-tab>Loket</a><a href="#penugasan" data-master-tab>Riwayat penugasan</a></div></details>
-    </nav>
-</div>
+<section id="akun" data-master-panel class="panel-section"><div class="section-heading"><div><p class="eyebrow">Akun internal</p><h2>Petugas & akun</h2><p>Masyarakat membuat akun sendiri melalui aktivasi NIK.</p></div><span class="count">{{ $accounts->count() }} akun</span></div>
+    <div class="split"><form method="post" action="{{ route('admin.officers.store') }}" class="panel form-grid one">@csrf<h3>Tambah petugas</h3><label>Nama lengkap<input name="nama_lengkap" required></label><label>Email<input type="email" name="email" required></label><label>Password<input type="password" name="password" minlength="8" required></label><label>Puskesmas<select name="puskesmas_id" required><option value="">Pilih</option>@foreach($puskesmasItems as $item)<option value="{{ $item->puskesmas_id }}">{{ $item->nama_puskesmas }}</option>@endforeach</select></label><button class="button primary">Simpan petugas</button></form>
+    <div class="stack-list">@foreach($accounts as $account)<article class="record"><div><span class="status {{ strtolower($account->status_akun) }}">{{ $account->role }} · {{ $account->status_akun }}</span><h3>{{ $account->nama_lengkap }}</h3><p>{{ $account->email }}{{ $account->puskesmas ? ' · '.$account->puskesmas->nama_puskesmas : '' }}</p></div><details><summary>Edit</summary><form method="post" action="{{ route('admin.accounts.update',$account) }}" class="inline-form">@csrf @method('put')<input name="nama_lengkap" value="{{ $account->nama_lengkap }}" required><input type="email" name="email" value="{{ $account->email }}" required><select name="puskesmas_id"><option value="">Tanpa puskesmas</option>@foreach($puskesmasItems as $item)<option value="{{ $item->puskesmas_id }}" @selected($account->puskesmas_id===$item->puskesmas_id)>{{ $item->nama_puskesmas }}</option>@endforeach</select><select name="status_akun"><option @selected($account->status_akun==='AKTIF')>AKTIF</option><option @selected($account->status_akun==='NONAKTIF')>NONAKTIF</option></select><input type="password" name="password" placeholder="Password baru (opsional)"><button class="button primary">Simpan</button></form>@if(!in_array($account->role,['MASYARAKAT']) && !auth()->user()->is($account))<form method="post" action="{{ route('admin.accounts.destroy',$account) }}">@csrf @method('delete')<button class="button danger">Hapus akun</button></form>@endif</details></article>@endforeach</div></div>
+</section>
 
-<div class="shell master-stack">
-    <section id="kecamatan" class="master-section is-active" data-master-panel>
-        <header><div><p class="eyebrow">01 · Wilayah</p><h2>Kecamatan</h2></div><span>{{ $districts->count() }} data</span></header>
-        <form class="master-create-form compact" method="post" action="{{ route('admin.master.districts.store') }}">@csrf
-            <label><span>Nama kecamatan</span><input name="name" required maxlength="100" placeholder="Contoh: Rungkut"></label>
-            <button class="button button-primary" type="submit">Tambah kecamatan</button>
-        </form>
-        <div class="master-list">
-            @foreach ($districts as $district)
-                <article><div><strong>{{ $district->name }}</strong><small>{{ $district->hospitals_count }} rumah sakit</small></div>
-                    <div class="master-actions"><details><summary>Edit</summary><form method="post" action="{{ route('admin.master.districts.update', $district) }}">@csrf @method('PUT')<input name="name" value="{{ $district->name }}" required><button>Simpan</button></form></details>
-                    <form method="post" action="{{ route('admin.master.districts.destroy', $district) }}" onsubmit="return confirm('Hapus kecamatan ini?')">@csrf @method('DELETE')<button class="danger-link">Hapus</button></form></div>
-                </article>
-            @endforeach
-        </div>
-    </section>
+<section id="puskesmas" data-master-panel class="panel-section"><div class="section-heading"><div><p class="eyebrow">Data master</p><h2>Puskesmas</h2></div><span class="count">{{ $puskesmasItems->count() }} data</span></div>
+    <div class="split"><form method="post" action="{{ route('admin.puskesmas.store') }}" class="panel form-grid one">@csrf<h3>Tambah puskesmas</h3><label>Nama<input name="nama_puskesmas" required></label><label>Alamat<textarea name="alamat" required></textarea></label><label>Nomor telepon<input name="nomor_telepon"></label><input type="hidden" name="status" value="AKTIF"><button class="button primary">Simpan puskesmas</button></form>
+    <div class="stack-list">@foreach($puskesmasItems as $item)<article class="record"><div><span class="status {{ strtolower($item->status) }}">{{ $item->status }}</span><h3>{{ $item->nama_puskesmas }}</h3><p>{{ $item->alamat }} · {{ $item->puskesmas_services_count }} layanan · {{ $item->officers_count }} petugas</p></div><details><summary>Edit</summary><form method="post" action="{{ route('admin.puskesmas.update',$item) }}" class="inline-form">@csrf @method('put')<input name="nama_puskesmas" value="{{ $item->nama_puskesmas }}" required><input name="alamat" value="{{ $item->alamat }}" required><input name="nomor_telepon" value="{{ $item->nomor_telepon }}"><select name="status"><option @selected($item->status==='AKTIF')>AKTIF</option><option @selected($item->status==='NONAKTIF')>NONAKTIF</option></select><button class="button primary">Simpan</button></form><form method="post" action="{{ route('admin.puskesmas.destroy',$item) }}">@csrf @method('delete')<button class="button danger">Hapus</button></form></details></article>@endforeach</div></div>
+</section>
 
-    <section id="layanan" class="master-section" data-master-panel>
-        <header><div><p class="eyebrow">02 · Referensi</p><h2>Master layanan</h2></div><span>{{ $services->count() }} data</span></header>
-        <form class="master-create-form" method="post" action="{{ route('admin.master.services.store') }}">@csrf
-            <label><span>Nama layanan</span><input name="name" required maxlength="100" placeholder="Contoh: Poli Gigi"></label>
-            <label><span>Deskripsi</span><input name="description" maxlength="255" placeholder="Deskripsi singkat"></label>
-            <button class="button button-primary" type="submit">Tambah layanan</button>
-        </form>
-        <div class="master-list">
-            @foreach ($services as $service)
-                <article><div><strong>{{ $service->name }}</strong><small>{{ $service->description ?: 'Tanpa deskripsi' }} · {{ $service->hospital_services_count }} rumah sakit</small></div>
-                    <div class="master-actions"><details><summary>Edit</summary><form class="wide-edit" method="post" action="{{ route('admin.master.services.update', $service) }}">@csrf @method('PUT')<input name="name" value="{{ $service->name }}" required><input name="description" value="{{ $service->description }}" placeholder="Deskripsi"><button>Simpan</button></form></details>
-                    <form method="post" action="{{ route('admin.master.services.destroy', $service) }}" onsubmit="return confirm('Hapus layanan ini?')">@csrf @method('DELETE')<button class="danger-link">Hapus</button></form></div>
-                </article>
-            @endforeach
-        </div>
-    </section>
+<section id="layanan" data-master-panel class="panel-section"><div class="section-heading"><div><p class="eyebrow">Data master</p><h2>Layanan</h2></div><span class="count">{{ $services->count() }} data</span></div>
+    <div class="split"><form method="post" action="{{ route('admin.services.store') }}" class="panel form-grid one">@csrf<h3>Tambah layanan</h3><label>Nama layanan<input name="nama_layanan" required></label><label>Deskripsi<textarea name="deskripsi"></textarea></label><input type="hidden" name="status" value="AKTIF"><button class="button primary">Simpan layanan</button></form>
+    <div class="stack-list">@foreach($services as $service)<article class="record"><div><span class="status {{ strtolower($service->status) }}">{{ $service->status }}</span><h3>{{ $service->nama_layanan }}</h3><p>{{ $service->deskripsi }} · {{ $service->puskesmas_services_count }} puskesmas</p></div><details><summary>Edit</summary><form method="post" action="{{ route('admin.services.update',$service) }}" class="inline-form">@csrf @method('put')<input name="nama_layanan" value="{{ $service->nama_layanan }}" required><input name="deskripsi" value="{{ $service->deskripsi }}"><select name="status"><option @selected($service->status==='AKTIF')>AKTIF</option><option @selected($service->status==='NONAKTIF')>NONAKTIF</option></select><button class="button primary">Simpan</button></form><form method="post" action="{{ route('admin.services.destroy',$service) }}">@csrf @method('delete')<button class="button danger">Hapus</button></form></details></article>@endforeach</div></div>
+</section>
 
-    <section id="rumah-sakit-layanan" class="master-section" data-master-panel>
-        <header><div><p class="eyebrow">03 · Relasi M:N</p><h2>Rumah sakit–layanan</h2></div><span>{{ $hospitalServices->count() }} relasi</span></header>
-        <form class="master-create-form four" method="post" action="{{ route('admin.master.hospital-services.store') }}">@csrf
-            <label><span>Rumah sakit</span><select name="hospital_id" required><option value="">Pilih</option>@foreach($hospitals as $hospital)<option value="{{ $hospital->id }}">{{ $hospital->name }}</option>@endforeach</select></label>
-            <label><span>Layanan</span><select name="service_id" required><option value="">Pilih</option>@foreach($services as $service)<option value="{{ $service->id }}">{{ $service->name }}</option>@endforeach</select></label>
-            <label><span>Durasi rata-rata (menit)</span><input type="number" name="initial_service_duration" min="1" max="480" value="20"></label>
-            <input type="hidden" name="availability_status" value="ACTIVE">
-            <button class="button button-primary" type="submit">Hubungkan layanan</button>
-        </form>
-        <div class="data-table-wrap"><table class="data-table master-table"><thead><tr><th>Rumah sakit</th><th>Layanan</th><th>Durasi</th><th>Turunan</th><th>Status</th><th>Aksi</th></tr></thead><tbody>
-            @foreach($hospitalServices as $item)<tr><td><strong>{{ $item->hospital->name }}</strong></td><td>{{ $item->service->name }}</td><td>{{ $item->initial_service_duration ?: '—' }} menit</td><td>{{ $item->schedules_count }} jadwal · {{ $item->desks_count }} loket</td><td><span class="table-status {{ $item->availability_status === 'ACTIVE' ? 'is-on' : '' }}">{{ $item->availability_status }}</span></td><td class="master-actions">
-                <details><summary>Edit</summary><form method="post" action="{{ route('admin.master.hospital-services.update', $item) }}">@csrf @method('PUT')<input type="hidden" name="hospital_id" value="{{ $item->hospital_id }}"><select name="service_id">@foreach($services as $service)<option value="{{ $service->id }}" @selected($item->service_id === $service->id)>{{ $service->name }}</option>@endforeach</select><input type="number" name="initial_service_duration" value="{{ $item->initial_service_duration }}" min="1" max="480"><select name="availability_status"><option value="ACTIVE" @selected($item->availability_status === 'ACTIVE')>Aktif</option><option value="INACTIVE" @selected($item->availability_status === 'INACTIVE')>Tidak aktif</option></select><button>Simpan</button></form></details>
-                <form method="post" action="{{ route('admin.master.hospital-services.destroy', $item) }}" onsubmit="return confirm('Hapus relasi layanan ini?')">@csrf @method('DELETE')<button class="danger-link">Hapus</button></form>
-            </td></tr>@endforeach
-        </tbody></table></div>
-    </section>
-
-    <section id="jadwal" class="master-section" data-master-panel>
-        <header><div><p class="eyebrow">04 · Operasional</p><h2>Jadwal layanan rutin</h2></div><span>{{ $schedules->count() }} jadwal</span></header>
-        <form class="master-create-form schedule" method="post" action="{{ route('admin.master.schedules.store') }}">@csrf
-            <label><span>Rumah sakit & layanan</span><select name="hospital_service_id" required><option value="">Pilih</option>@foreach($hospitalServices as $item)<option value="{{ $item->id }}">{{ $item->hospital->name }} — {{ $item->service->name }}</option>@endforeach</select></label>
-            <label><span>Hari</span><select name="day" required>@foreach($days as $value => $label)<option value="{{ $value }}">{{ $label }}</option>@endforeach</select></label>
-            <label><span>Buka</span><input type="time" name="opens_at" required value="08:00"></label><label><span>Tutup</span><input type="time" name="closes_at" required value="12:00"></label>
-            <label><span>Kapasitas antrean</span><input type="number" name="quota" min="1" value="50" required></label><input type="hidden" name="schedule_status" value="ACTIVE">
-            <button class="button button-primary" type="submit">Tambah jadwal</button>
-        </form>
-        <div class="master-list">
-            @forelse($schedules as $schedule)<article><div><strong>{{ $schedule->hospitalService->hospital->name }} — {{ $schedule->hospitalService->service->name }}</strong><small>{{ $days[$schedule->day] }} · {{ substr($schedule->opens_at, 0, 5) }}–{{ substr($schedule->closes_at, 0, 5) }} · Kuota {{ $schedule->quota ?: 'fleksibel' }} · {{ $schedule->schedule_status }}</small></div><div class="master-actions">
-                <details><summary>Edit</summary><form method="post" action="{{ route('admin.master.schedules.update', $schedule) }}">@csrf @method('PUT')<input type="hidden" name="hospital_service_id" value="{{ $schedule->hospital_service_id }}"><select name="day">@foreach($days as $value => $label)<option value="{{ $value }}" @selected($schedule->day === $value)>{{ $label }}</option>@endforeach</select><input type="time" name="opens_at" value="{{ substr($schedule->opens_at, 0, 5) }}"><input type="time" name="closes_at" value="{{ substr($schedule->closes_at, 0, 5) }}"><input type="number" name="quota" value="{{ $schedule->quota }}" min="1"><select name="schedule_status"><option value="ACTIVE" @selected($schedule->schedule_status === 'ACTIVE')>Aktif</option><option value="INACTIVE" @selected($schedule->schedule_status === 'INACTIVE')>Tidak aktif</option></select><button>Simpan</button></form></details>
-                <form method="post" action="{{ route('admin.master.schedules.destroy', $schedule) }}" onsubmit="return confirm('Hapus jadwal ini?')">@csrf @method('DELETE')<button class="danger-link">Hapus</button></form></div></article>
-            @empty<p class="master-empty">Belum ada jadwal rutin.</p>@endforelse
-        </div>
-    </section>
-
-    <section id="jadwal-khusus" class="master-section" data-master-panel>
-        <header><div><p class="eyebrow">05 · Pengecualian</p><h2>Jadwal khusus</h2></div><span>{{ $specialSchedules->count() }} jadwal</span></header>
-        <form class="master-create-form schedule" method="post" action="{{ route('admin.master.special-schedules.store') }}">@csrf
-            <label><span>Rumah sakit & layanan</span><select name="hospital_service_id" required><option value="">Pilih</option>@foreach($hospitalServices as $item)<option value="{{ $item->id }}">{{ $item->hospital->name }} — {{ $item->service->name }}</option>@endforeach</select></label>
-            <label><span>Tanggal</span><input type="date" name="date" required></label><label><span>Buka khusus</span><input type="time" name="special_opens_at"></label><label><span>Tutup khusus</span><input type="time" name="special_closes_at"></label>
-            <label><span>Status</span><select name="status"><option value="CHANGED">Berubah</option><option value="OPEN">Buka</option><option value="CLOSED">Tutup</option></select></label><label><span>Alasan</span><input name="reason" maxlength="255"></label>
-            <button class="button button-primary" type="submit">Tambah jadwal khusus</button>
-        </form>
-        <div class="master-list">
-            @forelse($specialSchedules as $schedule)<article><div><strong>{{ $schedule->date->format('d/m/Y') }} · {{ $schedule->hospitalService->hospital->name }}</strong><small>{{ $schedule->hospitalService->service->name }} · {{ $schedule->status }} · {{ $schedule->reason ?: 'Tanpa alasan' }}</small></div><div class="master-actions">
-                <details><summary>Edit</summary><form method="post" action="{{ route('admin.master.special-schedules.update', $schedule) }}">@csrf @method('PUT')<input type="hidden" name="hospital_service_id" value="{{ $schedule->hospital_service_id }}"><input type="date" name="date" value="{{ $schedule->date->format('Y-m-d') }}"><input type="time" name="special_opens_at" value="{{ $schedule->special_opens_at ? substr($schedule->special_opens_at, 0, 5) : '' }}"><input type="time" name="special_closes_at" value="{{ $schedule->special_closes_at ? substr($schedule->special_closes_at, 0, 5) : '' }}"><select name="status"><option value="CHANGED" @selected($schedule->status === 'CHANGED')>Berubah</option><option value="OPEN" @selected($schedule->status === 'OPEN')>Buka</option><option value="CLOSED" @selected($schedule->status === 'CLOSED')>Tutup</option></select><input name="reason" value="{{ $schedule->reason }}" placeholder="Alasan"><button>Simpan</button></form></details>
-                <form method="post" action="{{ route('admin.master.special-schedules.destroy', $schedule) }}" onsubmit="return confirm('Hapus jadwal khusus ini?')">@csrf @method('DELETE')<button class="danger-link">Hapus</button></form></div></article>
-            @empty<p class="master-empty">Belum ada jadwal khusus.</p>@endforelse
-        </div>
-    </section>
-
-    <section id="loket" class="master-section" data-master-panel>
-        <header><div><p class="eyebrow">06 · Pelayanan</p><h2>Loket layanan</h2></div><span>{{ $desks->count() }} loket</span></header>
-        <form class="master-create-form" method="post" action="{{ route('admin.master.desks.store') }}">@csrf
-            <label><span>Rumah sakit & layanan</span><select name="hospital_service_id" required><option value="">Pilih</option>@foreach($hospitalServices as $item)<option value="{{ $item->id }}">{{ $item->hospital->name }} — {{ $item->service->name }}</option>@endforeach</select></label>
-            <label><span>Nama loket</span><input name="name" required placeholder="Loket 1"></label><input type="hidden" name="desk_status" value="ACTIVE">
-            <button class="button button-primary" type="submit">Tambah loket</button>
-        </form>
-        <div class="master-list">@foreach($desks as $desk)<article><div><strong>{{ $desk->name }} · {{ $desk->hospitalService->hospital->name }}</strong><small>{{ $desk->hospitalService->service->name }} · {{ $desk->desk_status }}</small></div><div class="master-actions">
-            <details><summary>Edit</summary><form method="post" action="{{ route('admin.master.desks.update', $desk) }}">@csrf @method('PUT')<input type="hidden" name="hospital_service_id" value="{{ $desk->hospital_service_id }}"><input name="name" value="{{ $desk->name }}"><select name="desk_status"><option value="ACTIVE" @selected($desk->desk_status === 'ACTIVE')>Aktif</option><option value="INACTIVE" @selected($desk->desk_status === 'INACTIVE')>Tidak aktif</option></select><button>Simpan</button></form></details>
-            <form method="post" action="{{ route('admin.master.desks.destroy', $desk) }}" onsubmit="return confirm('Hapus loket ini?')">@csrf @method('DELETE')<button class="danger-link">Hapus</button></form></div></article>@endforeach</div>
-    </section>
-
-    <section id="akun" class="master-section" data-master-panel>
-        <header><div><p class="eyebrow">05 · Pengguna</p><h2>Petugas & masyarakat</h2><p class="section-hint">Petugas langsung ditugaskan ke rumah sakit dalam satu langkah.</p></div><span>{{ $users->count() }} akun</span></header>
-        <div class="simple-role-forms">
-            <form class="master-create-form simple-account" method="post" action="{{ route('admin.master.officers.store') }}">@csrf
-                <h3>Tambah petugas</h3><label><span>Nama lengkap</span><input name="name" required></label><label><span>Email</span><input type="email" name="email" required></label><label><span>Telepon</span><input name="phone"></label><label><span>Kata sandi</span><input type="password" name="password" required minlength="8" autocomplete="new-password" placeholder="Minimal 8 karakter"></label>
-                <label><span>Tempat bertugas</span><select name="hospital_id" required><option value="">Pilih rumah sakit</option>@foreach($hospitals as $hospital)<option value="{{ $hospital->id }}">{{ $hospital->name }}</option>@endforeach</select></label><label><span>Kode pegawai</span><input name="employee_code" placeholder="Opsional"></label>
-                <button class="button button-primary" type="submit">Simpan petugas</button>
-            </form>
-            <form class="master-create-form simple-account" method="post" action="{{ route('admin.master.users.store') }}">@csrf
-                <h3>Tambah masyarakat</h3><label><span>Nama lengkap</span><input name="name" required></label><label><span>Email</span><input type="email" name="email" required></label><label><span>Telepon</span><input name="phone"></label><label><span>Kata sandi</span><input type="password" name="password" required minlength="8" autocomplete="new-password" placeholder="Minimal 8 karakter"></label>
-                <input type="hidden" name="role" value="PUBLIC"><input type="hidden" name="account_status" value="ACTIVE"><button class="button button-quiet" type="submit">Simpan masyarakat</button>
-            </form>
-        </div>
-        <div class="master-list">@foreach($users as $user)<article><div><strong>{{ $user->name }}</strong><small>{{ $user->email }} · {{ $user->role }} · {{ $user->account_status }} · {{ $user->staff_assignments_count }} penugasan</small></div><div class="master-actions">
-            <details><summary>Edit</summary><form method="post" action="{{ route('admin.master.users.update', $user) }}">@csrf @method('PUT')<input name="name" value="{{ $user->name }}" required><input type="email" name="email" value="{{ $user->email }}" required><input name="phone" value="{{ $user->phone }}" placeholder="Telepon"><input type="password" name="password" placeholder="Kosongkan jika tetap"><select name="role"><option value="ADMIN" @selected($user->role === 'ADMIN')>Admin</option><option value="OFFICER" @selected($user->role === 'OFFICER')>Petugas</option><option value="PUBLIC" @selected($user->role === 'PUBLIC')>Masyarakat</option></select><select name="account_status"><option value="ACTIVE" @selected($user->account_status === 'ACTIVE')>Aktif</option><option value="INACTIVE" @selected($user->account_status === 'INACTIVE')>Tidak aktif</option></select><button>Simpan</button></form></details>
-            <form method="post" action="{{ route('admin.master.users.destroy', $user) }}" onsubmit="return confirm('Hapus akun ini?')">@csrf @method('DELETE')<button class="danger-link">Hapus</button></form></div></article>@endforeach</div>
-    </section>
-
-    <section id="penugasan" class="master-section" data-master-panel>
-        <header><div><p class="eyebrow">08 · Organisasi</p><h2>Penugasan petugas</h2></div><span>{{ $assignments->count() }} penugasan</span></header>
-        <form class="master-create-form four" method="post" action="{{ route('admin.master.assignments.store') }}">@csrf
-            <label><span>Petugas</span><select name="user_id" required><option value="">Pilih</option>@foreach($users->where('role', 'OFFICER') as $user)<option value="{{ $user->id }}">{{ $user->name }}</option>@endforeach</select></label><label><span>Rumah sakit</span><select name="hospital_id" required><option value="">Pilih</option>@foreach($hospitals as $hospital)<option value="{{ $hospital->id }}">{{ $hospital->name }}</option>@endforeach</select></label>
-            <label><span>Kode pegawai</span><input name="employee_code"></label><input type="hidden" name="starts_on" value="{{ today()->format('Y-m-d') }}"><input type="hidden" name="assignment_status" value="ACTIVE">
-            <button class="button button-primary" type="submit">Tambah penugasan</button>
-        </form>
-        <div class="master-list">
-            @forelse($assignments as $assignment)<article><div><strong>{{ $assignment->user->name }} → {{ $assignment->hospital->name }}</strong><small>{{ $assignment->employee_code ?: 'Tanpa kode' }} · {{ $assignment->starts_on->format('d/m/Y') }}–{{ $assignment->ends_on?->format('d/m/Y') ?: 'sekarang' }} · {{ $assignment->assignment_status }}</small></div><div class="master-actions">
-                <details><summary>Edit</summary><form method="post" action="{{ route('admin.master.assignments.update', $assignment) }}">@csrf @method('PUT')<select name="user_id">@foreach($users->where('role', 'OFFICER') as $user)<option value="{{ $user->id }}" @selected($assignment->user_id === $user->id)>{{ $user->name }}</option>@endforeach</select><select name="hospital_id">@foreach($hospitals as $hospital)<option value="{{ $hospital->id }}" @selected($assignment->hospital_id === $hospital->id)>{{ $hospital->name }}</option>@endforeach</select><input name="employee_code" value="{{ $assignment->employee_code }}"><input type="date" name="starts_on" value="{{ $assignment->starts_on->format('Y-m-d') }}"><input type="date" name="ends_on" value="{{ $assignment->ends_on?->format('Y-m-d') }}"><select name="assignment_status"><option value="ACTIVE" @selected($assignment->assignment_status === 'ACTIVE')>Aktif</option><option value="INACTIVE" @selected($assignment->assignment_status === 'INACTIVE')>Tidak aktif</option></select><button>Simpan</button></form></details>
-                <form method="post" action="{{ route('admin.master.assignments.destroy', $assignment) }}" onsubmit="return confirm('Hapus penugasan ini?')">@csrf @method('DELETE')<button class="danger-link">Hapus</button></form></div></article>
-            @empty<p class="master-empty">Belum ada penugasan petugas.</p>@endforelse
-        </div>
-    </section>
-</div>
+<section id="relasi" data-master-panel class="panel-section"><div class="section-heading"><div><p class="eyebrow">N : M</p><h2>Puskesmas · layanan</h2></div><span class="count">{{ $relations->count() }} relasi</span></div>
+    <div class="split"><form method="post" action="{{ route('admin.relations.store') }}" class="panel form-grid one">@csrf<h3>Hubungkan layanan</h3><label>Puskesmas<select name="puskesmas_id" required>@foreach($puskesmasItems as $item)<option value="{{ $item->puskesmas_id }}">{{ $item->nama_puskesmas }}</option>@endforeach</select></label><label>Layanan<select name="layanan_id" required>@foreach($services as $service)<option value="{{ $service->layanan_id }}">{{ $service->nama_layanan }}</option>@endforeach</select></label><input type="hidden" name="status" value="AKTIF"><button class="button primary">Hubungkan</button></form>
+    <div class="stack-list">@foreach($relations as $relation)<article class="record"><div><span class="status {{ strtolower($relation->status) }}">{{ $relation->status }}</span><h3>{{ $relation->service->nama_layanan }}</h3><p>{{ $relation->puskesmas->nama_puskesmas }} · {{ $relation->schedules_count }} jadwal</p></div><details><summary>Edit</summary><form method="post" action="{{ route('admin.relations.update',$relation) }}" class="inline-form">@csrf @method('put')<input type="hidden" name="puskesmas_id" value="{{ $relation->puskesmas_id }}"><input type="hidden" name="layanan_id" value="{{ $relation->layanan_id }}"><select name="status"><option @selected($relation->status==='AKTIF')>AKTIF</option><option @selected($relation->status==='NONAKTIF')>NONAKTIF</option></select><button class="button primary">Simpan</button></form><form method="post" action="{{ route('admin.relations.destroy',$relation) }}">@csrf @method('delete')<button class="button danger">Hapus relasi</button></form></details></article>@endforeach</div></div>
+</section>
 @endsection

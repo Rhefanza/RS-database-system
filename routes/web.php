@@ -1,74 +1,64 @@
 <?php
 
-use App\Http\Controllers\Admin\HospitalController as AdminHospitalController;
+use App\Http\Controllers\ActivationController;
 use App\Http\Controllers\Admin\MasterDataController;
-use App\Http\Controllers\Admin\QueueController as AdminQueueController;
 use App\Http\Controllers\AuthController;
-use App\Http\Controllers\PublicHospitalController;
-use App\Http\Controllers\PublicQueueController;
+use App\Http\Controllers\CitizenQueueController;
+use App\Http\Controllers\Officer\QueueController;
+use App\Http\Controllers\Officer\ScheduleController;
+use App\Http\Controllers\ProfileController;
+use App\Http\Controllers\PublicPuskesmasController;
 use Illuminate\Support\Facades\Route;
 
-Route::get('/', [PublicHospitalController::class, 'index'])->name('home');
-Route::get('/rumah-sakit/{hospital}', [PublicHospitalController::class, 'show'])->name('hospitals.show');
-Route::post('/antrean/{hospitalService}', [PublicQueueController::class, 'store'])->name('queues.store');
-Route::get('/antrean/tiket/{token}', [PublicQueueController::class, 'show'])->name('queues.show');
+Route::get('/', [PublicPuskesmasController::class, 'index'])->name('home');
+Route::get('/puskesmas/{puskesmas}', [PublicPuskesmasController::class, 'show'])->name('puskesmas.show');
 
 Route::middleware('guest')->group(function () {
     Route::get('/login', [AuthController::class, 'create'])->name('login');
     Route::post('/login', [AuthController::class, 'store'])->name('login.store');
+    Route::get('/aktivasi', [ActivationController::class, 'create'])->name('activation.create');
+    Route::post('/aktivasi', [ActivationController::class, 'store'])->name('activation.store');
 });
 
-Route::post('/logout', [AuthController::class, 'destroy'])->middleware('auth')->name('logout');
+Route::middleware('auth')->group(function () {
+    Route::post('/logout', [AuthController::class, 'destroy'])->name('logout');
+    Route::get('/profil', [ProfileController::class, 'edit'])->name('profile.edit');
+    Route::put('/profil', [ProfileController::class, 'update'])->name('profile.update');
 
-Route::prefix('admin')->middleware('auth')->group(function () {
-    Route::middleware('role:ADMIN,OFFICER')->group(function () {
-        Route::get('/antrean', [AdminQueueController::class, 'index'])->name('admin.queues.index');
-        Route::post('/antrean/loket', [AdminQueueController::class, 'storeDesk'])->name('admin.queues.desks.store');
-        Route::post('/antrean/sesi', [AdminQueueController::class, 'storeSession'])->name('admin.queues.sessions.store');
-        Route::post('/antrean/sesi/{queueSession}/panggil', [AdminQueueController::class, 'callNext'])->name('admin.queues.call-next');
-        Route::post('/antrean/sesi/{queueSession}/tutup', [AdminQueueController::class, 'close'])->name('admin.queues.sessions.close');
-        Route::patch('/antrean/{queue}/mulai', [AdminQueueController::class, 'start'])->name('admin.queues.start');
-        Route::patch('/antrean/{queue}/selesai', [AdminQueueController::class, 'complete'])->name('admin.queues.complete');
-        Route::patch('/antrean/{queue}/batal', [AdminQueueController::class, 'cancel'])->name('admin.queues.cancel');
+    Route::middleware('role:MASYARAKAT')->group(function () {
+        Route::get('/antrean-saya', [CitizenQueueController::class, 'index'])->name('my-queues.index');
+        Route::post('/antrean/{schedule}', [CitizenQueueController::class, 'store'])->name('my-queues.store');
+        Route::patch('/antrean/{queue}/batal', [CitizenQueueController::class, 'cancel'])->name('my-queues.cancel');
+        Route::delete('/antrean/{queue}', [CitizenQueueController::class, 'destroy'])->name('my-queues.destroy');
     });
 
-    Route::middleware('role:ADMIN')->group(function () {
-        Route::get('/', [AdminHospitalController::class, 'index'])->name('admin.index');
-        Route::resource('hospitals', AdminHospitalController::class)
-            ->except(['index', 'show'])
-            ->names([
-                'create' => 'admin.hospitals.create',
-                'store' => 'admin.hospitals.store',
-                'edit' => 'admin.hospitals.edit',
-                'update' => 'admin.hospitals.update',
-                'destroy' => 'admin.hospitals.destroy',
-            ]);
+    Route::prefix('pengelola')->middleware('role:ADMIN,PETUGAS')->group(function () {
+        Route::get('/jadwal', [ScheduleController::class, 'index'])->name('officer.schedules.index');
+        Route::post('/jadwal', [ScheduleController::class, 'store'])->name('officer.schedules.store');
+        Route::put('/jadwal/{schedule}', [ScheduleController::class, 'update'])->name('officer.schedules.update');
+        Route::delete('/jadwal/{schedule}', [ScheduleController::class, 'destroy'])->name('officer.schedules.destroy');
+        Route::get('/antrean', [QueueController::class, 'index'])->name('officer.queues.index');
+        Route::post('/antrean', [QueueController::class, 'store'])->name('officer.queues.store');
+        Route::patch('/antrean/{queue}', [QueueController::class, 'update'])->name('officer.queues.update');
+        Route::delete('/antrean/{queue}', [QueueController::class, 'destroy'])->name('officer.queues.destroy');
+    });
 
-        Route::get('/data-master', [MasterDataController::class, 'index'])->name('admin.master.index');
-        Route::post('/data-master/kecamatan', [MasterDataController::class, 'storeDistrict'])->name('admin.master.districts.store');
-        Route::put('/data-master/kecamatan/{district}', [MasterDataController::class, 'updateDistrict'])->name('admin.master.districts.update');
-        Route::delete('/data-master/kecamatan/{district}', [MasterDataController::class, 'destroyDistrict'])->name('admin.master.districts.destroy');
-        Route::post('/data-master/layanan', [MasterDataController::class, 'storeService'])->name('admin.master.services.store');
-        Route::put('/data-master/layanan/{service}', [MasterDataController::class, 'updateService'])->name('admin.master.services.update');
-        Route::delete('/data-master/layanan/{service}', [MasterDataController::class, 'destroyService'])->name('admin.master.services.destroy');
-        Route::post('/data-master/rumah-sakit-layanan', [MasterDataController::class, 'storeHospitalService'])->name('admin.master.hospital-services.store');
-        Route::put('/data-master/rumah-sakit-layanan/{hospitalService}', [MasterDataController::class, 'updateHospitalService'])->name('admin.master.hospital-services.update');
-        Route::delete('/data-master/rumah-sakit-layanan/{hospitalService}', [MasterDataController::class, 'destroyHospitalService'])->name('admin.master.hospital-services.destroy');
-        Route::post('/data-master/jadwal', [MasterDataController::class, 'storeSchedule'])->name('admin.master.schedules.store');
-        Route::put('/data-master/jadwal/{serviceSchedule}', [MasterDataController::class, 'updateSchedule'])->name('admin.master.schedules.update');
-        Route::delete('/data-master/jadwal/{serviceSchedule}', [MasterDataController::class, 'destroySchedule'])->name('admin.master.schedules.destroy');
-        Route::post('/data-master/jadwal-khusus', [MasterDataController::class, 'storeSpecialSchedule'])->name('admin.master.special-schedules.store');
-        Route::put('/data-master/jadwal-khusus/{specialServiceSchedule}', [MasterDataController::class, 'updateSpecialSchedule'])->name('admin.master.special-schedules.update');
-        Route::delete('/data-master/jadwal-khusus/{specialServiceSchedule}', [MasterDataController::class, 'destroySpecialSchedule'])->name('admin.master.special-schedules.destroy');
-        Route::post('/data-master/loket', [MasterDataController::class, 'storeDesk'])->name('admin.master.desks.store');
-        Route::put('/data-master/loket/{serviceDesk}', [MasterDataController::class, 'updateDesk'])->name('admin.master.desks.update');
-        Route::delete('/data-master/loket/{serviceDesk}', [MasterDataController::class, 'destroyDesk'])->name('admin.master.desks.destroy');
-        Route::post('/data-master/akun', [MasterDataController::class, 'storeUser'])->name('admin.master.users.store');
-        Route::post('/data-master/petugas', [MasterDataController::class, 'storeOfficer'])->name('admin.master.officers.store');
-        Route::put('/data-master/akun/{user}', [MasterDataController::class, 'updateUser'])->name('admin.master.users.update');
-        Route::delete('/data-master/akun/{user}', [MasterDataController::class, 'destroyUser'])->name('admin.master.users.destroy');
-        Route::post('/data-master/penugasan', [MasterDataController::class, 'storeAssignment'])->name('admin.master.assignments.store');
-        Route::put('/data-master/penugasan/{staffAssignment}', [MasterDataController::class, 'updateAssignment'])->name('admin.master.assignments.update');
-        Route::delete('/data-master/penugasan/{staffAssignment}', [MasterDataController::class, 'destroyAssignment'])->name('admin.master.assignments.destroy');
+    Route::prefix('admin')->middleware('role:ADMIN')->group(function () {
+        Route::get('/', [MasterDataController::class, 'index'])->name('admin.master.index');
+        Route::post('/masyarakat', [MasterDataController::class, 'storeCitizen'])->name('admin.citizens.store');
+        Route::put('/masyarakat/{citizen}', [MasterDataController::class, 'updateCitizen'])->name('admin.citizens.update');
+        Route::delete('/masyarakat/{citizen}', [MasterDataController::class, 'destroyCitizen'])->name('admin.citizens.destroy');
+        Route::post('/petugas', [MasterDataController::class, 'storeOfficer'])->name('admin.officers.store');
+        Route::put('/akun/{account}', [MasterDataController::class, 'updateAccount'])->name('admin.accounts.update');
+        Route::delete('/akun/{account}', [MasterDataController::class, 'destroyAccount'])->name('admin.accounts.destroy');
+        Route::post('/puskesmas', [MasterDataController::class, 'storePuskesmas'])->name('admin.puskesmas.store');
+        Route::put('/puskesmas/{puskesmas}', [MasterDataController::class, 'updatePuskesmas'])->name('admin.puskesmas.update');
+        Route::delete('/puskesmas/{puskesmas}', [MasterDataController::class, 'destroyPuskesmas'])->name('admin.puskesmas.destroy');
+        Route::post('/layanan', [MasterDataController::class, 'storeService'])->name('admin.services.store');
+        Route::put('/layanan/{service}', [MasterDataController::class, 'updateService'])->name('admin.services.update');
+        Route::delete('/layanan/{service}', [MasterDataController::class, 'destroyService'])->name('admin.services.destroy');
+        Route::post('/relasi', [MasterDataController::class, 'storeRelation'])->name('admin.relations.store');
+        Route::put('/relasi/{relation}', [MasterDataController::class, 'updateRelation'])->name('admin.relations.update');
+        Route::delete('/relasi/{relation}', [MasterDataController::class, 'destroyRelation'])->name('admin.relations.destroy');
     });
 });

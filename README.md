@@ -1,120 +1,87 @@
-# Rujuk. — Laravel 12
+# Sistem Informasi Antrean Puskesmas
 
-Rujuk. adalah aplikasi direktori rumah sakit untuk proyek UTS Basis Data. Masyarakat dapat mencari dan membandingkan rumah sakit, sedangkan pengelola dapat mengelola datanya melalui CRUD.
+Proyek Laravel 12 untuk UTS Basis Data. Fokus aplikasi adalah CRUD, autentikasi, pembagian tiga role, relasi MySQL, jadwal, kapasitas, dan transaksi antrean.
 
-## Fitur yang tersedia
+## Role dan fitur
 
-- Pencarian publik berdasarkan nama, alamat, atau kota.
-- Filter kelas dan kepemilikan rumah sakit.
-- Pengurutan jarak terdekat memakai lokasi peramban dan rumus Haversine.
-- Detail rumah sakit, fasilitas, kontak, dan tautan Google Maps.
-- Pengambilan nomor antrean publik untuk layanan yang sedang membuka sesi.
-- Tiket antrean digital dengan status, jumlah antrean di depan, estimasi waktu tunggu, nomor yang dipanggil, dan loket.
-- Login dan logout admin maupun petugas, termasuk penolakan akun nonaktif.
-- Tambah, lihat, ubah, dan hapus data rumah sakit.
-- Panel data master UTS untuk CRUD kecamatan, layanan, relasi rumah sakit–layanan, jadwal rutin, jadwal khusus, loket, akun, dan penugasan petugas.
-- Alur pengisian data master bertahap: hanya satu kategori ditampilkan, status aktif memakai nilai bawaan, kapasitas awal 50, dan pembuatan petugas sekaligus membuat penugasannya.
-- Hak akses berbasis peran: admin mengelola data master, sedangkan petugas hanya mengoperasikan antrean rumah sakit aktif dalam penugasannya.
-- Dashboard antrean untuk membuat loket, membuka sesi, memanggil antrean berikutnya, memulai dan menyelesaikan layanan, membatalkan antrean, serta menutup sesi.
-- Snapshot statistik antrean otomatis pada setiap perubahan status operasional.
-- Relasi many-to-many rumah sakit dengan fasilitas.
-- Relasi kecamatan, layanan medis, jadwal, loket, petugas, sesi antrean, dan lokasi pengguna.
-- Validasi Form Request, route model binding, CSRF, session regeneration, dan middleware autentikasi.
-- Seeder enam rumah sakit demonstrasi, sembilan fasilitas, loket layanan, dan sesi Rawat Jalan harian.
-- Feature test untuk fungsi publik, autentikasi, validasi, CRUD, dan alur antrean penuh.
+### Masyarakat
 
-## Teknologi
+- Aktivasi akun memakai NIK dummy yang sudah didaftarkan Dinkes.
+- Login dan mengubah profil sendiri.
+- Melihat puskesmas, layanan, jadwal, dan sisa kapasitas.
+- Mengambil, melihat, membatalkan, serta menghapus antrean sendiri yang sudah dibatalkan.
 
-- Laravel 12
-- PHP 8.2 atau lebih baru
-- MySQL/MariaDB
-- Blade, CSS, dan JavaScript native
-- Tidak membutuhkan proses build frontend
+### Petugas
 
-## Struktur database
+- Terhubung langsung ke satu puskesmas melalui `akun.puskesmas_id`.
+- CRUD jadwal dan kapasitas layanan puskesmasnya.
+- CRUD antrean dan mengubah status antrean secara manual.
+- Tidak dapat membuka data master Dinkes atau data puskesmas lain.
 
-Penjelasan lengkap setiap relasi dan aturan integritas tersedia di [DATABASE.md](DATABASE.md).
+### Admin / Dinkes
 
-```mermaid
-erDiagram
-    DISTRICTS ||--o{ HOSPITALS : memiliki
-    HOSPITALS ||--o{ HOSPITAL_SERVICES : menyediakan
-    SERVICES ||--o{ HOSPITAL_SERVICES : tersedia_di
-    HOSPITAL_SERVICES ||--o{ SERVICE_SCHEDULES : memiliki
-    HOSPITAL_SERVICES ||--o{ SPECIAL_SERVICE_SCHEDULES : dikecualikan_oleh
-    HOSPITAL_SERVICES ||--o{ SERVICE_DESKS : dilayani_di
-    HOSPITAL_SERVICES ||--o{ QUEUE_SESSIONS : membuka
-    HOSPITAL_SERVICES ||--o{ QUEUE_SNAPSHOTS : direkam_dalam
-    USERS ||--o{ QUEUE_SESSIONS : membuka
-    USERS ||--o{ STAFF_ASSIGNMENTS : ditugaskan
-    HOSPITALS ||--o{ STAFF_ASSIGNMENTS : menempatkan
-    QUEUE_SESSIONS ||--o{ QUEUES : berisi
-    SERVICE_DESKS o|--o{ QUEUES : menangani
-    USERS ||--o{ SAVED_LOCATIONS : menyimpan
-    HOSPITALS ||--o{ HOSPITAL_FACILITIES : memiliki
-    FACILITIES ||--o{ HOSPITAL_FACILITIES : tersedia_di
+- CRUD masyarakat, petugas, puskesmas, layanan, dan relasi puskesmas–layanan.
+- Mengaktifkan atau menonaktifkan akun.
+- Melihat dan mengelola jadwal serta antrean.
+
+## Struktur database UTS
+
+Tepat tujuh tabel bisnis digunakan:
+
+1. `masyarakat`
+2. `akun`
+3. `puskesmas`
+4. `layanan`
+5. `puskesmas_layanan`
+6. `jadwal`
+7. `antrean`
+
+Relasi utama:
+
+```text
+masyarakat 1 ── 0..1 akun
+puskesmas  1 ── N akun (role PETUGAS)
+puskesmas  N ── M layanan (melalui puskesmas_layanan)
+puskesmas_layanan 1 ── N jadwal
+jadwal 1 ── N antrean
+masyarakat 1 ── N antrean
 ```
 
-`services` menyimpan layanan medis yang dapat memiliki jadwal dan antrean. `facilities` tetap dipisahkan untuk sarana penunjang seperti ICU, CT Scan, ambulans, dan ruang operasi.
+Schema UTS tidak memakai kecamatan, fasilitas, penugasan terpisah, jadwal khusus, loket, sesi antrean, snapshot, lokasi tersimpan, map, GPS, rekomendasi, analitik, data warehouse, atau simulasi real-time.
 
-## Instalasi dengan Laragon
+## Menjalankan aplikasi
 
-Kloning repositori, lalu masuk ke direktori proyek:
-
-```bash
-git clone https://github.com/Rhefanza/RS-database-system.git
-cd RS-database-system
-```
-
-Nyalakan Apache dan MySQL di Laragon, lalu jalankan:
+1. Buat database MySQL kosong bernama `rujuk_uts`.
+2. Salin `.env.example` menjadi `.env` dan sesuaikan koneksi MySQL bila perlu.
+3. Jalankan:
 
 ```bash
-copy .env.example .env
 composer install
 php artisan key:generate
-```
-
-Buat database kosong bernama `rujuk_uts` melalui phpMyAdmin. Setelah itu jalankan:
-
-```bash
 php artisan migrate:fresh --seed
 php artisan serve
 ```
 
 Buka `http://127.0.0.1:8000`.
 
-## Akun demo
+## Akun dan data demo
 
-```text
-Email: admin@rujuk.test
-Password: password
+Semua data bersifat synthetic dan tidak merepresentasikan orang atau fasilitas nyata.
 
-Email petugas: petugas@rujuk.test
-Password: password
-```
+| Role | Email | Password |
+|---|---|---|
+| Admin | `admin@puskesmas.test` | `password` |
+| Petugas | `petugas@puskesmas.test` | `password` |
+| Masyarakat | `masyarakat1@puskesmas.test` | `password` |
 
-## Data dummy
+NIK dummy yang belum diaktivasi: `3578010101900004`.
 
-Perintah `php artisan db:seed` menghasilkan dataset synthetic yang saling terhubung dan aman dijalankan berulang:
+Seeder menghasilkan 15 masyarakat, 3 puskesmas, 5 layanan, 9 relasi layanan, 9 jadwal untuk hari saat seeder dijalankan, dan 8 antrean.
 
-- 6 rumah sakit, 6 kecamatan, 6 master layanan, dan 33 relasi rumah sakit–layanan.
-- 30 jadwal rutin, 6 jadwal khusus hari libur, dan 39 loket pada database baru.
-- 1 admin, 6 petugas, 5 akun masyarakat demo, 6 penugasan, dan 5 lokasi tersimpan.
-- 6 sesi antrean harian, 48 transaksi antrean pada database baru, serta 6 snapshot kondisi antrean.
-- Status transaksi mencakup `WAITING`, `CALLED`, `SERVING`, `COMPLETED`, dan `CANCELLED`.
-
-Seeder tidak menghapus data yang sudah ada. Karena itu, jumlah pada database pengembangan dapat lebih besar daripada baseline tersebut.
-
-## Menjalankan pengujian
+## Pengujian
 
 ```bash
 php artisan test
 ```
 
-Pengujian mencakup halaman publik, detail dan 404, filter, proteksi halaman admin, login, logout, password salah, CRUD rumah sakit, validasi, pengambilan tiket, penomoran berurutan, pemanggilan, pelayanan, penyelesaian, pembatalan, dan penutupan sesi antrean.
-
-## Cakupan tahap UTS
-
-Tahap UTS telah mencakup ERD dan relational database MySQL, autentikasi admin/petugas, seluruh CRUD entitas operasional, relasi dan constraint, serta operasional antrean dasar. Data rumah sakit tetap berupa data demonstrasi.
-
-Dashboard analitik lanjutan, peta interaktif penuh, estimasi perjalanan, rekomendasi berbobot, ETL, dan Data Warehouse tidak termasuk tahap ini dan disiapkan untuk UAS.
+Test mencakup tujuh tabel bisnis, aktivasi NIK, login, pembatasan role, CRUD data master, pembatasan puskesmas petugas, kapasitas antrean, pembatalan, penghapusan, dan konsistensi data dummy.
