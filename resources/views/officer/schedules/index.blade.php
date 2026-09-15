@@ -1,7 +1,7 @@
 @extends('layouts.app')
 @section('title', 'Kelola Jadwal')
 @section('content')
-<div class="page-title"><div><p class="eyebrow">Petugas / Admin</p><h1>Jadwal & kapasitas</h1><p>Petugas hanya dapat mengelola layanan di puskesmas tempat bertugas.</p></div><a class="button secondary" href="{{ route('officer.queues.index') }}">Kelola antrean</a></div>
+<div class="page-title"><div><p class="eyebrow">Petugas / Admin</p><h1>Jadwal & kapasitas</h1><p>Petugas hanya dapat mengelola layanan di puskesmas tempat bertugas.</p></div>@if (auth()->user()->role === 'PETUGAS')<a class="button secondary" href="{{ route('officer.queues.index') }}">Kelola antrean</a>@endif</div>
 <section class="panel"><h2>Tambah jadwal</h2><form method="post" action="{{ route('officer.schedules.store') }}" class="form-grid">@csrf
     <label class="span-2">Puskesmas · layanan<select name="puskesmas_layanan_id" required><option value="">Pilih layanan</option>@foreach ($relations as $relation)<option value="{{ $relation->puskesmas_layanan_id }}">{{ $relation->puskesmas->nama_puskesmas }} · {{ $relation->service->nama_layanan }}</option>@endforeach</select></label>
     <label>Hari<select name="hari" required>@foreach (['SENIN','SELASA','RABU','KAMIS','JUMAT','SABTU','MINGGU'] as $day)<option>{{ $day }}</option>@endforeach</select></label>

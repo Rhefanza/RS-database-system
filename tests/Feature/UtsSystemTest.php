@@ -67,8 +67,10 @@ class UtsSystemTest extends TestCase
         $public = User::factory()->create(['role' => 'MASYARAKAT', 'nik' => $citizen->nik]);
 
         $this->actingAs($admin)->get(route('admin.master.index'))->assertOk();
+        $this->actingAs($admin)->get(route('officer.queues.index'))->assertForbidden();
         $this->actingAs($officer)->get(route('admin.master.index'))->assertForbidden();
         $this->actingAs($officer)->get(route('officer.schedules.index'))->assertOk();
+        $this->actingAs($officer)->get(route('officer.queues.index'))->assertOk();
         $this->actingAs($public)->get(route('officer.schedules.index'))->assertForbidden();
         $this->actingAs($public)->get(route('my-queues.index'))->assertOk();
     }

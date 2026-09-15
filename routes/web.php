@@ -37,6 +37,9 @@ Route::middleware('auth')->group(function () {
         Route::post('/jadwal', [ScheduleController::class, 'store'])->name('officer.schedules.store');
         Route::put('/jadwal/{schedule}', [ScheduleController::class, 'update'])->name('officer.schedules.update');
         Route::delete('/jadwal/{schedule}', [ScheduleController::class, 'destroy'])->name('officer.schedules.destroy');
+    });
+
+    Route::prefix('pengelola')->middleware('role:PETUGAS')->group(function () {
         Route::get('/antrean', [QueueController::class, 'index'])->name('officer.queues.index');
         Route::post('/antrean', [QueueController::class, 'store'])->name('officer.queues.store');
         Route::patch('/antrean/{queue}', [QueueController::class, 'update'])->name('officer.queues.update');

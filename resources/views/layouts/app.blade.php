@@ -26,7 +26,7 @@
                 @if (in_array(auth()->user()->role, ['ADMIN', 'PETUGAS'], true))
                     @if (auth()->user()->role === 'ADMIN')<a href="{{ route('admin.master.index') }}">Data master</a>@endif
                     <a href="{{ route('officer.schedules.index') }}">Jadwal</a>
-                    <a href="{{ route('officer.queues.index') }}">Antrean</a>
+                    @if (auth()->user()->role === 'PETUGAS')<a href="{{ route('officer.queues.index') }}">Antrean</a>@endif
                 @endif
                 <a href="{{ route('profile.edit') }}">Profil</a>
                 <form method="post" action="{{ route('logout') }}">@csrf<button class="link-button" type="submit">Keluar</button></form>

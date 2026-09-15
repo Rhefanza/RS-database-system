@@ -22,7 +22,7 @@ Proyek Laravel 12 untuk UTS Basis Data. Fokus aplikasi adalah CRUD, autentikasi,
 
 - CRUD masyarakat, petugas, puskesmas, layanan, dan relasi puskesmas–layanan.
 - Mengaktifkan atau menonaktifkan akun.
-- Melihat dan mengelola jadwal serta antrean.
+- Melihat dan mengelola jadwal tanpa akses ke fitur antrean petugas.
 
 ## Struktur database UTS
 
