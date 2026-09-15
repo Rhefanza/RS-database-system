@@ -91,3 +91,25 @@ document.querySelectorAll('[data-delete-trigger]').forEach((button) => {
 });
 
 document.querySelector('[data-delete-cancel]')?.addEventListener('click', () => deleteDialog.close());
+
+const masterPanels = [...document.querySelectorAll('[data-master-panel]')];
+const masterTabs = [...document.querySelectorAll('[data-master-tab]')];
+
+function showMasterPanel(panelId) {
+    const target = masterPanels.find((panel) => panel.id === panelId) ?? masterPanels[0];
+    if (!target) return;
+
+    masterPanels.forEach((panel) => panel.classList.toggle('is-active', panel === target));
+    masterTabs.forEach((tab) => {
+        const active = tab.hash === `#${target.id}`;
+        tab.classList.toggle('is-active', active);
+        if (active) tab.setAttribute('aria-current', 'page');
+        else tab.removeAttribute('aria-current');
+    });
+}
+
+if (masterPanels.length) {
+    showMasterPanel(window.location.hash.slice(1));
+    masterTabs.forEach((tab) => tab.addEventListener('click', () => showMasterPanel(tab.hash.slice(1))));
+    window.addEventListener('hashchange', () => showMasterPanel(window.location.hash.slice(1)));
+}

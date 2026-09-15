@@ -32,9 +32,9 @@ class MasterDataCrudTest extends TestCase
     {
         $this->get(route('admin.master.index'))
             ->assertOk()
-            ->assertSee('Data master & relasi', false)
+            ->assertSee('Pengisian data')
             ->assertSee('Kecamatan')
-            ->assertSee('Penugasan petugas');
+            ->assertSee('Petugas & masyarakat', false);
     }
 
     public function test_admin_can_crud_districts_and_services(): void
@@ -119,17 +119,13 @@ class MasterDataCrudTest extends TestCase
     public function test_admin_can_crud_officer_accounts_and_assignments(): void
     {
         $hospital = Hospital::factory()->create();
-        $this->post(route('admin.master.users.store'), [
+        $this->post(route('admin.master.officers.store'), [
             'name' => 'Petugas Satu', 'email' => 'petugas@example.test', 'phone' => '08123456789',
             'password' => 'password123', 'role' => 'OFFICER', 'account_status' => 'ACTIVE',
+            'hospital_id' => $hospital->id, 'employee_code' => 'PGW-9',
         ])->assertRedirect();
         $officer = User::where('email', 'petugas@example.test')->firstOrFail();
         $this->assertTrue(Hash::check('password123', $officer->password));
-
-        $this->post(route('admin.master.assignments.store'), [
-            'user_id' => $officer->id, 'hospital_id' => $hospital->id, 'employee_code' => 'PGW-9',
-            'starts_on' => '2026-09-01', 'assignment_status' => 'ACTIVE',
-        ])->assertRedirect();
         $assignment = StaffAssignment::firstOrFail();
         $this->put(route('admin.master.assignments.update', $assignment), [
             'user_id' => $officer->id, 'hospital_id' => $hospital->id, 'employee_code' => 'PGW-10',
@@ -140,6 +136,12 @@ class MasterDataCrudTest extends TestCase
         $this->delete(route('admin.master.assignments.destroy', $assignment))->assertRedirect();
         $this->delete(route('admin.master.users.destroy', $officer))->assertRedirect();
         $this->assertDatabaseMissing('users', ['id' => $officer->id]);
+
+        $this->post(route('admin.master.users.store'), [
+            'name' => 'Masyarakat Uji', 'email' => 'masyarakat@example.test', 'phone' => '080000001',
+            'password' => 'password123', 'role' => 'PUBLIC', 'account_status' => 'ACTIVE',
+        ])->assertRedirect();
+        $this->assertDatabaseHas('users', ['email' => 'masyarakat@example.test', 'role' => 'PUBLIC']);
     }
 
     public function test_relational_records_cannot_be_deleted_while_still_in_use(): void

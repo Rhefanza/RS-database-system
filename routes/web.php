@@ -64,6 +64,7 @@ Route::prefix('admin')->middleware('auth')->group(function () {
         Route::put('/data-master/loket/{serviceDesk}', [MasterDataController::class, 'updateDesk'])->name('admin.master.desks.update');
         Route::delete('/data-master/loket/{serviceDesk}', [MasterDataController::class, 'destroyDesk'])->name('admin.master.desks.destroy');
         Route::post('/data-master/akun', [MasterDataController::class, 'storeUser'])->name('admin.master.users.store');
+        Route::post('/data-master/petugas', [MasterDataController::class, 'storeOfficer'])->name('admin.master.officers.store');
         Route::put('/data-master/akun/{user}', [MasterDataController::class, 'updateUser'])->name('admin.master.users.update');
         Route::delete('/data-master/akun/{user}', [MasterDataController::class, 'destroyUser'])->name('admin.master.users.destroy');
         Route::post('/data-master/penugasan', [MasterDataController::class, 'storeAssignment'])->name('admin.master.assignments.store');

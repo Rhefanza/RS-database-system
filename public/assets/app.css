@@ -322,14 +322,23 @@ input:focus, select:focus, textarea:focus, button:focus-visible, a:focus-visible
 .footer-row p:first-child { color: var(--gold); font-weight: 700; }
 .footer-row span { margin-left: 9px; color: #aeb1af; font-weight: 400; }
 .sr-only { position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px; overflow: hidden; clip: rect(0,0,0,0); white-space: nowrap; border: 0; }
-.master-jump { position: sticky; top: 0; z-index: 8; padding-block: 12px; display: flex; gap: 8px; overflow-x: auto; background: var(--ivory); }
+.master-workflow { margin-top: 22px; padding: 16px 18px; background: #f4f1e9; border: 1px solid var(--line); }
+.master-workflow > p { margin: 0 0 12px; color: var(--muted); font-size: 10px; }
+.master-jump { display: flex; align-items: center; flex-wrap: wrap; gap: 8px; }
 .master-jump a { padding: 8px 12px; flex: 0 0 auto; border: 1px solid var(--line); border-radius: 999px; color: var(--ink); background: var(--white); font-size: 10px; font-weight: 700; text-decoration: none; }
-.master-jump a:hover { border-color: var(--gold); color: var(--gold-dark); }
+.master-jump a:hover, .master-jump a.is-active { border-color: var(--gold); color: var(--charcoal); background: var(--gold); }
+.master-jump > details { position: relative; }
+.master-jump > details summary { padding: 8px 12px; border: 1px dashed #aaa69d; border-radius: 999px; font-size: 10px; font-weight: 700; cursor: pointer; }
+.master-jump > details div { position: absolute; top: calc(100% + 7px); right: 0; z-index: 9; min-width: 180px; padding: 8px; display: grid; gap: 6px; background: var(--white); border: 1px solid var(--line); box-shadow: var(--shadow); }
+.master-jump > details div a { border-radius: 3px; }
 .master-stack { padding-block: 28px 90px; display: grid; grid-template-columns: minmax(0, 1fr); gap: 32px; }
 .master-section { min-width: 0; scroll-margin-top: 70px; padding: 28px; background: var(--white); border-top: 4px solid var(--gold); box-shadow: 0 7px 26px rgba(20,20,20,.06); }
+.master-section[data-master-panel] { display: none; }
+.master-section[data-master-panel].is-active { display: block; }
 .master-section > header { display: flex; justify-content: space-between; align-items: end; gap: 20px; }
 .master-section > header h2 { margin: 0; font: 600 28px/1.2 "Playfair Display", serif; }
 .master-section > header > span { color: var(--muted); font-size: 10px; text-transform: uppercase; }
+.section-hint { margin: 5px 0 0; color: var(--muted); font-size: 10px; }
 .master-create-form { margin-top: 22px; padding: 18px; display: grid; grid-template-columns: 1.5fr 1.5fr auto; align-items: end; gap: 12px; background: #f4f1e9; border: 1px solid var(--line); }
 .master-create-form.compact { grid-template-columns: 1fr auto; }
 .master-create-form.four { grid-template-columns: repeat(4, minmax(0, 1fr)); }
@@ -354,6 +363,10 @@ input:focus, select:focus, textarea:focus, button:focus-visible, a:focus-visible
 .master-table { min-width: 900px; }
 .master-table .master-actions { display: flex; }
 .master-empty { margin: 0; padding: 28px; color: var(--muted); text-align: center; font-size: 11px; }
+.simple-role-forms { margin-top: 22px; display: grid; grid-template-columns: 1.35fr 1fr; gap: 16px; }
+.master-create-form.simple-account { margin-top: 0; grid-template-columns: repeat(2, minmax(0, 1fr)); align-content: start; }
+.simple-account h3 { margin: 0; grid-column: 1 / -1; font: 600 20px/1.2 "Playfair Display", serif; }
+.simple-account button { grid-column: 1 / -1; }
 
 @media (max-width: 950px) {
     .stage-grid { grid-template-columns: 1fr; gap: 42px; }
@@ -365,6 +378,7 @@ input:focus, select:focus, textarea:focus, button:focus-visible, a:focus-visible
     .detail-callout, .fact-sheet { max-width: 520px; }
     .form-section { grid-template-columns: 1fr; gap: 25px; }
     .master-create-form.four, .master-create-form.schedule { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+    .simple-role-forms { grid-template-columns: 1fr; }
 }
 @media (max-width: 720px) {
     .shell { width: min(100% - 28px, 1180px); }
@@ -401,6 +415,8 @@ input:focus, select:focus, textarea:focus, button:focus-visible, a:focus-visible
     .session-controls select { min-width: 0; }
     .master-section { padding: 20px 14px; }
     .master-create-form, .master-create-form.compact, .master-create-form.four, .master-create-form.schedule { grid-template-columns: 1fr; }
+    .master-create-form.simple-account { grid-template-columns: 1fr; }
+    .simple-account h3, .simple-account button { grid-column: auto; }
     .master-list > article { align-items: flex-start; flex-direction: column; }
     .master-actions { width: 100%; justify-content: flex-start; }
     .master-actions details[open] > form { right: auto; left: 0; width: min(86vw, 680px); }

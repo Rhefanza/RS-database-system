@@ -5,19 +5,22 @@
 @section('content')
 <section class="admin-heading">
     <div class="shell heading-row">
-        <div><p class="eyebrow">Cakupan UTS</p><h1>Data master & relasi</h1><p>Kelola seluruh entitas inti database dari satu panel.</p></div>
+        <div><p class="eyebrow">Cakupan UTS</p><h1>Pengisian data</h1><p>Pilih satu pekerjaan, isi formulir singkat, lalu simpan.</p></div>
         <span class="today-chip">{{ $districts->count() + $services->count() + $hospitalServices->count() }} data inti</span>
     </div>
 </section>
 
-<nav class="shell master-jump" aria-label="Bagian data master">
-    <a href="#kecamatan">Kecamatan</a><a href="#layanan">Layanan</a><a href="#rumah-sakit-layanan">RS–Layanan</a>
-    <a href="#jadwal">Jadwal</a><a href="#jadwal-khusus">Jadwal khusus</a><a href="#loket">Loket</a>
-    <a href="#akun">Akun</a><a href="#penugasan">Penugasan</a>
-</nav>
+<div class="shell master-workflow">
+    <p><strong>Urutan yang disarankan:</strong> Kecamatan → Rumah sakit → Layanan → Hubungkan layanan → Petugas. Jadwal dan kapasitas dapat dilanjutkan oleh petugas.</p>
+    <nav class="master-jump" aria-label="Bagian data master" data-master-tabs>
+        <a href="#kecamatan" data-master-tab>Kecamatan</a><a href="{{ route('admin.index') }}">Rumah sakit</a><a href="#layanan" data-master-tab>Layanan</a>
+        <a href="#rumah-sakit-layanan" data-master-tab>Hubungkan layanan</a><a href="#akun" data-master-tab>Pengguna</a><a href="#jadwal" data-master-tab>Jadwal & kapasitas</a>
+        <details><summary>Pengaturan lanjutan</summary><div><a href="#jadwal-khusus" data-master-tab>Jadwal khusus</a><a href="#loket" data-master-tab>Loket</a><a href="#penugasan" data-master-tab>Riwayat penugasan</a></div></details>
+    </nav>
+</div>
 
 <div class="shell master-stack">
-    <section id="kecamatan" class="master-section">
+    <section id="kecamatan" class="master-section is-active" data-master-panel>
         <header><div><p class="eyebrow">01 · Wilayah</p><h2>Kecamatan</h2></div><span>{{ $districts->count() }} data</span></header>
         <form class="master-create-form compact" method="post" action="{{ route('admin.master.districts.store') }}">@csrf
             <label><span>Nama kecamatan</span><input name="name" required maxlength="100" placeholder="Contoh: Rungkut"></label>
@@ -33,7 +36,7 @@
         </div>
     </section>
 
-    <section id="layanan" class="master-section">
+    <section id="layanan" class="master-section" data-master-panel>
         <header><div><p class="eyebrow">02 · Referensi</p><h2>Master layanan</h2></div><span>{{ $services->count() }} data</span></header>
         <form class="master-create-form" method="post" action="{{ route('admin.master.services.store') }}">@csrf
             <label><span>Nama layanan</span><input name="name" required maxlength="100" placeholder="Contoh: Poli Gigi"></label>
@@ -50,13 +53,13 @@
         </div>
     </section>
 
-    <section id="rumah-sakit-layanan" class="master-section">
+    <section id="rumah-sakit-layanan" class="master-section" data-master-panel>
         <header><div><p class="eyebrow">03 · Relasi M:N</p><h2>Rumah sakit–layanan</h2></div><span>{{ $hospitalServices->count() }} relasi</span></header>
         <form class="master-create-form four" method="post" action="{{ route('admin.master.hospital-services.store') }}">@csrf
             <label><span>Rumah sakit</span><select name="hospital_id" required><option value="">Pilih</option>@foreach($hospitals as $hospital)<option value="{{ $hospital->id }}">{{ $hospital->name }}</option>@endforeach</select></label>
             <label><span>Layanan</span><select name="service_id" required><option value="">Pilih</option>@foreach($services as $service)<option value="{{ $service->id }}">{{ $service->name }}</option>@endforeach</select></label>
-            <label><span>Durasi (menit)</span><input type="number" name="initial_service_duration" min="1" max="480" value="20"></label>
-            <label><span>Status</span><select name="availability_status"><option value="ACTIVE">Aktif</option><option value="INACTIVE">Tidak aktif</option></select></label>
+            <label><span>Durasi rata-rata (menit)</span><input type="number" name="initial_service_duration" min="1" max="480" value="20"></label>
+            <input type="hidden" name="availability_status" value="ACTIVE">
             <button class="button button-primary" type="submit">Hubungkan layanan</button>
         </form>
         <div class="data-table-wrap"><table class="data-table master-table"><thead><tr><th>Rumah sakit</th><th>Layanan</th><th>Durasi</th><th>Turunan</th><th>Status</th><th>Aksi</th></tr></thead><tbody>
@@ -67,13 +70,13 @@
         </tbody></table></div>
     </section>
 
-    <section id="jadwal" class="master-section">
+    <section id="jadwal" class="master-section" data-master-panel>
         <header><div><p class="eyebrow">04 · Operasional</p><h2>Jadwal layanan rutin</h2></div><span>{{ $schedules->count() }} jadwal</span></header>
         <form class="master-create-form schedule" method="post" action="{{ route('admin.master.schedules.store') }}">@csrf
             <label><span>Rumah sakit & layanan</span><select name="hospital_service_id" required><option value="">Pilih</option>@foreach($hospitalServices as $item)<option value="{{ $item->id }}">{{ $item->hospital->name }} — {{ $item->service->name }}</option>@endforeach</select></label>
             <label><span>Hari</span><select name="day" required>@foreach($days as $value => $label)<option value="{{ $value }}">{{ $label }}</option>@endforeach</select></label>
             <label><span>Buka</span><input type="time" name="opens_at" required value="08:00"></label><label><span>Tutup</span><input type="time" name="closes_at" required value="12:00"></label>
-            <label><span>Kuota</span><input type="number" name="quota" min="1"></label><label><span>Status</span><select name="schedule_status"><option value="ACTIVE">Aktif</option><option value="INACTIVE">Tidak aktif</option></select></label>
+            <label><span>Kapasitas antrean</span><input type="number" name="quota" min="1" value="50" required></label><input type="hidden" name="schedule_status" value="ACTIVE">
             <button class="button button-primary" type="submit">Tambah jadwal</button>
         </form>
         <div class="master-list">
@@ -84,7 +87,7 @@
         </div>
     </section>
 
-    <section id="jadwal-khusus" class="master-section">
+    <section id="jadwal-khusus" class="master-section" data-master-panel>
         <header><div><p class="eyebrow">05 · Pengecualian</p><h2>Jadwal khusus</h2></div><span>{{ $specialSchedules->count() }} jadwal</span></header>
         <form class="master-create-form schedule" method="post" action="{{ route('admin.master.special-schedules.store') }}">@csrf
             <label><span>Rumah sakit & layanan</span><select name="hospital_service_id" required><option value="">Pilih</option>@foreach($hospitalServices as $item)<option value="{{ $item->id }}">{{ $item->hospital->name }} — {{ $item->service->name }}</option>@endforeach</select></label>
@@ -100,11 +103,11 @@
         </div>
     </section>
 
-    <section id="loket" class="master-section">
+    <section id="loket" class="master-section" data-master-panel>
         <header><div><p class="eyebrow">06 · Pelayanan</p><h2>Loket layanan</h2></div><span>{{ $desks->count() }} loket</span></header>
         <form class="master-create-form" method="post" action="{{ route('admin.master.desks.store') }}">@csrf
             <label><span>Rumah sakit & layanan</span><select name="hospital_service_id" required><option value="">Pilih</option>@foreach($hospitalServices as $item)<option value="{{ $item->id }}">{{ $item->hospital->name }} — {{ $item->service->name }}</option>@endforeach</select></label>
-            <label><span>Nama loket</span><input name="name" required placeholder="Loket 1"></label><label><span>Status</span><select name="desk_status"><option value="ACTIVE">Aktif</option><option value="INACTIVE">Tidak aktif</option></select></label>
+            <label><span>Nama loket</span><input name="name" required placeholder="Loket 1"></label><input type="hidden" name="desk_status" value="ACTIVE">
             <button class="button button-primary" type="submit">Tambah loket</button>
         </form>
         <div class="master-list">@foreach($desks as $desk)<article><div><strong>{{ $desk->name }} · {{ $desk->hospitalService->hospital->name }}</strong><small>{{ $desk->hospitalService->service->name }} · {{ $desk->desk_status }}</small></div><div class="master-actions">
@@ -112,23 +115,29 @@
             <form method="post" action="{{ route('admin.master.desks.destroy', $desk) }}" onsubmit="return confirm('Hapus loket ini?')">@csrf @method('DELETE')<button class="danger-link">Hapus</button></form></div></article>@endforeach</div>
     </section>
 
-    <section id="akun" class="master-section">
-        <header><div><p class="eyebrow">07 · Akses</p><h2>Akun pengguna</h2></div><span>{{ $users->count() }} akun</span></header>
-        <form class="master-create-form four" method="post" action="{{ route('admin.master.users.store') }}">@csrf
-            <label><span>Nama lengkap</span><input name="name" required></label><label><span>Email</span><input type="email" name="email" required></label><label><span>Telepon</span><input name="phone"></label><label><span>Kata sandi</span><input type="password" name="password" required minlength="8"></label>
-            <label><span>Peran</span><select name="role"><option value="OFFICER">Petugas</option><option value="ADMIN">Admin</option><option value="PUBLIC">Masyarakat</option></select></label><label><span>Status</span><select name="account_status"><option value="ACTIVE">Aktif</option><option value="INACTIVE">Tidak aktif</option></select></label>
-            <button class="button button-primary" type="submit">Tambah akun</button>
-        </form>
+    <section id="akun" class="master-section" data-master-panel>
+        <header><div><p class="eyebrow">05 · Pengguna</p><h2>Petugas & masyarakat</h2><p class="section-hint">Petugas langsung ditugaskan ke rumah sakit dalam satu langkah.</p></div><span>{{ $users->count() }} akun</span></header>
+        <div class="simple-role-forms">
+            <form class="master-create-form simple-account" method="post" action="{{ route('admin.master.officers.store') }}">@csrf
+                <h3>Tambah petugas</h3><label><span>Nama lengkap</span><input name="name" required></label><label><span>Email</span><input type="email" name="email" required></label><label><span>Telepon</span><input name="phone"></label><label><span>Kata sandi</span><input type="password" name="password" required minlength="8" autocomplete="new-password" placeholder="Minimal 8 karakter"></label>
+                <label><span>Tempat bertugas</span><select name="hospital_id" required><option value="">Pilih rumah sakit</option>@foreach($hospitals as $hospital)<option value="{{ $hospital->id }}">{{ $hospital->name }}</option>@endforeach</select></label><label><span>Kode pegawai</span><input name="employee_code" placeholder="Opsional"></label>
+                <button class="button button-primary" type="submit">Simpan petugas</button>
+            </form>
+            <form class="master-create-form simple-account" method="post" action="{{ route('admin.master.users.store') }}">@csrf
+                <h3>Tambah masyarakat</h3><label><span>Nama lengkap</span><input name="name" required></label><label><span>Email</span><input type="email" name="email" required></label><label><span>Telepon</span><input name="phone"></label><label><span>Kata sandi</span><input type="password" name="password" required minlength="8" autocomplete="new-password" placeholder="Minimal 8 karakter"></label>
+                <input type="hidden" name="role" value="PUBLIC"><input type="hidden" name="account_status" value="ACTIVE"><button class="button button-quiet" type="submit">Simpan masyarakat</button>
+            </form>
+        </div>
         <div class="master-list">@foreach($users as $user)<article><div><strong>{{ $user->name }}</strong><small>{{ $user->email }} · {{ $user->role }} · {{ $user->account_status }} · {{ $user->staff_assignments_count }} penugasan</small></div><div class="master-actions">
             <details><summary>Edit</summary><form method="post" action="{{ route('admin.master.users.update', $user) }}">@csrf @method('PUT')<input name="name" value="{{ $user->name }}" required><input type="email" name="email" value="{{ $user->email }}" required><input name="phone" value="{{ $user->phone }}" placeholder="Telepon"><input type="password" name="password" placeholder="Kosongkan jika tetap"><select name="role"><option value="ADMIN" @selected($user->role === 'ADMIN')>Admin</option><option value="OFFICER" @selected($user->role === 'OFFICER')>Petugas</option><option value="PUBLIC" @selected($user->role === 'PUBLIC')>Masyarakat</option></select><select name="account_status"><option value="ACTIVE" @selected($user->account_status === 'ACTIVE')>Aktif</option><option value="INACTIVE" @selected($user->account_status === 'INACTIVE')>Tidak aktif</option></select><button>Simpan</button></form></details>
             <form method="post" action="{{ route('admin.master.users.destroy', $user) }}" onsubmit="return confirm('Hapus akun ini?')">@csrf @method('DELETE')<button class="danger-link">Hapus</button></form></div></article>@endforeach</div>
     </section>
 
-    <section id="penugasan" class="master-section">
+    <section id="penugasan" class="master-section" data-master-panel>
         <header><div><p class="eyebrow">08 · Organisasi</p><h2>Penugasan petugas</h2></div><span>{{ $assignments->count() }} penugasan</span></header>
         <form class="master-create-form four" method="post" action="{{ route('admin.master.assignments.store') }}">@csrf
             <label><span>Petugas</span><select name="user_id" required><option value="">Pilih</option>@foreach($users->where('role', 'OFFICER') as $user)<option value="{{ $user->id }}">{{ $user->name }}</option>@endforeach</select></label><label><span>Rumah sakit</span><select name="hospital_id" required><option value="">Pilih</option>@foreach($hospitals as $hospital)<option value="{{ $hospital->id }}">{{ $hospital->name }}</option>@endforeach</select></label>
-            <label><span>Kode pegawai</span><input name="employee_code"></label><label><span>Mulai</span><input type="date" name="starts_on" required value="{{ today()->format('Y-m-d') }}"></label><label><span>Selesai</span><input type="date" name="ends_on"></label><label><span>Status</span><select name="assignment_status"><option value="ACTIVE">Aktif</option><option value="INACTIVE">Tidak aktif</option></select></label>
+            <label><span>Kode pegawai</span><input name="employee_code"></label><input type="hidden" name="starts_on" value="{{ today()->format('Y-m-d') }}"><input type="hidden" name="assignment_status" value="ACTIVE">
             <button class="button button-primary" type="submit">Tambah penugasan</button>
         </form>
         <div class="master-list">

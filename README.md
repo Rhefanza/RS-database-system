@@ -13,6 +13,7 @@ Rujuk. adalah aplikasi direktori rumah sakit untuk proyek UTS Basis Data. Masyar
 - Login dan logout admin maupun petugas, termasuk penolakan akun nonaktif.
 - Tambah, lihat, ubah, dan hapus data rumah sakit.
 - Panel data master UTS untuk CRUD kecamatan, layanan, relasi rumah sakit–layanan, jadwal rutin, jadwal khusus, loket, akun, dan penugasan petugas.
+- Alur pengisian data master bertahap: hanya satu kategori ditampilkan, status aktif memakai nilai bawaan, kapasitas awal 50, dan pembuatan petugas sekaligus membuat penugasannya.
 - Hak akses berbasis peran: admin mengelola data master, sedangkan petugas hanya mengoperasikan antrean rumah sakit aktif dalam penugasannya.
 - Dashboard antrean untuk membuat loket, membuka sesi, memanggil antrean berikutnya, memulai dan menyelesaikan layanan, membatalkan antrean, serta menutup sesi.
 - Snapshot statistik antrean otomatis pada setiap perubahan status operasional.

@@ -15,6 +15,7 @@ use App\Models\User;
 use Illuminate\Contracts\View\View;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Validation\Rule;
 
 class MasterDataController extends Controller
@@ -190,6 +191,35 @@ class MasterDataController extends Controller
         User::create($request->validate($this->userRules()));
 
         return $this->success('akun', 'Akun berhasil ditambahkan.');
+    }
+
+    public function storeOfficer(Request $request): RedirectResponse
+    {
+        $validated = $request->validate([
+            'name' => ['required', 'string', 'max:255'],
+            'email' => ['required', 'email', 'max:255', 'unique:users,email'],
+            'phone' => ['nullable', 'string', 'max:20'],
+            'password' => ['required', 'string', 'min:8'],
+            'hospital_id' => ['required', 'exists:hospitals,id'],
+            'employee_code' => ['nullable', 'string', 'max:50'],
+        ]);
+
+        DB::transaction(function () use ($validated) {
+            $user = User::create([
+                ...collect($validated)->only(['name', 'email', 'phone', 'password'])->all(),
+                'role' => 'OFFICER',
+                'account_status' => 'ACTIVE',
+            ]);
+            StaffAssignment::create([
+                'user_id' => $user->id,
+                'hospital_id' => $validated['hospital_id'],
+                'employee_code' => $validated['employee_code'] ?? null,
+                'starts_on' => today(),
+                'assignment_status' => 'ACTIVE',
+            ]);
+        });
+
+        return $this->success('akun', 'Akun petugas dan penugasannya berhasil dibuat.');
     }
 
     public function updateUser(Request $request, User $user): RedirectResponse
