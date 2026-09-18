@@ -67,12 +67,18 @@ class UtsSystemTest extends TestCase
         $public = User::factory()->create(['role' => 'MASYARAKAT', 'nik' => $citizen->nik]);
 
         $this->actingAs($admin)->get(route('admin.master.index'))->assertOk();
+        $this->actingAs($admin)->get(route('officer.schedules.index'))->assertForbidden();
         $this->actingAs($admin)->get(route('officer.queues.index'))->assertForbidden();
         $this->actingAs($officer)->get(route('admin.master.index'))->assertForbidden();
         $this->actingAs($officer)->get(route('officer.schedules.index'))->assertOk();
         $this->actingAs($officer)->get(route('officer.queues.index'))->assertOk();
         $this->actingAs($public)->get(route('officer.schedules.index'))->assertForbidden();
         $this->actingAs($public)->get(route('my-queues.index'))->assertOk();
+
+        $this->actingAs($admin)->get(route('admin.master.index'))
+            ->assertDontSee(route('puskesmas.map'), false)
+            ->assertDontSee(route('officer.schedules.index'), false)
+            ->assertDontSee('Cara kerja');
     }
 
     public function test_admin_can_crud_master_data_and_create_officer(): void
@@ -140,7 +146,14 @@ class UtsSystemTest extends TestCase
         $second = User::factory()->create(['role' => 'MASYARAKAT', 'nik' => $secondCitizen->nik]);
 
         $this->actingAs($first)->post(route('my-queues.store', $schedule), ['tanggal_daftar' => today()->toDateString()])->assertRedirect(route('my-queues.index'));
-        $this->actingAs($second)->post(route('my-queues.store', $schedule), ['tanggal_daftar' => today()->toDateString()])->assertStatus(409);
+        $this->post(route('my-queues.store', $schedule), ['tanggal_daftar' => today()->toDateString()])
+            ->assertRedirect(route('my-queues.index'))
+            ->assertSessionHas('error', 'Anda sudah memiliki antrean untuk jadwal dan tanggal ini.');
+        $this->assertDatabaseCount('antrean', 1);
+
+        $this->actingAs($second)->from(route('puskesmas.show', $relation->puskesmas))->post(route('my-queues.store', $schedule), ['tanggal_daftar' => today()->toDateString()])
+            ->assertRedirect(route('puskesmas.show', $relation->puskesmas))
+            ->assertSessionHas('error', 'Kapasitas antrean sudah penuh.');
         $queue = Queue::firstOrFail();
         $this->actingAs($first)->patch(route('my-queues.cancel', $queue))->assertRedirect();
         $this->delete(route('my-queues.destroy', $queue))->assertRedirect();
@@ -157,6 +170,62 @@ class UtsSystemTest extends TestCase
             ->assertOk()
             ->assertSee('Poli Umum')
             ->assertSee('Sisa 50/50');
+    }
+
+    public function test_public_map_shows_puskesmas_and_today_queue_totals(): void
+    {
+        [$relation] = $this->twoRelations();
+        $relation->puskesmas->update(['latitude' => -7.2567, 'longitude' => 112.7505]);
+        $day = ['Sunday' => 'MINGGU', 'Monday' => 'SENIN', 'Tuesday' => 'SELASA', 'Wednesday' => 'RABU', 'Thursday' => 'KAMIS', 'Friday' => 'JUMAT', 'Saturday' => 'SABTU'][today()->format('l')];
+        $schedule = Schedule::create(['puskesmas_layanan_id' => $relation->puskesmas_layanan_id, 'hari' => $day, 'jam_buka' => '08:00', 'jam_tutup' => '12:00', 'kapasitas' => 50, 'status' => 'AKTIF']);
+        $citizen = $this->citizen();
+        Queue::create(['nik' => $citizen->nik, 'jadwal_id' => $schedule->jadwal_id, 'nomor_antrean' => 1, 'tanggal_daftar' => today(), 'status_antrean' => 'WAITING']);
+
+        $this->get(route('puskesmas.map'))
+            ->assertOk()
+            ->assertSee($relation->puskesmas->nama_puskesmas)
+            ->assertSee('Total antrean')
+            ->assertSee('data-clinic-map', false);
+    }
+
+    public function test_dummy_queue_simulator_and_live_api_work(): void
+    {
+        $this->seed(DatabaseSeeder::class);
+
+        $this->artisan('queue:simulate', ['--once' => true])->assertSuccessful();
+
+        $this->getJson(route('api.live-queues'))
+            ->assertOk()
+            ->assertHeader('Cache-Control')
+            ->assertJsonStructure([
+                'generated_at',
+                'refresh_after_seconds',
+                'totals' => ['puskesmas', 'queues', 'active', 'completed'],
+                'puskesmas' => [['id', 'name', 'total', 'active', 'completed']],
+            ]);
+    }
+
+    public function test_dummy_queue_simulator_resets_twenty_records_to_five(): void
+    {
+        $this->seed(DatabaseSeeder::class);
+        $citizens = Citizen::orderBy('nik')->take(12)->get();
+        $schedule = Schedule::orderBy('jadwal_id')->skip(1)->firstOrFail();
+
+        foreach ($citizens as $index => $citizen) {
+            Queue::create([
+                'nik' => $citizen->nik,
+                'jadwal_id' => $schedule->jadwal_id,
+                'nomor_antrean' => $index + 1,
+                'tanggal_daftar' => today(),
+                'status_antrean' => 'WAITING',
+            ]);
+        }
+
+        $this->assertDatabaseCount('antrean', 20);
+        $this->artisan('queue:simulate', ['--once' => true])
+            ->expectsOutputToContain('Batas 20 tercapai')
+            ->assertSuccessful();
+        $this->assertDatabaseCount('antrean', 5);
     }
 
     public function test_officer_can_crud_only_own_puskesmas_queues(): void

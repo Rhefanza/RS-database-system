@@ -28,10 +28,10 @@
     <div class="section-heading"><div><p class="eyebrow">Puskesmas aktif</p><h2 id="results-title">Pilihan untuk <em>Anda.</em></h2></div><div class="results-summary"><strong>{{ $items->count() }}</strong> puskesmas ditemukan @if (($search ?? '') !== '')<a href="{{ route('home') }}#cari-puskesmas">Hapus pencarian ↗</a>@endif</div></div>
     @forelse ($items as $item)
         @if ($loop->first)<div class="hospital-list" data-hospital-list>@endif
-        <article class="hospital-row" data-hospital data-lat="{{ $item->latitude }}" data-lng="{{ $item->longitude }}">
+        <article class="hospital-row" data-hospital data-puskesmas-id="{{ $item->puskesmas_id }}" data-lat="{{ $item->latitude }}" data-lng="{{ $item->longitude }}">
             <div class="hospital-card-top"><span class="result-number">{{ str_pad((string) $loop->iteration, 2, '0', STR_PAD_LEFT) }}</span><span class="status-dot"><i></i> Puskesmas aktif</span></div>
             <div class="hospital-main"><h3><a href="{{ route('puskesmas.show', $item) }}">{{ $item->nama_puskesmas }}</a></h3><p>{{ $item->alamat }}</p><div class="facility-line">@forelse ($item->services->take(4) as $service)<span>{{ $service->nama_layanan }}</span>@empty<span>Informasi layanan belum tersedia</span>@endforelse @if ($item->services->count() > 4)<span>+{{ $item->services->count() - 4 }} layanan</span>@endif</div></div>
-            <div class="hospital-meta"><div><small>Layanan tercatat</small><strong>{{ $item->services->count() }}</strong></div><div class="distance" data-distance hidden><small>Jarak garis lurus</small><strong>—</strong></div></div>
+            <div class="hospital-meta"><div><small>Layanan tercatat</small><strong>{{ $item->services->count() }}</strong></div><div><small>Antrean aktif</small><strong data-live-active>—</strong></div><div class="distance" data-distance hidden><small>Jarak garis lurus</small><strong>—</strong></div></div>
             <a class="hospital-card-link" href="{{ route('puskesmas.show', $item) }}">Lihat jadwal layanan <span aria-hidden="true">↗</span></a>
         </article>
         @if ($loop->last)</div>@endif
@@ -39,6 +39,8 @@
         <div class="empty-state"><span aria-hidden="true">⌕</span><div><h3>Belum ada hasil yang cocok.</h3><p>Coba nama puskesmas, alamat, atau layanan lain.</p><a class="button primary" href="{{ route('home') }}#cari-puskesmas">Lihat semua puskesmas</a></div></div>
     @endforelse
 </section>
+
+<p class="live-update-status" data-live-status role="status" aria-live="polite">Menghubungkan data antrean live…</p>
 
 <section class="how-section" id="cara-kerja"><div><p class="eyebrow">Langkah Anda</p><h2>Cari, lihat, lalu <em>kunjungi.</em></h2><p>Informasi layanan dan antrean kini bisa dilihat dalam satu alur.</p></div><ol><li><b>01</b><div><h3>Cari puskesmas</h3><p>Masukkan nama, alamat, atau layanan yang Anda butuhkan.</p></div></li><li><b>02</b><div><h3>Pilih jadwal layanan</h3><p>Periksa hari, jam buka, dan sisa kapasitas pada halaman puskesmas.</p></div></li><li><b>03</b><div><h3>Ambil antrean</h3><p>Masuk dengan akun masyarakat yang sudah diaktivasi, lalu pilih tanggal yang tersedia.</p></div></li></ol></section>
 

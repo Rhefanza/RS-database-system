@@ -47,9 +47,9 @@ class DatabaseSeeder extends Seeder
         }
 
         $puskesmasItems = collect([
-            ['nama_puskesmas' => 'Puskesmas Ketabang', 'alamat' => 'Jl. Jaksa Agung Suprapto No. 10, Surabaya', 'nomor_telepon' => '0315344508'],
-            ['nama_puskesmas' => 'Puskesmas Mulyorejo', 'alamat' => 'Jl. Mulyorejo Utara No. 201, Surabaya', 'nomor_telepon' => '0315921780'],
-            ['nama_puskesmas' => 'Puskesmas Jagir', 'alamat' => 'Jl. Bendul Merisi No. 1, Surabaya', 'nomor_telepon' => '0318435980'],
+            ['nama_puskesmas' => 'Puskesmas Ketabang', 'alamat' => 'Jl. Jaksa Agung Suprapto No. 10, Surabaya', 'latitude' => -7.2567000, 'longitude' => 112.7505000, 'nomor_telepon' => '0315344508'],
+            ['nama_puskesmas' => 'Puskesmas Mulyorejo', 'alamat' => 'Jl. Mulyorejo Utara No. 201, Surabaya', 'latitude' => -7.2676000, 'longitude' => 112.7985000, 'nomor_telepon' => '0315921780'],
+            ['nama_puskesmas' => 'Puskesmas Jagir', 'alamat' => 'Jl. Bendul Merisi No. 1, Surabaya', 'latitude' => -7.3066000, 'longitude' => 112.7444000, 'nomor_telepon' => '0318435980'],
         ])->map(fn (array $data) => Puskesmas::create([...$data, 'status' => 'AKTIF']));
 
         $services = collect([

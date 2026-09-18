@@ -9,6 +9,7 @@ Proyek Laravel 12 untuk UTS Basis Data. Fokus aplikasi adalah CRUD, autentikasi,
 - Aktivasi akun memakai NIK dummy yang sudah didaftarkan Dinkes.
 - Login dan mengubah profil sendiri.
 - Melihat puskesmas, layanan, jadwal, dan sisa kapasitas.
+- Membuka peta interaktif untuk melihat lokasi dan total antrean setiap puskesmas.
 - Mengambil, melihat, membatalkan, serta menghapus antrean sendiri yang sudah dibatalkan.
 
 ### Petugas
@@ -22,7 +23,7 @@ Proyek Laravel 12 untuk UTS Basis Data. Fokus aplikasi adalah CRUD, autentikasi,
 
 - CRUD masyarakat, petugas, puskesmas, layanan, dan relasi puskesmas–layanan.
 - Mengaktifkan atau menonaktifkan akun.
-- Melihat dan mengelola jadwal tanpa akses ke fitur antrean petugas.
+- Tidak memiliki menu atau akses pengelolaan jadwal dan antrean petugas.
 
 ## Struktur database UTS
 
@@ -47,7 +48,7 @@ jadwal 1 ── N antrean
 masyarakat 1 ── N antrean
 ```
 
-Schema UTS tidak memakai kecamatan, fasilitas, penugasan terpisah, jadwal khusus, loket, sesi antrean, snapshot, lokasi tersimpan, map, GPS, rekomendasi, analitik, data warehouse, atau simulasi real-time.
+Peta publik menggunakan kolom `latitude` dan `longitude` pada tabel `puskesmas` serta menghitung total antrean hari ini langsung dari relasi jadwal. Schema UTS tetap tidak memakai tabel lokasi tersimpan, GPS pengguna, rekomendasi, loket, sesi antrean, snapshot, analitik, data warehouse, atau simulasi real-time.
 
 ## Menjalankan aplikasi
 
@@ -84,4 +85,14 @@ Seeder menghasilkan 15 masyarakat, 3 puskesmas, 5 layanan, 9 relasi layanan, 9 j
 php artisan test
 ```
 
-Test mencakup tujuh tabel bisnis, aktivasi NIK, login, pembatasan role, CRUD data master, pembatasan puskesmas petugas, kapasitas antrean, pembatalan, penghapusan, dan konsistensi data dummy.
+Test mencakup tujuh tabel bisnis, aktivasi NIK, login, pembatasan role, CRUD data master, pembatasan puskesmas petugas, kapasitas antrean, peta dan total antrean, pembatalan, penghapusan, serta konsistensi data dummy.
+
+## Simulator antrean live
+
+Jalankan simulator pada terminal terpisah:
+
+```bash
+php artisan queue:simulate --min=2 --max=9
+```
+
+Simulator hanya memakai masyarakat dummy. Setiap 2–9 detik simulator secara acak menambahkan antrean atau memajukan status `WAITING → CALLED → SERVING → COMPLETED` di MySQL. Jumlah antrean dummy hari berjalan dibatasi 20 data; saat batas tercapai simulator menghapus data lama dan menyisakan 5 antrean terbaru sebelum melanjutkan siklus. Data antrean non-dummy tidak ikut dihapus. Endpoint `GET /api/antrean-live` menyediakan ringkasan antrean, lalu halaman beranda dan peta mengambil pembaruan menggunakan `fetch()` setiap 5 detik. Ketika jumlah antrean bertambah, toast popup menampilkan jumlah antrean baru dan nama puskesmas. Gunakan `php artisan queue:simulate --once` untuk menjalankan satu perubahan saja.

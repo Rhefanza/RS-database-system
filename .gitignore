@@ -19,6 +19,7 @@
 /storage/*.key
 /storage/pail
 /storage/framework/views/*.php
+/storage/framework/queue-simulator.lock
 /vendor
 Homestead.json
 Homestead.yaml

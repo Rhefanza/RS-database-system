@@ -13,10 +13,19 @@
                     $daysAhead = ($map[$schedule->hari] - today()->dayOfWeek + 7) % 7;
                     $date = today()->copy()->addDays($daysAhead);
                     $used = $schedule->queues->filter(fn ($queue) => $queue->tanggal_daftar->isSameDay($date))->count();
+                    $existingQueue = auth()->check() && auth()->user()->role === 'MASYARAKAT'
+                        ? $schedule->queues->first(fn ($queue) => $queue->nik === auth()->user()->nik && $queue->tanggal_daftar->isSameDay($date))
+                        : null;
                 @endphp
                 <div class="schedule-row"><div><strong>{{ ucfirst(strtolower($schedule->hari)) }}</strong><span>{{ substr($schedule->jam_buka, 0, 5) }}–{{ substr($schedule->jam_tutup, 0, 5) }} · Sisa {{ max($schedule->kapasitas - $used, 0) }}/{{ $schedule->kapasitas }}</span></div>
                     @auth
-                        @if (auth()->user()->role === 'MASYARAKAT')<form method="post" action="{{ route('my-queues.store', $schedule) }}">@csrf<input type="hidden" name="tanggal_daftar" value="{{ $date->toDateString() }}"><button class="button primary" type="submit" @disabled($used >= $schedule->kapasitas)>Ambil {{ $date->translatedFormat('d M') }}</button></form>@endif
+                        @if (auth()->user()->role === 'MASYARAKAT')
+                            @if ($existingQueue)
+                                <a class="button ghost" href="{{ route('my-queues.index') }}">Lihat antrean</a>
+                            @else
+                                <form method="post" action="{{ route('my-queues.store', $schedule) }}">@csrf<input type="hidden" name="tanggal_daftar" value="{{ $date->toDateString() }}"><button class="button primary" type="submit" @disabled($used >= $schedule->kapasitas)>Ambil {{ $date->translatedFormat('d M') }}</button></form>
+                            @endif
+                        @endif
                     @else <a class="button primary" href="{{ route('login') }}">Masuk untuk antre</a> @endauth
                 </div>
             @empty <p>Jadwal belum dibuat petugas.</p> @endforelse</div>
@@ -25,4 +34,3 @@
     </div>
 </section>
 @endsection
-

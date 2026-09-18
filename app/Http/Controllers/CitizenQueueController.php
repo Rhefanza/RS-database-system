@@ -25,23 +25,43 @@ class CitizenQueueController extends Controller
         $validated = $request->validate(['tanggal_daftar' => ['required', 'date', 'after_or_equal:today']]);
         $date = Carbon::parse($validated['tanggal_daftar']);
         abort_unless($request->user()->nik && $schedule->status === 'AKTIF', 403);
-        abort_unless($this->dayName($date) === $schedule->hari, 422, 'Tanggal tidak sesuai dengan hari jadwal.');
+        if ($this->dayName($date) !== $schedule->hari) {
+            return back()->with('error', 'Tanggal tidak sesuai dengan hari jadwal.');
+        }
 
-        $queue = DB::transaction(function () use ($request, $schedule, $date) {
+        $result = DB::transaction(function () use ($request, $schedule, $date) {
             $locked = Schedule::whereKey($schedule->getKey())->lockForUpdate()->firstOrFail();
-            $activeCount = $locked->queues()->whereDate('tanggal_daftar', $date)->where('status_antrean', '!=', 'CANCELLED')->count();
-            abort_if($activeCount >= $locked->kapasitas, 409, 'Kapasitas antrean sudah penuh.');
 
             $existing = $locked->queues()->where('nik', $request->user()->nik)->whereDate('tanggal_daftar', $date)->first();
-            abort_if($existing, 409, 'Anda sudah memiliki antrean untuk jadwal ini.');
+            if ($existing) {
+                return ['status' => 'existing', 'queue' => $existing];
+            }
 
-            return $locked->queues()->create([
-                'nik' => $request->user()->nik,
-                'nomor_antrean' => ((int) $locked->queues()->whereDate('tanggal_daftar', $date)->max('nomor_antrean')) + 1,
-                'tanggal_daftar' => $date,
-                'status_antrean' => 'WAITING',
-            ]);
+            $activeCount = $locked->queues()->whereDate('tanggal_daftar', $date)->where('status_antrean', '!=', 'CANCELLED')->count();
+            if ($activeCount >= $locked->kapasitas) {
+                return ['status' => 'full'];
+            }
+
+            return [
+                'status' => 'created',
+                'queue' => $locked->queues()->create([
+                    'nik' => $request->user()->nik,
+                    'nomor_antrean' => ((int) $locked->queues()->whereDate('tanggal_daftar', $date)->max('nomor_antrean')) + 1,
+                    'tanggal_daftar' => $date,
+                    'status_antrean' => 'WAITING',
+                ]),
+            ];
         });
+
+        if ($result['status'] === 'existing') {
+            return redirect()->route('my-queues.index')->with('error', 'Anda sudah memiliki antrean untuk jadwal dan tanggal ini.');
+        }
+
+        if ($result['status'] === 'full') {
+            return back()->with('error', 'Kapasitas antrean sudah penuh.');
+        }
+
+        $queue = $result['queue'];
 
         return redirect()->route('my-queues.index')->with('success', 'Antrean nomor '.$queue->nomor_antrean.' berhasil diambil.');
     }

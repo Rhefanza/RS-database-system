@@ -99,6 +99,93 @@ function useCurrentLocation() {
 locationButtons.forEach((button) => button.addEventListener('click', useCurrentLocation));
 
 
+const clinicMap = document.querySelector('[data-clinic-map]');
+if (clinicMap) {
+    const selectors = [...clinicMap.querySelectorAll('[data-map-select]')];
+    const details = [...clinicMap.querySelectorAll('[data-map-detail]')];
+
+    const selectClinic = (id) => {
+        selectors.forEach((selector) => {
+            const selected = selector.dataset.mapSelect === id;
+            selector.classList.toggle('is-active', selected);
+            if (selector.classList.contains('map-marker')) selector.setAttribute('aria-pressed', String(selected));
+        });
+        details.forEach((detail) => { detail.hidden = detail.dataset.mapDetail !== id; });
+    };
+
+    selectors.forEach((selector) => selector.addEventListener('click', () => selectClinic(selector.dataset.mapSelect)));
+}
+
+const liveQueueTargets = [...document.querySelectorAll('[data-puskesmas-id]')];
+if (liveQueueTargets.length) {
+    const endpoint = document.body.dataset.liveQueueEndpoint;
+    const liveStatus = document.querySelector('[data-live-status]');
+    const toastStack = document.querySelector('[data-live-toast-stack]');
+    let previousValues = new Map();
+
+    const setLiveValue = (container, selector, value) => {
+        container.querySelectorAll(selector).forEach((element) => { element.textContent = String(value); });
+    };
+
+    const showLiveToast = (item, difference) => {
+        if (!toastStack) return;
+        const toast = document.createElement('div');
+        toast.className = 'live-toast';
+        toast.setAttribute('role', 'status');
+        const icon = document.createElement('span');
+        icon.className = 'live-toast-icon';
+        icon.setAttribute('aria-hidden', 'true');
+        icon.textContent = '+';
+        const message = document.createElement('div');
+        const title = document.createElement('strong');
+        title.textContent = `${difference} antrean baru masuk`;
+        const detail = document.createElement('small');
+        detail.textContent = item.name;
+        message.append(title, detail);
+        toast.append(icon, message);
+        toastStack.appendChild(toast);
+        window.setTimeout(() => {
+            toast.classList.add('is-leaving');
+            window.setTimeout(() => toast.remove(), 260);
+        }, 4500);
+    };
+
+    const refreshLiveQueues = async () => {
+        try {
+            const response = await fetch(endpoint, { headers: { Accept: 'application/json' }, cache: 'no-store' });
+            if (!response.ok) throw new Error(`HTTP ${response.status}`);
+            const payload = await response.json();
+            const values = new Map(payload.puskesmas.map((item) => [String(item.id), item]));
+
+            if (previousValues.size) {
+                values.forEach((item, id) => {
+                    const previous = previousValues.get(id);
+                    if (previous && item.total > previous.total) showLiveToast(item, item.total - previous.total);
+                });
+            }
+
+            liveQueueTargets.forEach((target) => {
+                const item = values.get(target.dataset.puskesmasId);
+                if (!item) return;
+                setLiveValue(target, '[data-live-total]', item.total);
+                setLiveValue(target, '[data-live-active]', item.active);
+                setLiveValue(target, '[data-live-completed]', item.completed);
+            });
+
+            document.querySelectorAll('[data-live-summary-total]').forEach((element) => { element.textContent = String(payload.totals.queues); });
+            document.querySelectorAll('[data-live-summary-active]').forEach((element) => { element.textContent = String(payload.totals.active); });
+            if (liveStatus) liveStatus.textContent = `Data live diperbarui ${new Date(payload.generated_at).toLocaleTimeString('id-ID')}. Pembaruan berikutnya dalam 5 detik.`;
+            previousValues = values;
+        } catch (error) {
+            if (liveStatus) liveStatus.textContent = 'Data live belum dapat diperbarui. Sistem akan mencoba lagi otomatis.';
+        }
+    };
+
+    refreshLiveQueues();
+    window.setInterval(refreshLiveQueues, 5000);
+}
+
+
 // Progressive enhancement: navigation remains available when JavaScript is off.
 const menuToggle = document.querySelector('[data-menu-toggle]');
 const mainNavigation = document.querySelector('#main-navigation');

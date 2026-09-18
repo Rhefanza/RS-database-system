@@ -11,6 +11,8 @@ use App\Http\Controllers\PublicPuskesmasController;
 use Illuminate\Support\Facades\Route;
 
 Route::get('/', [PublicPuskesmasController::class, 'index'])->name('home');
+Route::get('/peta-puskesmas', [PublicPuskesmasController::class, 'map'])->name('puskesmas.map');
+Route::get('/api/antrean-live', [PublicPuskesmasController::class, 'liveQueues'])->middleware('throttle:60,1')->name('api.live-queues');
 Route::get('/puskesmas/{puskesmas}', [PublicPuskesmasController::class, 'show'])->name('puskesmas.show');
 
 Route::middleware('guest')->group(function () {
@@ -32,14 +34,11 @@ Route::middleware('auth')->group(function () {
         Route::delete('/antrean/{queue}', [CitizenQueueController::class, 'destroy'])->name('my-queues.destroy');
     });
 
-    Route::prefix('pengelola')->middleware('role:ADMIN,PETUGAS')->group(function () {
+    Route::prefix('pengelola')->middleware('role:PETUGAS')->group(function () {
         Route::get('/jadwal', [ScheduleController::class, 'index'])->name('officer.schedules.index');
         Route::post('/jadwal', [ScheduleController::class, 'store'])->name('officer.schedules.store');
         Route::put('/jadwal/{schedule}', [ScheduleController::class, 'update'])->name('officer.schedules.update');
         Route::delete('/jadwal/{schedule}', [ScheduleController::class, 'destroy'])->name('officer.schedules.destroy');
-    });
-
-    Route::prefix('pengelola')->middleware('role:PETUGAS')->group(function () {
         Route::get('/antrean', [QueueController::class, 'index'])->name('officer.queues.index');
         Route::post('/antrean', [QueueController::class, 'store'])->name('officer.queues.store');
         Route::patch('/antrean/{queue}', [QueueController::class, 'update'])->name('officer.queues.update');
