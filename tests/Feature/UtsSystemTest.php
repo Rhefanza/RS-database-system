@@ -228,6 +228,43 @@ class UtsSystemTest extends TestCase
         $this->assertDatabaseCount('antrean', 5);
     }
 
+    public function test_new_puskesmas_automatically_receives_realtime_dummy_queue(): void
+    {
+        $service = Service::create(['nama_layanan' => 'Poli Baru', 'status' => 'AKTIF']);
+        $puskesmas = Puskesmas::factory()->create(['nama_puskesmas' => 'Puskesmas Baru Realtime']);
+        $relation = PuskesmasService::create([
+            'puskesmas_id' => $puskesmas->puskesmas_id,
+            'layanan_id' => $service->layanan_id,
+            'status' => 'AKTIF',
+        ]);
+        $tomorrow = ['Sunday' => 'MINGGU', 'Monday' => 'SENIN', 'Tuesday' => 'SELASA', 'Wednesday' => 'RABU', 'Thursday' => 'KAMIS', 'Friday' => 'JUMAT', 'Saturday' => 'SABTU'][today()->addDay()->format('l')];
+        Schedule::create([
+            'puskesmas_layanan_id' => $relation->puskesmas_layanan_id,
+            'hari' => $tomorrow,
+            'jam_buka' => '08:00',
+            'jam_tutup' => '12:00',
+            'kapasitas' => 10,
+            'status' => 'AKTIF',
+        ]);
+        $citizen = $this->citizen(['nama_lengkap' => 'Masyarakat Dummy Baru']);
+
+        $this->artisan('queue:simulate', ['--once' => true])
+            ->expectsOutputToContain('Puskesmas Baru Realtime')
+            ->assertSuccessful();
+
+        $todaySchedule = Schedule::where('puskesmas_layanan_id', $relation->puskesmas_layanan_id)
+            ->where('hari', ['Sunday' => 'MINGGU', 'Monday' => 'SENIN', 'Tuesday' => 'SELASA', 'Wednesday' => 'RABU', 'Thursday' => 'KAMIS', 'Friday' => 'JUMAT', 'Saturday' => 'SABTU'][today()->format('l')])
+            ->firstOrFail();
+        $this->assertDatabaseHas('antrean', [
+            'nik' => $citizen->nik,
+            'jadwal_id' => $todaySchedule->jadwal_id,
+            'status_antrean' => 'WAITING',
+        ]);
+        $this->getJson(route('api.live-queues'))
+            ->assertOk()
+            ->assertJsonFragment(['name' => 'Puskesmas Baru Realtime', 'total' => 1]);
+    }
+
     public function test_officer_can_crud_only_own_puskesmas_queues(): void
     {
         [$ownRelation, $otherRelation] = $this->twoRelations();

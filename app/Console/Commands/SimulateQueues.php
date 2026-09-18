@@ -36,7 +36,6 @@ class SimulateQueues extends Command
             }
         }
 
-        $this->ensureTodaySchedules();
         $this->info('Simulator antrean dummy aktif. Tekan Ctrl+C untuk berhenti.');
 
         try {
@@ -64,7 +63,15 @@ class SimulateQueues extends Command
     private function simulateTick(): string
     {
         return DB::transaction(function (): string {
+            // Refresh on every tick so a puskesmas added while the long-running
+            // simulator is active can immediately join the simulation.
+            $this->ensureTodaySchedules();
+
             if ($message = $this->resetDummyQueuesAtLimit()) {
+                return $message;
+            }
+
+            if ($message = $this->createRandomQueue(true)) {
                 return $message;
             }
 
@@ -123,17 +130,35 @@ class SimulateQueues extends Command
         return "Antrean #{$queue->nomor_antrean} berubah {$previous} → {$next}.";
     }
 
-    private function createRandomQueue(): ?string
+    private function createRandomQueue(bool $prioritizeUnrepresentedPuskesmas = false): ?string
     {
-        $schedule = Schedule::query()
+        $schedules = Schedule::query()
             ->where('status', 'AKTIF')
             ->where('hari', $this->todayName())
-            ->whereHas('puskesmasService', fn ($relation) => $relation->where('status', 'AKTIF'))
+            ->whereHas('puskesmasService', fn ($relation) => $relation
+                ->where('status', 'AKTIF')
+                ->whereHas('puskesmas', fn ($puskesmas) => $puskesmas->where('status', 'AKTIF')))
             ->with('puskesmasService.puskesmas')
             ->lockForUpdate()
             ->inRandomOrder()
             ->get()
-            ->first(fn (Schedule $item) => $item->queues()->whereDate('tanggal_daftar', today())->where('status_antrean', '!=', 'CANCELLED')->count() < $item->kapasitas);
+            ->filter(fn (Schedule $item) => $item->queues()->whereDate('tanggal_daftar', today())->where('status_antrean', '!=', 'CANCELLED')->count() < $item->kapasitas);
+
+        if ($prioritizeUnrepresentedPuskesmas) {
+            $representedPuskesmasIds = Queue::query()
+                ->whereDate('tanggal_daftar', today())
+                ->whereHas('citizen', fn ($citizen) => $citizen->where('nama_lengkap', 'like', 'Masyarakat Dummy %'))
+                ->with('schedule.puskesmasService')
+                ->get()
+                ->pluck('schedule.puskesmasService.puskesmas_id')
+                ->filter()
+                ->unique();
+
+            $schedules = $schedules->reject(fn (Schedule $item) => $representedPuskesmasIds
+                ->contains($item->puskesmasService->puskesmas_id));
+        }
+
+        $schedule = $schedules->first();
 
         if (! $schedule) {
             return null;
@@ -163,7 +188,10 @@ class SimulateQueues extends Command
 
     private function ensureTodaySchedules(): void
     {
-        foreach (PuskesmasService::query()->where('status', 'AKTIF')->with('schedules')->get() as $relation) {
+        foreach (PuskesmasService::query()
+            ->where('status', 'AKTIF')
+            ->whereHas('puskesmas', fn ($puskesmas) => $puskesmas->where('status', 'AKTIF'))
+            ->with('schedules')->get() as $relation) {
             if ($relation->schedules->contains('hari', $this->todayName())) {
                 continue;
             }
