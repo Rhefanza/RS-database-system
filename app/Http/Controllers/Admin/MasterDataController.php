@@ -239,8 +239,8 @@ class MasterDataController extends Controller
             'nama_puskesmas' => ['required', 'string', 'max:255', Rule::unique('puskesmas', 'nama_puskesmas')->ignore($puskesmas?->puskesmas_id, 'puskesmas_id')],
             'alamat' => ['required', 'string', 'max:1000'],
             'nomor_telepon' => ['nullable', 'string', 'max:20'],
-            'latitude' => ['nullable', 'numeric', 'between:-90,90'],
-            'longitude' => ['nullable', 'numeric', 'between:-180,180'],
+            'latitude' => ['nullable', 'numeric', 'between:-7.5,-7.0'],
+            'longitude' => ['nullable', 'numeric', 'between:112.5,113.0'],
             'status' => ['required', Rule::in(['AKTIF', 'NONAKTIF'])],
         ]);
     }

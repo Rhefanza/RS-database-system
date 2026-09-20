@@ -31,7 +31,7 @@ class PublicPuskesmasController extends Controller
 
     public function liveQueues(): JsonResponse
     {
-        $items = $this->liveQueueData();
+        $items = $this->liveQueueData(true);
 
         return response()->json([
             'generated_at' => now()->toIso8601String(),
@@ -90,7 +90,8 @@ class PublicPuskesmasController extends Controller
             ->orderBy('nama_puskesmas');
 
         if ($coordinatesOnly) {
-            $query->whereNotNull('latitude')->whereNotNull('longitude');
+            $query->whereBetween('latitude', [-7.5, -7.0])
+                ->whereBetween('longitude', [112.5, 113.0]);
         }
 
         return $query->get()->map(function (Puskesmas $puskesmas): array {

@@ -185,6 +185,11 @@ class UtsSystemTest extends TestCase
     {
         [$relation] = $this->twoRelations();
         $relation->puskesmas->update(['latitude' => -7.2567, 'longitude' => 112.7505]);
+        $outlier = Puskesmas::factory()->create([
+            'nama_puskesmas' => 'Puskesmas Koordinat Salah',
+            'latitude' => 0.0000001,
+            'longitude' => 0.0000004,
+        ]);
         $day = ['Sunday' => 'MINGGU', 'Monday' => 'SENIN', 'Tuesday' => 'SELASA', 'Wednesday' => 'RABU', 'Thursday' => 'KAMIS', 'Friday' => 'JUMAT', 'Saturday' => 'SABTU'][today()->format('l')];
         $schedule = Schedule::create(['puskesmas_layanan_id' => $relation->puskesmas_layanan_id, 'hari' => $day, 'jam_buka' => '08:00', 'jam_tutup' => '12:00', 'kapasitas' => 50, 'status' => 'AKTIF']);
         $citizen = $this->citizen();
@@ -193,6 +198,7 @@ class UtsSystemTest extends TestCase
         $this->get(route('home'))
             ->assertOk()
             ->assertSee($relation->puskesmas->nama_puskesmas)
+            ->assertDontSee($outlier->nama_puskesmas)
             ->assertSee('Peta layanan hari ini')
             ->assertSee('data-leaflet-map', false);
 
@@ -228,7 +234,11 @@ class UtsSystemTest extends TestCase
     public function test_new_puskesmas_automatically_receives_realtime_dummy_queue(): void
     {
         $service = Service::create(['nama_layanan' => 'Poli Baru', 'status' => 'AKTIF']);
-        $puskesmas = Puskesmas::factory()->create(['nama_puskesmas' => 'Puskesmas Baru Realtime']);
+        $puskesmas = Puskesmas::factory()->create([
+            'nama_puskesmas' => 'Puskesmas Baru Realtime',
+            'latitude' => -7.28,
+            'longitude' => 112.76,
+        ]);
         $relation = PuskesmasService::create([
             'puskesmas_id' => $puskesmas->puskesmas_id,
             'layanan_id' => $service->layanan_id,
