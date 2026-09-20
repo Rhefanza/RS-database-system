@@ -1,46 +1,40 @@
-# Struktur dan Relasi Database Rujuk.
+# Struktur Database PuskesmasKu
 
-Rancangan ini mengadaptasi sistem antrean puskesmas menjadi sistem informasi dan antrean rumah sakit. Istilah `puskesmas` diterjemahkan menjadi `hospital`, sedangkan `layanan` menjadi `service`. Fasilitas penunjang tetap menjadi entitas terpisah.
+## Entitas
 
-## Relasi utama
+| Tabel | Fungsi | Kunci utama |
+|---|---|---|
+| `kecamatan` | Wilayah administratif Surabaya | `kecamatan_id` |
+| `masyarakat` | Identitas dummy pemilik antrean | `nik` |
+| `akun` | Autentikasi masyarakat, petugas, dan admin | `akun_id` |
+| `puskesmas` | Identitas, alamat, dan koordinat faskes | `puskesmas_id` |
+| `layanan` | Master jenis poli atau layanan | `layanan_id` |
+| `puskesmas_layanan` | Penghubung N:M puskesmas dan layanan | `puskesmas_layanan_id` |
+| `jadwal` | Hari, jam, dan kapasitas layanan | `jadwal_id` |
+| `dokter` | Dokter dummy yang praktik pada layanan puskesmas | `dokter_id` |
+| `antrean` | Transaksi pengambilan nomor antrean | `antrean_id` |
 
-| Entitas | Relasi | Entitas tujuan | Implementasi |
-|---|---|---|---|
-| District | 1:N | Hospital | `hospitals.district_id` |
-| Hospital | M:N | Service | `hospital_services` dengan durasi awal dan status ketersediaan |
-| HospitalService | 1:N | ServiceSchedule | Jadwal rutin mingguan |
-| HospitalService | 1:N | SpecialServiceSchedule | Perubahan jadwal pada tanggal tertentu |
-| HospitalService | 1:N | ServiceDesk | Loket atau ruang pelayanan |
-| HospitalService | 1:N | QueueSession | Sesi antrean per tanggal/waktu |
-| User | 1:N | QueueSession | Petugas pembuka dan penutup sesi |
-| QueueSession | 1:N | Queue | Nomor antrean unik dalam satu sesi |
-| ServiceDesk | 1:N | Queue | Loket pelayanan; boleh kosong ketika masih menunggu |
-| HospitalService | 1:N | QueueSnapshot | Rekaman kondisi antrean dari waktu ke waktu |
-| User | M:N | Hospital | `staff_assignments` menyimpan riwayat penugasan |
-| User | 1:N | SavedLocation | Lokasi favorit pengguna; GPS sementara tidak disimpan |
-| Hospital | M:N | Facility | `hospital_facilities` untuk sarana penunjang |
+## Relasi
 
-## Aturan integritas penting
+```text
+kecamatan 1 ── N puskesmas
+masyarakat 1 ── 0..1 akun
+puskesmas 1 ── N akun PETUGAS
+puskesmas N ── M layanan melalui puskesmas_layanan
+puskesmas_layanan 1 ── N jadwal
+puskesmas_layanan 1 ── N dokter
+jadwal 1 ── N antrean
+masyarakat 1 ── N antrean
+```
 
-- Kombinasi `hospital_id` dan `service_id` pada `hospital_services` harus unik.
-- Kombinasi `queue_session_id` dan `queue_number` pada `queues` harus unik.
-- `queues.public_token` berupa UUID unik agar tiket dapat dipantau tanpa mengekspos ID antrean berurutan.
-- Sesi hanya dapat ditutup setelah seluruh antrean berstatus selesai atau dibatalkan.
-- Status antrean operasional berjalan berurutan dari `WAITING`, `CALLED`, `SERVING`, hingga `COMPLETED`; `WAITING` dan `CALLED` juga dapat dibatalkan.
-- Jadwal khusus hanya boleh satu untuk setiap layanan rumah sakit pada satu tanggal.
-- Nama loket unik di dalam satu layanan rumah sakit.
-- Antrean terhapus ketika sesi induknya dihapus.
-- Loket pada antrean menjadi `NULL` jika loket dihapus.
-- Akun penutup sesi boleh `NULL` selama sesi masih berlangsung atau jika akun penutup dihapus.
-- Penghapusan rumah sakit membersihkan relasi layanan dan data operasional turunannya, tetapi riwayat penugasan petugas menggunakan pembatasan penghapusan.
-- Akun berstatus `INACTIVE` tidak dapat masuk ke sistem.
-- Admin dapat mengelola seluruh data master; petugas hanya dapat mengelola antrean rumah sakit yang memiliki penugasan aktif dan masih berlaku.
+## Aturan integritas
 
-## Perbedaan layanan dan fasilitas
+- Nama kecamatan, nama puskesmas, nama layanan, dan email akun harus unik.
+- Kombinasi puskesmas dan layanan hanya boleh muncul sekali.
+- Kombinasi layanan puskesmas dan hari hanya boleh memiliki satu jadwal pada versi saat ini.
+- Nama dokter harus unik di dalam satu layanan puskesmas.
+- Nomor antrean unik untuk kombinasi jadwal dan tanggal.
+- Satu NIK hanya boleh mengambil satu antrean pada jadwal dan tanggal yang sama.
+- Status antrean: `WAITING`, `CALLED`, `SERVING`, `COMPLETED`, atau `CANCELLED`.
 
-- `services`: kegiatan medis yang memiliki jadwal, loket, dan antrean, misalnya IGD, rawat jalan, atau hemodialisis.
-- `facilities`: sarana pendukung yang dimiliki rumah sakit, misalnya ICU, ambulans, CT Scan, dan ruang operasi.
-
-Implementasi fisik terdapat dalam migration `2026_09_13_000003` sampai `2026_09_13_000005`, sedangkan relasi aplikasinya berada pada model Eloquent di `app/Models`.
-
-Seluruh record bawaan dari `DatabaseSeeder` adalah data synthetic untuk demonstrasi. Email masyarakat memakai domain `.test`, nomor telepon dan alamat diberi pola demo, dan transaksi antrean tidak merepresentasikan pasien sebenarnya.
+Lokasi pengguna tidak disimpan. Jarak dihitung pada browser dari koordinat puskesmas dan lokasi sementara yang diberikan pengguna.

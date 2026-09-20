@@ -11,7 +11,8 @@ use App\Http\Controllers\PublicPuskesmasController;
 use Illuminate\Support\Facades\Route;
 
 Route::get('/', [PublicPuskesmasController::class, 'index'])->name('home');
-Route::get('/peta-puskesmas', [PublicPuskesmasController::class, 'map'])->name('puskesmas.map');
+Route::get('/peta-puskesmas', fn () => redirect(route('home').'#peta-surabaya'))->name('puskesmas.map');
+Route::get('/rekomendasi', [PublicPuskesmasController::class, 'recommendations'])->name('recommendations.index');
 Route::get('/api/antrean-live', [PublicPuskesmasController::class, 'liveQueues'])->middleware('throttle:60,1')->name('api.live-queues');
 Route::get('/puskesmas/{puskesmas}', [PublicPuskesmasController::class, 'show'])->name('puskesmas.show');
 
@@ -47,6 +48,9 @@ Route::middleware('auth')->group(function () {
 
     Route::prefix('admin')->middleware('role:ADMIN')->group(function () {
         Route::get('/', [MasterDataController::class, 'index'])->name('admin.master.index');
+        Route::post('/kecamatan', [MasterDataController::class, 'storeDistrict'])->name('admin.districts.store');
+        Route::put('/kecamatan/{district}', [MasterDataController::class, 'updateDistrict'])->name('admin.districts.update');
+        Route::delete('/kecamatan/{district}', [MasterDataController::class, 'destroyDistrict'])->name('admin.districts.destroy');
         Route::post('/masyarakat', [MasterDataController::class, 'storeCitizen'])->name('admin.citizens.store');
         Route::put('/masyarakat/{citizen}', [MasterDataController::class, 'updateCitizen'])->name('admin.citizens.update');
         Route::delete('/masyarakat/{citizen}', [MasterDataController::class, 'destroyCitizen'])->name('admin.citizens.destroy');
@@ -62,5 +66,8 @@ Route::middleware('auth')->group(function () {
         Route::post('/relasi', [MasterDataController::class, 'storeRelation'])->name('admin.relations.store');
         Route::put('/relasi/{relation}', [MasterDataController::class, 'updateRelation'])->name('admin.relations.update');
         Route::delete('/relasi/{relation}', [MasterDataController::class, 'destroyRelation'])->name('admin.relations.destroy');
+        Route::post('/dokter', [MasterDataController::class, 'storeDoctor'])->name('admin.doctors.store');
+        Route::put('/dokter/{doctor}', [MasterDataController::class, 'updateDoctor'])->name('admin.doctors.update');
+        Route::delete('/dokter/{doctor}', [MasterDataController::class, 'destroyDoctor'])->name('admin.doctors.destroy');
     });
 });

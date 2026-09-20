@@ -1,12 +1,9 @@
-# Arah desain Rujuk. — premium healthcare directory
+# Arah UI PuskesmasKu
 
-Antarmuka mengambil inspirasi dari struktur situs rumah sakit premium: lapisan navigasi arang, aksen champagne-gold, hero fotografis, serta panel layanan putih yang lapang. Seluruh identitas, teks, logo, dan gambar tetap orisinal untuk Rujuk.
-
-- Palet utama: charcoal `#171a1c`, champagne-gold `#c9a45f`, ivory `#f7f4ed`, dan putih.
-- Playfair Display dipakai hanya untuk judul besar; Montserrat untuk navigasi, isi, formulir, dan data.
-- Hero publik menggunakan foto gedung rumah sakit orisinal dengan lapisan gelap agar teks tetap terbaca.
-- Aksi utama memakai emas; status dan pesan validasi tetap memakai warna semantik.
-- Panel pencarian, layanan, detail, dan tabel menggunakan garis tipis serta radius lembut 6–12px.
-- Hierarki mengutamakan ruang, tipografi, dan kontras; bayangan hanya untuk panel penting.
-- Semua kontrol memiliki target sentuh minimal 44px, fokus keyboard terlihat, dan tata letak responsif.
-- Area admin mempertahankan bahasa visual yang sama tanpa mengorbankan kepadatan informasi.
+- Beranda mengutamakan pencarian dan peta Surabaya; daftar rekomendasi tidak diduplikasi di beranda.
+- Peta memakai Leaflet dan OpenStreetMap dengan seluruh titik faskes dummy, antrean aktif, popup singkat, dan jarak berbasis izin lokasi.
+- Pencarian memberi saran langsung berdasarkan awalan nama puskesmas, kecamatan, alamat, atau layanan.
+- Halaman `Lihat rekomendasi` menampilkan lima hasil dari 10 faskes terdekat, dengan antrean aktif sebagai prioritas berikutnya.
+- Kartu rekomendasi menampilkan layanan, dokter, jadwal praktik, alamat, jarak, dan antrean aktif.
+- Seluruh data simulasi diberi penanda yang jelas dan tidak diklaim terhubung dengan Mobile JKN atau faskes nyata.
+- Warna, tipografi, fokus keyboard, target sentuh, dan tata letak responsif mengikuti sistem visual PuskesmasKu yang sudah ada.

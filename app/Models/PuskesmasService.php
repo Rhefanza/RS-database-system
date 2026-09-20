@@ -28,4 +28,9 @@ class PuskesmasService extends Model
     {
         return $this->hasMany(Schedule::class, 'puskesmas_layanan_id', 'puskesmas_layanan_id');
     }
+
+    public function doctors(): HasMany
+    {
+        return $this->hasMany(Doctor::class, 'puskesmas_layanan_id', 'puskesmas_layanan_id');
+    }
 }

@@ -11,7 +11,7 @@
             <label>Kata sandi<input type="password" name="password" required></label>
             <button class="button primary" type="submit">Masuk</button>
         </form>
-        <div class="demo-box"><strong>Akun demo</strong><code>admin@puskesmas.test / password</code><code>petugas@puskesmas.test / password</code><code>masyarakat1@puskesmas.test / password</code></div>
+        <div class="demo-box"><strong>Akun akses</strong><code>admin@puskesmas.test / password</code><code>petugas@puskesmas.test / password</code><code>masyarakat1@puskesmas.test / password</code></div>
         <p>Belum punya akun masyarakat? <a href="{{ route('activation.create') }}">Aktivasi dengan NIK</a>.</p>
     </div>
 </section>

@@ -4,6 +4,8 @@ namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
 use App\Models\Citizen;
+use App\Models\District;
+use App\Models\Doctor;
 use App\Models\Puskesmas;
 use App\Models\PuskesmasService;
 use App\Models\Queue;
@@ -20,12 +22,38 @@ class MasterDataController extends Controller
     {
         return view('admin.master.index', [
             'citizens' => Citizen::with('account')->orderBy('nama_lengkap')->get(),
+            'districts' => District::withCount('puskesmas')->orderBy('nama_kecamatan')->get(),
             'accounts' => User::with('puskesmas')->orderBy('role')->orderBy('nama_lengkap')->get(),
-            'puskesmasItems' => Puskesmas::withCount('puskesmasServices', 'officers')->orderBy('nama_puskesmas')->get(),
+            'puskesmasItems' => Puskesmas::with('district')->withCount('puskesmasServices', 'officers')->orderBy('nama_puskesmas')->get(),
             'services' => Service::withCount('puskesmasServices')->orderBy('nama_layanan')->get(),
             'relations' => PuskesmasService::with('puskesmas', 'service')->withCount('schedules')->get()
                 ->sortBy(fn ($item) => $item->puskesmas->nama_puskesmas.' '.$item->service->nama_layanan),
+            'doctors' => Doctor::with('puskesmasService.puskesmas', 'puskesmasService.service')->orderBy('nama_dokter')->get(),
         ]);
+    }
+
+    public function storeDistrict(Request $request): RedirectResponse
+    {
+        District::create($this->districtData($request));
+
+        return $this->success('kecamatan', 'Kecamatan ditambahkan.');
+    }
+
+    public function updateDistrict(Request $request, District $district): RedirectResponse
+    {
+        $district->update($this->districtData($request, $district));
+
+        return $this->success('kecamatan', 'Kecamatan diperbarui.');
+    }
+
+    public function destroyDistrict(District $district): RedirectResponse
+    {
+        if ($district->puskesmas()->exists()) {
+            return $this->error('kecamatan', 'Kecamatan masih dipakai oleh puskesmas.');
+        }
+        $district->delete();
+
+        return $this->success('kecamatan', 'Kecamatan dihapus.');
     }
 
     public function storeCitizen(Request $request): RedirectResponse
@@ -172,6 +200,27 @@ class MasterDataController extends Controller
         return $this->success('relasi', 'Relasi dihapus.');
     }
 
+    public function storeDoctor(Request $request): RedirectResponse
+    {
+        Doctor::create($this->doctorData($request));
+
+        return $this->success('dokter', 'Dokter ditambahkan.');
+    }
+
+    public function updateDoctor(Request $request, Doctor $doctor): RedirectResponse
+    {
+        $doctor->update($this->doctorData($request, $doctor));
+
+        return $this->success('dokter', 'Dokter diperbarui.');
+    }
+
+    public function destroyDoctor(Doctor $doctor): RedirectResponse
+    {
+        $doctor->delete();
+
+        return $this->success('dokter', 'Dokter dihapus.');
+    }
+
     private function citizenData(Request $request, ?Citizen $citizen = null): array
     {
         return $request->validate([
@@ -186,11 +235,30 @@ class MasterDataController extends Controller
     private function puskesmasData(Request $request, ?Puskesmas $puskesmas = null): array
     {
         return $request->validate([
+            'kecamatan_id' => ['required', 'exists:kecamatan,kecamatan_id'],
             'nama_puskesmas' => ['required', 'string', 'max:255', Rule::unique('puskesmas', 'nama_puskesmas')->ignore($puskesmas?->puskesmas_id, 'puskesmas_id')],
             'alamat' => ['required', 'string', 'max:1000'],
             'nomor_telepon' => ['nullable', 'string', 'max:20'],
             'latitude' => ['nullable', 'numeric', 'between:-90,90'],
             'longitude' => ['nullable', 'numeric', 'between:-180,180'],
+            'status' => ['required', Rule::in(['AKTIF', 'NONAKTIF'])],
+        ]);
+    }
+
+    private function districtData(Request $request, ?District $district = null): array
+    {
+        return $request->validate([
+            'nama_kecamatan' => ['required', 'string', 'max:255', Rule::unique('kecamatan', 'nama_kecamatan')->ignore($district?->kecamatan_id, 'kecamatan_id')],
+        ]);
+    }
+
+    private function doctorData(Request $request, ?Doctor $doctor = null): array
+    {
+        return $request->validate([
+            'puskesmas_layanan_id' => ['required', 'exists:puskesmas_layanan,puskesmas_layanan_id'],
+            'nama_dokter' => ['required', 'string', 'max:255', Rule::unique('dokter', 'nama_dokter')
+                ->where('puskesmas_layanan_id', $request->input('puskesmas_layanan_id'))->ignore($doctor?->dokter_id, 'dokter_id')],
+            'spesialisasi' => ['nullable', 'string', 'max:255'],
             'status' => ['required', Rule::in(['AKTIF', 'NONAKTIF'])],
         ]);
     }

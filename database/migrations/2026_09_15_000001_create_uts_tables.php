@@ -8,6 +8,12 @@ return new class extends Migration
 {
     public function up(): void
     {
+        Schema::create('kecamatan', function (Blueprint $table) {
+            $table->id('kecamatan_id');
+            $table->string('nama_kecamatan')->unique();
+            $table->timestamps();
+        });
+
         Schema::create('masyarakat', function (Blueprint $table) {
             $table->string('nik', 16)->primary();
             $table->string('nama_lengkap');
@@ -19,6 +25,7 @@ return new class extends Migration
 
         Schema::create('puskesmas', function (Blueprint $table) {
             $table->id('puskesmas_id');
+            $table->unsignedBigInteger('kecamatan_id')->index();
             $table->string('nama_puskesmas')->unique();
             $table->text('alamat');
             $table->decimal('latitude', 10, 7)->nullable();
@@ -26,6 +33,8 @@ return new class extends Migration
             $table->string('nomor_telepon', 20)->nullable();
             $table->enum('status', ['AKTIF', 'NONAKTIF'])->default('AKTIF')->index();
             $table->timestamps();
+
+            $table->foreign('kecamatan_id')->references('kecamatan_id')->on('kecamatan')->restrictOnDelete()->cascadeOnUpdate();
         });
 
         Schema::create('akun', function (Blueprint $table) {
@@ -77,6 +86,18 @@ return new class extends Migration
             $table->unique(['puskesmas_layanan_id', 'hari']);
         });
 
+        Schema::create('dokter', function (Blueprint $table) {
+            $table->id('dokter_id');
+            $table->unsignedBigInteger('puskesmas_layanan_id');
+            $table->string('nama_dokter');
+            $table->string('spesialisasi')->nullable();
+            $table->enum('status', ['AKTIF', 'NONAKTIF'])->default('AKTIF')->index();
+            $table->timestamps();
+
+            $table->foreign('puskesmas_layanan_id')->references('puskesmas_layanan_id')->on('puskesmas_layanan')->cascadeOnDelete()->cascadeOnUpdate();
+            $table->unique(['puskesmas_layanan_id', 'nama_dokter']);
+        });
+
         Schema::create('antrean', function (Blueprint $table) {
             $table->id('antrean_id');
             $table->string('nik', 16);
@@ -96,11 +117,13 @@ return new class extends Migration
     public function down(): void
     {
         Schema::dropIfExists('antrean');
+        Schema::dropIfExists('dokter');
         Schema::dropIfExists('jadwal');
         Schema::dropIfExists('puskesmas_layanan');
         Schema::dropIfExists('layanan');
         Schema::dropIfExists('akun');
         Schema::dropIfExists('puskesmas');
         Schema::dropIfExists('masyarakat');
+        Schema::dropIfExists('kecamatan');
     }
 };

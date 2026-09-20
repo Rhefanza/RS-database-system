@@ -11,9 +11,9 @@ use Illuminate\Support\Facades\DB;
 
 class SimulateQueues extends Command
 {
-    private const MAX_DUMMY_QUEUES = 20;
+    private const MAX_DUMMY_QUEUES = 300;
 
-    private const RESET_TO_DUMMY_QUEUES = 5;
+    private const RESET_TO_DUMMY_QUEUES = 150;
 
     protected $signature = 'queue:simulate {--once : Jalankan satu perubahan lalu berhenti} {--min=2 : Jeda minimum dalam detik} {--max=9 : Jeda maksimum dalam detik}';
 
@@ -106,7 +106,7 @@ class SimulateQueues extends Command
 
         $deleted = $dummyQueues->whereNotIn('antrean_id', $idsToKeep)->delete();
 
-        return "Batas 20 tercapai: {$deleted} antrean dummy lama dihapus, 5 antrean terbaru dipertahankan.";
+        return 'Batas '.self::MAX_DUMMY_QUEUES." tercapai: {$deleted} antrean dummy lama dihapus, ".self::RESET_TO_DUMMY_QUEUES.' antrean terbaru dipertahankan.';
     }
 
     private function advanceRandomQueue(): ?string

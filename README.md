@@ -1,60 +1,26 @@
-# Sistem Informasi Antrean Puskesmas
+# PuskesmasKu
 
-Proyek Laravel 12 untuk UTS Basis Data. Fokus aplikasi adalah CRUD, autentikasi, pembagian tiga role, relasi MySQL, jadwal, kapasitas, dan transaksi antrean.
+Prototipe Laravel 12 untuk simulasi informasi dan pengambilan antrean puskesmas di Kota Surabaya. Seluruh fasilitas, akun, dokter, jadwal, dan transaksi antrean merupakan data dummy.
 
-## Role dan fitur
+## Fitur publik dan masyarakat
 
-### Masyarakat
+- Beranda memuat pencarian langsung dan peta Surabaya berbasis Leaflet serta OpenStreetMap.
+- Peta menampilkan 31 titik puskesmas dummy, satu pada setiap kecamatan, beserta antrean aktif dan jarak dari lokasi pengguna.
+- Halaman rekomendasi mengambil 10 faskes terdekat lalu menampilkan lima dengan antrean aktif lebih sedikit.
+- Detail rekomendasi memuat kecamatan, alamat, layanan, dokter dummy, jadwal, jarak, dan antrean aktif.
+- Masyarakat tetap dapat mengaktifkan akun, mengambil nomor antrean, melihat antrean sendiri, dan membatalkannya.
 
-- Aktivasi akun memakai NIK dummy yang sudah didaftarkan Dinkes.
-- Login dan mengubah profil sendiri.
-- Melihat puskesmas, layanan, jadwal, dan sisa kapasitas.
-- Membuka peta interaktif untuk melihat lokasi dan total antrean setiap puskesmas.
-- Mengambil, melihat, membatalkan, serta menghapus antrean sendiri yang sudah dibatalkan.
+## Role
 
-### Petugas
+- `MASYARAKAT`: mengambil dan mengelola antrean milik sendiri.
+- `PETUGAS`: mengelola jadwal dan antrean hanya pada puskesmas tempatnya bertugas.
+- `ADMIN`: mengelola kecamatan, masyarakat, akun, puskesmas, layanan, relasi layanan, dan dokter.
 
-- Terhubung langsung ke satu puskesmas melalui `akun.puskesmas_id`.
-- CRUD jadwal dan kapasitas layanan puskesmasnya.
-- CRUD antrean dan mengubah status antrean secara manual.
-- Tidak dapat membuka data master Dinkes atau data puskesmas lain.
+## Struktur database
 
-### Admin / Dinkes
-
-- CRUD masyarakat, petugas, puskesmas, layanan, dan relasi puskesmas–layanan.
-- Mengaktifkan atau menonaktifkan akun.
-- Tidak memiliki menu atau akses pengelolaan jadwal dan antrean petugas.
-
-## Struktur database UTS
-
-Tepat tujuh tabel bisnis digunakan:
-
-1. `masyarakat`
-2. `akun`
-3. `puskesmas`
-4. `layanan`
-5. `puskesmas_layanan`
-6. `jadwal`
-7. `antrean`
-
-Relasi utama:
-
-```text
-masyarakat 1 ── 0..1 akun
-puskesmas  1 ── N akun (role PETUGAS)
-puskesmas  N ── M layanan (melalui puskesmas_layanan)
-puskesmas_layanan 1 ── N jadwal
-jadwal 1 ── N antrean
-masyarakat 1 ── N antrean
-```
-
-Peta publik menggunakan kolom `latitude` dan `longitude` pada tabel `puskesmas` serta menghitung total antrean hari ini langsung dari relasi jadwal. Schema UTS tetap tidak memakai tabel lokasi tersimpan, GPS pengguna, rekomendasi, loket, sesi antrean, snapshot, analitik, data warehouse, atau simulasi real-time.
+Sembilan tabel bisnis digunakan: `kecamatan`, `masyarakat`, `akun`, `puskesmas`, `layanan`, `puskesmas_layanan`, `jadwal`, `dokter`, dan `antrean`. Detail relasi tersedia di `DATABASE.md`.
 
 ## Menjalankan aplikasi
-
-1. Buat database MySQL kosong bernama `rujuk_uts`.
-2. Salin `.env.example` menjadi `.env` dan sesuaikan koneksi MySQL bila perlu.
-3. Jalankan:
 
 ```bash
 composer install
@@ -65,9 +31,7 @@ php artisan serve
 
 Buka `http://127.0.0.1:8000`.
 
-## Akun dan data demo
-
-Semua data bersifat synthetic dan tidak merepresentasikan orang atau fasilitas nyata.
+## Akun demo
 
 | Role | Email | Password |
 |---|---|---|
@@ -77,22 +41,20 @@ Semua data bersifat synthetic dan tidak merepresentasikan orang atau fasilitas n
 
 NIK dummy yang belum diaktivasi: `3578010101900004`.
 
-Seeder menghasilkan 15 masyarakat, 3 puskesmas, 5 layanan, 9 relasi layanan, 9 jadwal untuk hari saat seeder dijalankan, dan 8 antrean.
+Seeder membuat 31 kecamatan, 31 puskesmas, 80 masyarakat, 6 layanan, 93 relasi layanan, 93 dokter, 93 jadwal hari ini, dan antrean dummy yang tersebar pada seluruh puskesmas.
 
-## Pengujian
+## Peta
 
-```bash
-php artisan test
-```
+Antarmuka memakai Leaflet 1.9.4 dan tile standar OpenStreetMap. Atribusi OpenStreetMap selalu ditampilkan pada peta. Jarak dihitung dengan rumus Haversine di perangkat pengguna dan lokasi pengguna tidak disimpan ke database.
 
-Test mencakup tujuh tabel bisnis, aktivasi NIK, login, pembatasan role, CRUD data master, pembatasan puskesmas petugas, kapasitas antrean, peta dan total antrean, pembatalan, penghapusan, serta konsistensi data dummy.
-
-## Simulator antrean live
-
-Jalankan simulator pada terminal terpisah:
+## Simulator antrean
 
 ```bash
 php artisan queue:simulate --min=2 --max=9
 ```
 
-Simulator hanya memakai masyarakat dummy. Setiap 2–9 detik simulator secara acak menambahkan antrean atau memajukan status `WAITING → CALLED → SERVING → COMPLETED` di MySQL. Puskesmas aktif yang baru ditambahkan otomatis ikut simulasi setelah memiliki relasi layanan aktif dan minimal satu jadwal aktif sebagai pola; simulator membuat jadwal untuk hari berjalan bila diperlukan dan memprioritaskan antrean pertama untuk puskesmas yang belum terwakili. Jumlah antrean dummy hari berjalan dibatasi 20 data; saat batas tercapai simulator menghapus data lama dan menyisakan 5 antrean terbaru sebelum melanjutkan siklus. Data antrean non-dummy tidak ikut dihapus. Endpoint `GET /api/antrean-live` menyediakan ringkasan antrean, lalu halaman beranda dan peta mengambil pembaruan menggunakan `fetch()` setiap 5 detik. Ketika jumlah antrean bertambah, toast popup menampilkan jumlah antrean baru dan nama puskesmas. Gunakan `php artisan queue:simulate --once` untuk menjalankan satu perubahan saja.
+Endpoint `GET /api/antrean-live` diperiksa halaman setiap lima detik. Simulator memproses data dummy dan membatasi antrean dummy hari berjalan hingga 300 record agar data demonstrasi tidak tumbuh tanpa batas.
+
+## Batas pengembangan saat ini
+
+Versi ini belum mencakup estimasi waktu tunggu, loket, sesi antrean, riwayat snapshot, data medis, atau integrasi Mobile JKN. Nomor antrean hanya berlaku dalam lingkungan simulasi.

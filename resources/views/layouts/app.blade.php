@@ -8,12 +8,14 @@
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=DM+Serif+Display:ital@0;1&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="{{ asset('assets/app.css').'?v=puskesmas-live-4' }}">
-    <script src="{{ asset('assets/app.js').'?v=puskesmas-live-4' }}" defer></script>
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" integrity="sha256-p4NxAoJBhIINfQ3ynceqWgVqC41Wifii1/Lnt2MZt4=" crossorigin="">
+    <link rel="stylesheet" href="{{ asset('assets/app.css').'?v=puskesmas-map-9' }}">
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin="" defer></script>
+    <script src="{{ asset('assets/app.js').'?v=puskesmas-map-9' }}" defer></script>
 </head>
 <body data-live-queue-endpoint="{{ route('api.live-queues') }}">
     <a class="skip-link" href="#main-content">Lewati ke konten</a>
-    <div class="utility-bar"><span>Lebih mudah mencari. Lebih siap berkunjung.</span><span>Proyek demonstrasi · Data contoh</span></div>
+    <div class="utility-bar"><span>Lebih mudah mencari. Lebih siap berkunjung.</span><span>Informasi layanan kesehatan Surabaya</span></div>
     <header class="site-header">
         <a class="brand" href="{{ auth()->check() && auth()->user()->role === 'ADMIN' ? route('admin.master.index') : route('home') }}"><span aria-hidden="true">✦</span><strong>PuskesmasKu</strong><small>Lebih dekat. Lebih peduli.</small></a>
         <button class="menu-toggle" type="button" aria-controls="main-navigation" aria-expanded="false" data-menu-toggle hidden>Menu <span aria-hidden="true">☰</span></button>
@@ -23,9 +25,9 @@
                     <a href="{{ route('admin.master.index') }}">Data master</a>
                 @else
                     <a href="{{ route('home') }}">Beranda</a>
-                    <a href="{{ route('home') }}#hasil-puskesmas">Puskesmas</a>
-                    <a href="{{ route('puskesmas.map') }}">Peta</a>
+                    <a href="{{ route('home') }}#peta-surabaya">Puskesmas</a>
                     <a href="{{ route('home') }}#cara-kerja">Cara kerja</a>
+                    <a class="nav-recommendation" href="{{ route('recommendations.index') }}">Lihat rekomendasi</a>
                     @if (auth()->user()->role === 'MASYARAKAT')<a href="{{ route('my-queues.index') }}">Antrean saya</a>@endif
                     @if (auth()->user()->role === 'PETUGAS')
                     <a href="{{ route('officer.schedules.index') }}">Jadwal</a>
@@ -36,9 +38,9 @@
                 <form method="post" action="{{ route('logout') }}">@csrf<button class="link-button" type="submit">Keluar</button></form>
             @else
                 <a href="{{ route('home') }}">Beranda</a>
-                <a href="{{ route('home') }}#hasil-puskesmas">Puskesmas</a>
-                <a href="{{ route('puskesmas.map') }}">Peta</a>
+                <a href="{{ route('home') }}#peta-surabaya">Puskesmas</a>
                 <a href="{{ route('home') }}#cara-kerja">Cara kerja</a>
+                <a class="nav-recommendation" href="{{ route('recommendations.index') }}">Lihat rekomendasi</a>
                 <a href="{{ route('activation.create') }}">Aktivasi NIK</a>
                 <a class="nav-primary" href="{{ route('login') }}">Masuk</a>
             @endauth
@@ -51,6 +53,6 @@
         @yield('content')
     </main>
     <div class="live-toast-stack" data-live-toast-stack aria-live="polite" aria-atomic="false"></div>
-    <footer class="site-footer"><div class="footer-main"><div><a class="brand" href="{{ auth()->check() && auth()->user()->role === 'ADMIN' ? route('admin.master.index') : route('home') }}"><span aria-hidden="true">✦</span><strong>PuskesmasKu</strong></a><p>{{ auth()->check() && auth()->user()->role === 'ADMIN' ? 'Area pengelolaan data master Dinas Kesehatan.' : 'Temukan layanan puskesmas dan siapkan kunjungan dengan lebih mudah.' }}</p></div>@if(!auth()->check() || auth()->user()->role !== 'ADMIN')<div><strong>Jelajahi</strong><a href="{{ route('home') }}#cari-puskesmas">Cari puskesmas</a><a href="{{ route('home') }}#cara-kerja">Cara kerja</a></div><div><strong>Informasi</strong><p>Proyek UTS basis data dengan data dummy. Pastikan layanan melalui puskesmas sebelum berkunjung.</p></div>@endif</div><div class="footer-bottom">PuskesmasKu · {{ now()->year }} · Proyek demonstrasi</div></footer>
+    <footer class="site-footer"><div class="footer-main"><div><a class="brand" href="{{ auth()->check() && auth()->user()->role === 'ADMIN' ? route('admin.master.index') : route('home') }}"><span aria-hidden="true">✦</span><strong>PuskesmasKu</strong></a><p>{{ auth()->check() && auth()->user()->role === 'ADMIN' ? 'Area pengelolaan data master Dinas Kesehatan.' : 'Temukan layanan puskesmas dan siapkan kunjungan dengan lebih mudah.' }}</p></div>@if(!auth()->check() || auth()->user()->role !== 'ADMIN')<div><strong>Jelajahi</strong><a href="{{ route('home') }}#peta-surabaya">Peta puskesmas</a><a href="{{ route('recommendations.index') }}">Lihat rekomendasi</a><a href="{{ route('home') }}#cara-kerja">Cara kerja</a></div><div><strong>Informasi</strong><p>Informasi layanan dan antrean diperbarui secara berkala.</p></div>@endif</div><div class="footer-bottom">PuskesmasKu · {{ now()->year }}</div></footer>
 </body>
 </html>

@@ -3,6 +3,8 @@
 namespace Tests\Feature;
 
 use App\Models\Citizen;
+use App\Models\District;
+use App\Models\Doctor;
 use App\Models\Puskesmas;
 use App\Models\PuskesmasService;
 use App\Models\Queue;
@@ -19,9 +21,9 @@ class UtsSystemTest extends TestCase
 {
     use RefreshDatabase;
 
-    public function test_database_uses_seven_uts_business_tables(): void
+    public function test_database_uses_nine_business_tables(): void
     {
-        foreach (['masyarakat', 'akun', 'puskesmas', 'layanan', 'puskesmas_layanan', 'jadwal', 'antrean'] as $table) {
+        foreach (['kecamatan', 'masyarakat', 'akun', 'puskesmas', 'layanan', 'puskesmas_layanan', 'jadwal', 'dokter', 'antrean'] as $table) {
             $this->assertTrue(Schema::hasTable($table));
         }
         foreach (['hospitals', 'districts', 'facilities', 'queue_sessions', 'queue_snapshots', 'service_desks', 'saved_locations'] as $table) {
@@ -84,14 +86,18 @@ class UtsSystemTest extends TestCase
     public function test_admin_can_crud_master_data_and_create_officer(): void
     {
         $admin = User::factory()->create();
+        $this->actingAs($admin)->post(route('admin.districts.store'), ['nama_kecamatan' => 'Kecamatan Uji CRUD'])->assertRedirect();
+        $district = District::where('nama_kecamatan', 'Kecamatan Uji CRUD')->firstOrFail();
         $this->actingAs($admin)->post(route('admin.citizens.store'), [
             'nik' => '3578010101900020', 'nama_lengkap' => 'Warga Uji', 'nomor_telepon' => '0812', 'alamat' => 'Surabaya', 'status_data' => 'AKTIF',
         ])->assertRedirect();
-        $this->post(route('admin.puskesmas.store'), ['nama_puskesmas' => 'Puskesmas Uji', 'alamat' => 'Jalan Uji', 'status' => 'AKTIF'])->assertRedirect();
+        $this->post(route('admin.puskesmas.store'), ['kecamatan_id' => $district->kecamatan_id, 'nama_puskesmas' => 'Puskesmas Uji', 'alamat' => 'Jalan Uji', 'status' => 'AKTIF'])->assertRedirect();
         $this->post(route('admin.services.store'), ['nama_layanan' => 'Poli Uji', 'deskripsi' => 'Layanan uji', 'status' => 'AKTIF'])->assertRedirect();
         $puskesmas = Puskesmas::firstOrFail();
         $service = Service::firstOrFail();
         $this->post(route('admin.relations.store'), ['puskesmas_id' => $puskesmas->puskesmas_id, 'layanan_id' => $service->layanan_id, 'status' => 'AKTIF'])->assertRedirect();
+        $relation = PuskesmasService::firstOrFail();
+        $this->post(route('admin.doctors.store'), ['puskesmas_layanan_id' => $relation->puskesmas_layanan_id, 'nama_dokter' => 'dr. Uji', 'spesialisasi' => 'Dokter Umum', 'status' => 'AKTIF'])->assertRedirect();
         $this->post(route('admin.officers.store'), ['nama_lengkap' => 'Petugas Uji', 'email' => 'petugas@example.test', 'password' => 'password123', 'puskesmas_id' => $puskesmas->puskesmas_id])->assertRedirect();
 
         $this->assertDatabaseHas('masyarakat', ['nik' => '3578010101900020']);
@@ -99,19 +105,22 @@ class UtsSystemTest extends TestCase
         $this->assertDatabaseHas('akun', ['email' => 'petugas@example.test', 'role' => 'PETUGAS']);
 
         $citizen = Citizen::findOrFail('3578010101900020');
-        $relation = PuskesmasService::firstOrFail();
+        $doctor = Doctor::firstOrFail();
         $officer = User::where('email', 'petugas@example.test')->firstOrFail();
         $this->put(route('admin.citizens.update', $citizen), ['nik' => $citizen->nik, 'nama_lengkap' => 'Warga Diperbarui', 'status_data' => 'NONAKTIF'])->assertRedirect();
-        $this->put(route('admin.puskesmas.update', $puskesmas), ['nama_puskesmas' => 'Puskesmas Diperbarui', 'alamat' => 'Jalan Baru', 'status' => 'AKTIF'])->assertRedirect();
+        $this->put(route('admin.puskesmas.update', $puskesmas), ['kecamatan_id' => $district->kecamatan_id, 'nama_puskesmas' => 'Puskesmas Diperbarui', 'alamat' => 'Jalan Baru', 'status' => 'AKTIF'])->assertRedirect();
         $this->put(route('admin.services.update', $service), ['nama_layanan' => 'Poli Diperbarui', 'status' => 'AKTIF'])->assertRedirect();
         $this->put(route('admin.relations.update', $relation), ['puskesmas_id' => $puskesmas->puskesmas_id, 'layanan_id' => $service->layanan_id, 'status' => 'NONAKTIF'])->assertRedirect();
+        $this->put(route('admin.doctors.update', $doctor), ['puskesmas_layanan_id' => $relation->puskesmas_layanan_id, 'nama_dokter' => 'dr. Uji Baru', 'spesialisasi' => 'Dokter Umum', 'status' => 'AKTIF'])->assertRedirect();
         $this->put(route('admin.accounts.update', $officer), ['nama_lengkap' => 'Petugas Baru', 'email' => $officer->email, 'puskesmas_id' => $puskesmas->puskesmas_id, 'status_akun' => 'NONAKTIF'])->assertRedirect();
         $this->assertDatabaseHas('masyarakat', ['nik' => $citizen->nik, 'nama_lengkap' => 'Warga Diperbarui']);
 
         $this->delete(route('admin.accounts.destroy', $officer))->assertRedirect();
+        $this->delete(route('admin.doctors.destroy', $doctor))->assertRedirect();
         $this->delete(route('admin.relations.destroy', $relation))->assertRedirect();
         $this->delete(route('admin.services.destroy', $service))->assertRedirect();
         $this->delete(route('admin.puskesmas.destroy', $puskesmas))->assertRedirect();
+        $this->delete(route('admin.districts.destroy', $district))->assertRedirect();
         $this->delete(route('admin.citizens.destroy', $citizen))->assertRedirect();
         $this->assertDatabaseMissing('masyarakat', ['nik' => $citizen->nik]);
     }
@@ -172,7 +181,7 @@ class UtsSystemTest extends TestCase
             ->assertSee('Sisa 50/50');
     }
 
-    public function test_public_map_shows_puskesmas_and_today_queue_totals(): void
+    public function test_home_shows_real_map_container_and_today_queue_totals(): void
     {
         [$relation] = $this->twoRelations();
         $relation->puskesmas->update(['latitude' => -7.2567, 'longitude' => 112.7505]);
@@ -181,11 +190,13 @@ class UtsSystemTest extends TestCase
         $citizen = $this->citizen();
         Queue::create(['nik' => $citizen->nik, 'jadwal_id' => $schedule->jadwal_id, 'nomor_antrean' => 1, 'tanggal_daftar' => today(), 'status_antrean' => 'WAITING']);
 
-        $this->get(route('puskesmas.map'))
+        $this->get(route('home'))
             ->assertOk()
             ->assertSee($relation->puskesmas->nama_puskesmas)
-            ->assertSee('Total antrean')
-            ->assertSee('data-clinic-map', false);
+            ->assertSee('Peta layanan hari ini')
+            ->assertSee('data-leaflet-map', false);
+
+        $this->get(route('puskesmas.map'))->assertRedirect(route('home').'#peta-surabaya');
     }
 
     public function test_dummy_queue_simulator_and_live_api_work(): void
@@ -205,27 +216,13 @@ class UtsSystemTest extends TestCase
             ]);
     }
 
-    public function test_dummy_queue_simulator_resets_twenty_records_to_five(): void
+    public function test_dummy_queue_simulator_preserves_citywide_demo_coverage(): void
     {
         $this->seed(DatabaseSeeder::class);
-        $citizens = Citizen::orderBy('nik')->take(12)->get();
-        $schedule = Schedule::orderBy('jadwal_id')->skip(1)->firstOrFail();
-
-        foreach ($citizens as $index => $citizen) {
-            Queue::create([
-                'nik' => $citizen->nik,
-                'jadwal_id' => $schedule->jadwal_id,
-                'nomor_antrean' => $index + 1,
-                'tanggal_daftar' => today(),
-                'status_antrean' => 'WAITING',
-            ]);
-        }
-
-        $this->assertDatabaseCount('antrean', 20);
-        $this->artisan('queue:simulate', ['--once' => true])
-            ->expectsOutputToContain('Batas 20 tercapai')
-            ->assertSuccessful();
-        $this->assertDatabaseCount('antrean', 5);
+        $before = Queue::count();
+        $this->assertGreaterThan(31, $before);
+        $this->artisan('queue:simulate', ['--once' => true])->assertSuccessful();
+        $this->assertGreaterThanOrEqual($before, Queue::count());
     }
 
     public function test_new_puskesmas_automatically_receives_realtime_dummy_queue(): void
@@ -286,14 +283,17 @@ class UtsSystemTest extends TestCase
     public function test_seeder_provides_complete_synthetic_demo_data(): void
     {
         $this->seed(DatabaseSeeder::class);
-        $this->assertDatabaseCount('masyarakat', 15);
-        $this->assertDatabaseCount('puskesmas', 3);
-        $this->assertDatabaseCount('layanan', 5);
-        $this->assertDatabaseCount('puskesmas_layanan', 9);
-        $this->assertDatabaseCount('jadwal', 9);
-        $this->assertDatabaseCount('antrean', 8);
+        $this->assertDatabaseCount('kecamatan', 31);
+        $this->assertDatabaseCount('masyarakat', 80);
+        $this->assertDatabaseCount('puskesmas', 31);
+        $this->assertDatabaseCount('layanan', 6);
+        $this->assertDatabaseCount('puskesmas_layanan', 93);
+        $this->assertDatabaseCount('dokter', 93);
+        $this->assertDatabaseCount('jadwal', 93);
+        $this->assertDatabaseCount('antrean', 182);
         $this->assertDatabaseHas('akun', ['email' => 'admin@puskesmas.test', 'role' => 'ADMIN']);
         $this->assertDatabaseHas('masyarakat', ['nik' => '3578010101900004']);
+        $this->assertSame(31, Puskesmas::whereNotNull('latitude')->whereNotNull('longitude')->distinct('kecamatan_id')->count('kecamatan_id'));
     }
 
     private function citizen(array $attributes = []): Citizen

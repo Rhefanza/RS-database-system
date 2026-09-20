@@ -5,6 +5,7 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class Puskesmas extends Model
@@ -15,7 +16,7 @@ class Puskesmas extends Model
 
     protected $primaryKey = 'puskesmas_id';
 
-    protected $fillable = ['nama_puskesmas', 'alamat', 'latitude', 'longitude', 'nomor_telepon', 'status'];
+    protected $fillable = ['kecamatan_id', 'nama_puskesmas', 'alamat', 'latitude', 'longitude', 'nomor_telepon', 'status'];
 
     protected function casts(): array
     {
@@ -26,6 +27,11 @@ class Puskesmas extends Model
     {
         return $this->belongsToMany(Service::class, 'puskesmas_layanan', 'puskesmas_id', 'layanan_id')
             ->withPivot(['puskesmas_layanan_id', 'status'])->withTimestamps();
+    }
+
+    public function district(): BelongsTo
+    {
+        return $this->belongsTo(District::class, 'kecamatan_id', 'kecamatan_id');
     }
 
     public function puskesmasServices(): HasMany
