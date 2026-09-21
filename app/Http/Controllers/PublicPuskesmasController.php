@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\Puskesmas;
+use App\Models\Queue;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\View\View;
@@ -65,7 +66,7 @@ class PublicPuskesmasController extends Controller
                     'service',
                     'doctors' => fn ($doctors) => $doctors->where('status', 'AKTIF')->orderBy('nama_dokter'),
                     'schedules' => fn ($schedule) => $schedule->where('status', 'AKTIF')->with([
-                        'queues' => fn ($queue) => $queue->whereDate('tanggal_daftar', '>=', today())->where('status_antrean', '!=', 'CANCELLED'),
+                        'queues' => fn ($queue) => $queue->active()->whereDate('tanggal_daftar', '>=', today()),
                     ]),
                 ]),
         ]);
@@ -98,6 +99,7 @@ class PublicPuskesmasController extends Controller
             $queues = $puskesmas->puskesmasServices
                 ->flatMap(fn ($relation) => $relation->schedules)
                 ->flatMap(fn ($schedule) => $schedule->queues);
+            $activeQueues = $queues->whereIn('status_antrean', Queue::ACTIVE_STATUSES);
 
             return [
                 'id' => $puskesmas->puskesmas_id,
@@ -107,8 +109,8 @@ class PublicPuskesmasController extends Controller
                 'phone' => $puskesmas->nomor_telepon,
                 'latitude' => (float) $puskesmas->latitude,
                 'longitude' => (float) $puskesmas->longitude,
-                'total' => $queues->where('status_antrean', '!=', 'CANCELLED')->count(),
-                'active' => $queues->whereIn('status_antrean', ['WAITING', 'CALLED', 'SERVING'])->count(),
+                'total' => $queues->count(),
+                'active' => $activeQueues->count(),
                 'completed' => $queues->where('status_antrean', 'COMPLETED')->count(),
                 'services' => $puskesmas->puskesmasServices->pluck('service.nama_layanan')->filter()->unique()->values(),
                 'service_details' => $puskesmas->puskesmasServices->map(fn ($relation): array => [

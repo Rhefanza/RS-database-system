@@ -139,10 +139,9 @@ class SimulateQueues extends Command
                 ->where('status', 'AKTIF')
                 ->whereHas('puskesmas', fn ($puskesmas) => $puskesmas->where('status', 'AKTIF')))
             ->with('puskesmasService.puskesmas')
-            ->lockForUpdate()
             ->inRandomOrder()
             ->get()
-            ->filter(fn (Schedule $item) => $item->queues()->whereDate('tanggal_daftar', today())->where('status_antrean', '!=', 'CANCELLED')->count() < $item->kapasitas);
+            ->filter(fn (Schedule $item) => $item->queues()->active()->whereDate('tanggal_daftar', today())->count() < $item->kapasitas);
 
         if ($prioritizeUnrepresentedPuskesmas) {
             $representedPuskesmasIds = Queue::query()
@@ -167,16 +166,24 @@ class SimulateQueues extends Command
         $citizen = Citizen::query()
             ->where('status_data', 'AKTIF')
             ->where('nama_lengkap', 'like', 'Masyarakat Dummy %')
-            ->whereDoesntHave('queues', fn ($queue) => $queue->where('jadwal_id', $schedule->jadwal_id)->whereDate('tanggal_daftar', today()))
             ->inRandomOrder()
-            ->first();
+            ->get()
+            ->first(fn (Citizen $candidate) => ! Queue::overlappingActiveFor($candidate->nik, $schedule, today()->toDateString()));
 
         if (! $citizen) {
             return null;
         }
 
-        $number = ((int) $schedule->queues()->whereDate('tanggal_daftar', today())->max('nomor_antrean')) + 1;
-        $schedule->queues()->create([
+        Citizen::whereKey($citizen->nik)->lockForUpdate()->firstOrFail();
+        $lockedSchedule = Schedule::whereKey($schedule->jadwal_id)->lockForUpdate()->firstOrFail();
+
+        if ($lockedSchedule->queues()->active()->whereDate('tanggal_daftar', today())->count() >= $lockedSchedule->kapasitas
+            || Queue::overlappingActiveFor($citizen->nik, $lockedSchedule, today()->toDateString())) {
+            return null;
+        }
+
+        $number = ((int) $lockedSchedule->queues()->whereDate('tanggal_daftar', today())->max('nomor_antrean')) + 1;
+        $lockedSchedule->queues()->create([
             'nik' => $citizen->nik,
             'nomor_antrean' => $number,
             'tanggal_daftar' => today(),

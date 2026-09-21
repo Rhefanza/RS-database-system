@@ -22,6 +22,15 @@ class AuthController extends Controller
             return back()->withErrors(['email' => 'Email, kata sandi, atau status akun tidak sesuai.'])->onlyInput('email');
         }
 
+        $user = Auth::user();
+        if ($user->role === 'PETUGAS' && (! $user->puskesmas_id || ! $user->puskesmas()->where('status', 'AKTIF')->exists())) {
+            Auth::logout();
+
+            return back()->withErrors([
+                'email' => 'Akun petugas belum terhubung dengan puskesmas aktif. Hubungi admin.',
+            ])->onlyInput('email');
+        }
+
         $request->session()->regenerate();
 
         return redirect()->intended($this->destination($request->user()->role))

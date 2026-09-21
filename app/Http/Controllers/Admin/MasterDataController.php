@@ -11,6 +11,7 @@ use App\Models\PuskesmasService;
 use App\Models\Queue;
 use App\Models\Service;
 use App\Models\User;
+use App\Support\OfficerEmail;
 use Illuminate\Contracts\View\View;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -25,7 +26,7 @@ class MasterDataController extends Controller
             'districts' => District::withCount('puskesmas')->orderBy('nama_kecamatan')->get(),
             'accounts' => User::query()
                 ->where('role', 'PETUGAS')
-                ->with('puskesmas')
+                ->with('puskesmas.district')
                 ->orderBy('nama_lengkap')
                 ->get(),
             'puskesmasItems' => Puskesmas::with('district')->withCount('puskesmasServices', 'officers')->orderBy('nama_puskesmas')->get(),
@@ -88,10 +89,11 @@ class MasterDataController extends Controller
     {
         $data = $request->validate([
             'nama_lengkap' => ['required', 'string', 'max:255'],
-            'email' => ['required', 'email', 'max:255', 'unique:akun,email'],
             'password' => ['required', 'string', 'min:8'],
-            'puskesmas_id' => ['required', 'exists:puskesmas,puskesmas_id'],
+            'puskesmas_id' => ['required', Rule::exists('puskesmas', 'puskesmas_id')->where('status', 'AKTIF')],
         ]);
+        $puskesmas = Puskesmas::findOrFail($data['puskesmas_id']);
+        $data['email'] = OfficerEmail::forPuskesmas($puskesmas);
         $data['password_hash'] = $data['password'];
         unset($data['password']);
         User::create([...$data, 'role' => 'PETUGAS', 'status_akun' => 'AKTIF']);
@@ -105,12 +107,13 @@ class MasterDataController extends Controller
 
         $data = $request->validate([
             'nama_lengkap' => ['required', 'string', 'max:255'],
-            'email' => ['required', 'email', Rule::unique('akun', 'email')->ignore($account->akun_id, 'akun_id')],
-            'puskesmas_id' => ['nullable', 'exists:puskesmas,puskesmas_id'],
+            'puskesmas_id' => ['required', Rule::exists('puskesmas', 'puskesmas_id')->where('status', 'AKTIF')],
             'status_akun' => ['required', Rule::in(['AKTIF', 'NONAKTIF'])],
             'password' => ['nullable', 'string', 'min:8'],
         ]);
-        $data['puskesmas_id'] = $data['puskesmas_id'] ?? null;
+        if ((int) $data['puskesmas_id'] !== (int) $account->puskesmas_id) {
+            $data['email'] = OfficerEmail::forPuskesmas(Puskesmas::findOrFail($data['puskesmas_id']), $account);
+        }
         if ($data['password'] ?? null) {
             $data['password_hash'] = $data['password'];
         }

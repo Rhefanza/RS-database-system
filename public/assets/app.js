@@ -55,7 +55,81 @@ document.addEventListener('DOMContentLoaded', () => {
     initSurabayaMap();
     initRecommendations();
     initLiveQueues();
+    initJourneyShowcase();
 });
+
+function initJourneyShowcase() {
+    const section = document.querySelector('[data-journey-showcase]');
+    if (!section) return;
+    const cards = [...section.querySelectorAll('[data-step-card]')];
+    const blurTarget = section.querySelector('[data-scroll-blur]');
+    const reducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    const desktop = window.matchMedia('(min-width: 801px)');
+    let activeIndex = Math.max(0, cards.findIndex((card) => card.classList.contains('is-active')));
+    let paused = false;
+    let visible = false;
+    let ticking = false;
+
+    const activate = (index) => {
+        activeIndex = (index + cards.length) % cards.length;
+        cards.forEach((card, cardIndex) => {
+            const active = cardIndex === activeIndex;
+            card.classList.toggle('is-active', active);
+            card.setAttribute('aria-expanded', String(active));
+        });
+    };
+
+    cards.forEach((card, index) => {
+        card.addEventListener('pointerenter', () => activate(index));
+        card.addEventListener('focus', () => activate(index));
+        card.addEventListener('click', () => activate(index));
+        card.addEventListener('keydown', (event) => {
+            if (event.key === 'Enter' || event.key === ' ') {
+                event.preventDefault();
+                activate(index);
+            }
+            if (event.key === 'ArrowRight') cards[(index + 1) % cards.length].focus();
+            if (event.key === 'ArrowLeft') cards[(index - 1 + cards.length) % cards.length].focus();
+        });
+    });
+
+    section.addEventListener('pointerenter', () => { paused = true; });
+    section.addEventListener('pointerleave', () => { paused = false; });
+    section.addEventListener('focusin', () => { paused = true; });
+    section.addEventListener('focusout', () => { paused = false; });
+
+    if ('IntersectionObserver' in window) {
+        new IntersectionObserver(([entry]) => { visible = entry.isIntersecting; }, { threshold: 0.35 }).observe(section);
+    } else {
+        visible = true;
+    }
+
+    if (!reducedMotion) {
+        window.setInterval(() => {
+            if (visible && !paused && desktop.matches && !document.hidden) activate(activeIndex + 1);
+        }, 4800);
+    }
+
+    const updateScrollEffect = () => {
+        ticking = false;
+        if (!blurTarget || reducedMotion) return;
+        const bounds = section.getBoundingClientRect();
+        const sectionCenter = bounds.top + bounds.height / 2;
+        const distance = Math.abs(sectionCenter - window.innerHeight / 2);
+        const progress = Math.min(1, Math.max(0, (distance - window.innerHeight * 0.18) / (window.innerHeight * 0.62)));
+        blurTarget.style.setProperty('--journey-blur', `${(progress * 5.5).toFixed(2)}px`);
+        blurTarget.style.setProperty('--journey-opacity', String((1 - progress * 0.38).toFixed(2)));
+        blurTarget.style.setProperty('--journey-shift', `${((bounds.top / Math.max(window.innerHeight, 1)) * -13).toFixed(2)}px`);
+    };
+    const requestScrollEffect = () => {
+        if (ticking) return;
+        ticking = true;
+        window.requestAnimationFrame(updateScrollEffect);
+    };
+    updateScrollEffect();
+    window.addEventListener('scroll', requestScrollEffect, { passive: true });
+    window.addEventListener('resize', requestScrollEffect);
+}
 
 function initClinicSearch() {
     const form = document.querySelector('[data-clinic-search]');

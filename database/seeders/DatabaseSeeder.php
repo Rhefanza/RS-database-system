@@ -12,6 +12,7 @@ use App\Models\Schedule;
 use App\Models\Service;
 use App\Models\User;
 use Illuminate\Database\Seeder;
+use Illuminate\Support\Str;
 
 class DatabaseSeeder extends Seeder
 {
@@ -80,6 +81,8 @@ class DatabaseSeeder extends Seeder
         ];
         $today = ['Sunday' => 'MINGGU', 'Monday' => 'SENIN', 'Tuesday' => 'SELASA', 'Wednesday' => 'RABU', 'Thursday' => 'KAMIS', 'Friday' => 'JUMAT', 'Saturday' => 'SABTU'][today()->format('l')];
 
+        $activeCitizenCursor = 0;
+
         foreach ($clinics as $clinicIndex => [$districtName, $latitude, $longitude]) {
             $district = District::updateOrCreate(['nama_kecamatan' => $districtName]);
             $clinicName = match ($districtName) {
@@ -105,7 +108,7 @@ class DatabaseSeeder extends Seeder
                 $puskesmas = Puskesmas::create($puskesmasData);
             }
 
-            $officerEmail = $clinicIndex === 0 ? 'petugas@puskesmas.test' : 'petugas'.($clinicIndex + 1).'@puskesmas.test';
+            $officerEmail = 'petugas_'.Str::slug(preg_replace('/^Puskesmas\s+/i', '', $clinicName), '_').'@test';
             User::updateOrCreate(['email' => $officerEmail], [
                 'puskesmas_id' => $puskesmas->puskesmas_id,
                 'nama_lengkap' => 'Petugas Demo '.$districtName,
@@ -142,10 +145,14 @@ class DatabaseSeeder extends Seeder
                 ]));
             }
 
-            $queueCount = 2 + (($clinicIndex * 5) % 9);
+            // Maksimal 80 antrean aktif agar satu masyarakat tidak muncul pada
+            // dua poli yang waktunya bertabrakan dalam data simulasi awal.
+            $queueCount = 2 + (($clinicIndex * 3) % 4);
             $schedule = $schedules->first();
             for ($queueIndex = 0; $queueIndex < $queueCount; $queueIndex++) {
-                $citizen = $citizens[($clinicIndex * 11 + $queueIndex) % $citizens->count()];
+                $citizen = $queueIndex === 0
+                    ? $citizens[$clinicIndex % $citizens->count()]
+                    : $citizens[$activeCitizenCursor++ % $citizens->count()];
                 Queue::updateOrCreate([
                     'jadwal_id' => $schedule->jadwal_id,
                     'nomor_antrean' => $queueIndex + 1,

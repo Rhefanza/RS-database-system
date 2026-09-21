@@ -9,11 +9,12 @@ Prototipe Laravel 12 untuk simulasi informasi dan pengambilan antrean puskesmas 
 - Halaman rekomendasi mengambil 10 faskes terdekat lalu menampilkan lima dengan antrean aktif lebih sedikit.
 - Detail rekomendasi memuat kecamatan, alamat, layanan, dokter dummy, jadwal, jarak, dan antrean aktif.
 - Masyarakat tetap dapat mengaktifkan akun, mengambil nomor antrean, melihat antrean sendiri, dan membatalkannya.
+- Sistem menolak pengambilan dua antrean aktif dengan jam yang bertabrakan serta mencegah kapasitas terlewati saat beberapa permintaan masuk bersamaan.
 
 ## Role
 
 - `MASYARAKAT`: mengambil dan mengelola antrean milik sendiri.
-- `PETUGAS`: mengelola jadwal dan antrean hanya pada puskesmas tempatnya bertugas.
+- `PETUGAS`: ditetapkan admin pada tepat satu puskesmas dan hanya dapat mengelola jadwal serta antrean puskesmas tersebut.
 - `ADMIN`: mengelola kecamatan, masyarakat, akun, puskesmas, layanan, relasi layanan, dan dokter.
 
 ## Struktur database
@@ -36,7 +37,7 @@ Buka `http://127.0.0.1:8000`.
 | Role | Email | Password |
 |---|---|---|
 | Admin | `admin@puskesmas.test` | `password` |
-| Petugas | `petugas@puskesmas.test` | `password` |
+| Petugas Asemrowo | `petugas_asemrowo@test` | `password` |
 | Masyarakat | `masyarakat1@puskesmas.test` | `password` |
 
 NIK dummy yang belum diaktivasi: `3578010101900004`.
@@ -53,7 +54,7 @@ Antarmuka memakai Leaflet 1.9.4 dan tile standar OpenStreetMap. Atribusi OpenStr
 php artisan queue:simulate --min=2 --max=9
 ```
 
-Endpoint `GET /api/antrean-live` diperiksa halaman setiap lima detik. Simulator memproses data dummy dan membatasi antrean dummy hari berjalan hingga 300 record agar data demonstrasi tidak tumbuh tanpa batas.
+Endpoint `GET /api/antrean-live` diperiksa halaman setiap lima detik. Hanya status `WAITING`, `CALLED`, dan `SERVING` yang ditampilkan dan dihitung sebagai antrean aktif. Data `COMPLETED` dan `CANCELLED` tetap tersimpan sebagai riwayat, tetapi tidak memakai kapasitas. Simulator memproses data dummy dan membatasi antrean dummy hari berjalan hingga 300 record agar data demonstrasi tidak tumbuh tanpa batas.
 
 ## Batas pengembangan saat ini
 

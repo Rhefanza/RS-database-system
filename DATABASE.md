@@ -19,7 +19,7 @@
 ```text
 kecamatan 1 ── N puskesmas
 masyarakat 1 ── 0..1 akun
-puskesmas 1 ── N akun PETUGAS
+puskesmas 1 ── N akun PETUGAS (setiap petugas tepat pada satu puskesmas)
 puskesmas N ── M layanan melalui puskesmas_layanan
 puskesmas_layanan 1 ── N jadwal
 puskesmas_layanan 1 ── N dokter
@@ -34,7 +34,12 @@ masyarakat 1 ── N antrean
 - Kombinasi layanan puskesmas dan hari hanya boleh memiliki satu jadwal pada versi saat ini.
 - Nama dokter harus unik di dalam satu layanan puskesmas.
 - Nomor antrean unik untuk kombinasi jadwal dan tanggal.
-- Satu NIK hanya boleh mengambil satu antrean pada jadwal dan tanggal yang sama.
+- Satu NIK hanya boleh memiliki satu antrean aktif pada jam yang sama. Jadwal poli yang waktunya bertabrakan akan ditolak, termasuk jika berada di puskesmas berbeda.
+- Hanya `WAITING`, `CALLED`, dan `SERVING` yang dihitung sebagai antrean aktif dan memakai kapasitas. `COMPLETED` dan `CANCELLED` tetap tersimpan sebagai riwayat, tetapi tidak tampil pada daftar operasional.
+- Kapasitas dan nomor antrean dibuat di dalam transaksi database agar dua permintaan yang datang hampir bersamaan tidak melewati kapasitas.
 - Status antrean: `WAITING`, `CALLED`, `SERVING`, `COMPLETED`, atau `CANCELLED`.
+- Perubahan status mengikuti urutan `WAITING` → `CALLED` → `SERVING` → `COMPLETED`; status aktif juga dapat diubah menjadi `CANCELLED`.
+- Email petugas dibuat otomatis dari puskesmas, misalnya `petugas_asemrowo@test`. Akun petugas tidak dapat mengakses sistem pengelola tanpa puskesmas aktif.
+- Akun admin tidak ditampilkan pada pengelolaan akun petugas dan tidak dapat dihapus melalui menu tersebut.
 
 Lokasi pengguna tidak disimpan. Jarak dihitung pada browser dari koordinat puskesmas dan lokasi sementara yang diberikan pengguna.

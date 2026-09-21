@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\Citizen;
 use App\Models\Queue;
 use App\Models\Schedule;
 use Carbon\Carbon;
@@ -15,7 +16,11 @@ class CitizenQueueController extends Controller
     public function index(Request $request): View
     {
         $queues = Queue::with('schedule.puskesmasService.puskesmas', 'schedule.puskesmasService.service')
-            ->where('nik', $request->user()->nik)->latest('tanggal_daftar')->latest('nomor_antrean')->get();
+            ->where('nik', $request->user()->nik)
+            ->active()
+            ->latest('tanggal_daftar')
+            ->latest('nomor_antrean')
+            ->get();
 
         return view('queues.mine', compact('queues'));
     }
@@ -24,20 +29,33 @@ class CitizenQueueController extends Controller
     {
         $validated = $request->validate(['tanggal_daftar' => ['required', 'date', 'after_or_equal:today']]);
         $date = Carbon::parse($validated['tanggal_daftar']);
-        abort_unless($request->user()->nik && $schedule->status === 'AKTIF', 403);
+        $schedule->load('puskesmasService.puskesmas', 'puskesmasService.service');
+        abort_unless(
+            $request->user()->nik
+            && $schedule->status === 'AKTIF'
+            && $schedule->puskesmasService?->status === 'AKTIF'
+            && $schedule->puskesmasService?->puskesmas?->status === 'AKTIF',
+            403
+        );
         if ($this->dayName($date) !== $schedule->hari) {
             return back()->with('error', 'Tanggal tidak sesuai dengan hari jadwal.');
         }
 
         $result = DB::transaction(function () use ($request, $schedule, $date) {
+            Citizen::whereKey($request->user()->nik)->lockForUpdate()->firstOrFail();
             $locked = Schedule::whereKey($schedule->getKey())->lockForUpdate()->firstOrFail();
 
-            $existing = $locked->queues()->where('nik', $request->user()->nik)->whereDate('tanggal_daftar', $date)->first();
+            $existing = $locked->queues()->active()->where('nik', $request->user()->nik)->whereDate('tanggal_daftar', $date)->first();
             if ($existing) {
                 return ['status' => 'existing', 'queue' => $existing];
             }
 
-            $activeCount = $locked->queues()->whereDate('tanggal_daftar', $date)->where('status_antrean', '!=', 'CANCELLED')->count();
+            $conflict = Queue::overlappingActiveFor($request->user()->nik, $locked, $date->toDateString());
+            if ($conflict) {
+                return ['status' => 'conflict', 'queue' => $conflict];
+            }
+
+            $activeCount = $locked->queues()->active()->whereDate('tanggal_daftar', $date)->count();
             if ($activeCount >= $locked->kapasitas) {
                 return ['status' => 'full'];
             }
@@ -55,6 +73,15 @@ class CitizenQueueController extends Controller
 
         if ($result['status'] === 'existing') {
             return redirect()->route('my-queues.index')->with('error', 'Anda sudah memiliki antrean untuk jadwal dan tanggal ini.');
+        }
+
+        if ($result['status'] === 'conflict') {
+            $conflict = $result['queue'];
+
+            return back()->with('error', 'Jadwal bertabrakan dengan antrean aktif Anda di '
+                .$conflict->schedule->puskesmasService->puskesmas->nama_puskesmas.' · '
+                .$conflict->schedule->puskesmasService->service->nama_layanan.' ('
+                .substr($conflict->schedule->jam_buka, 0, 5).'–'.substr($conflict->schedule->jam_tutup, 0, 5).').');
         }
 
         if ($result['status'] === 'full') {

@@ -4,7 +4,7 @@
 
 @section('content')
 <section class="care-hero" aria-labelledby="hero-title">
-    <img src="{{ asset('assets/rujuk-care-hero.png') }}" class="care-hero-photo" alt="Ilustrasi tenaga kesehatan berbincang dengan ibu dan anak" width="1536" height="1024" fetchpriority="high">
+    <img src="{{ asset('images/antre.png') }}" class="care-hero-photo" alt="Petugas kesehatan melayani masyarakat yang sedang mengantre" width="1448" height="1086" fetchpriority="high">
     <div class="care-hero-shade" aria-hidden="true"></div>
     <div class="care-hero-copy">
         <p class="eyebrow">✦ &nbsp; Layanan kesehatan Surabaya</p>
@@ -33,7 +33,7 @@
 <section class="care-promises" aria-label="Manfaat menggunakan layanan"><div><span aria-hidden="true">⌕</span><p><strong>Cari lebih mudah</strong><small>Nama berawalan sama langsung ditampilkan.</small></p></div><div><span aria-hidden="true">⌖</span><p><strong>Lihat di peta</strong><small>31 titik faskes pada peta Surabaya.</small></p></div><div><span aria-hidden="true">≋</span><p><strong>Ambil antrean</strong><small>Pilih layanan dan nomor antrean yang tersedia.</small></p></div></section>
 
 <section class="home-map-section" id="peta-surabaya" aria-labelledby="map-title">
-    <div class="section-heading map-section-heading"><div><p class="eyebrow">Peta layanan hari ini</p><h2 id="map-title">Semua faskes dalam <em>satu peta.</em></h2><p>Klik titik untuk melihat nama faskes, alamat, dan jumlah antrean aktif.</p></div><div class="map-summary" aria-label="Ringkasan peta"><div><strong>{{ $mapItems->count() }}</strong><span>Faskes</span></div><div><strong data-live-summary-total>{{ $totalQueues }}</strong><span>Total antrean</span></div><div><strong data-live-summary-active>{{ $activeQueues }}</strong><span>Masih aktif</span></div></div></div>
+    <div class="section-heading map-section-heading"><div><p class="eyebrow">Peta layanan hari ini</p><h2 id="map-title">Semua faskes dalam <em>satu peta.</em></h2><p>Klik titik untuk melihat nama faskes, alamat, dan jumlah antrean aktif.</p></div><div class="map-summary" aria-label="Ringkasan peta"><div><strong>{{ $mapItems->count() }}</strong><span>Faskes</span></div><div><strong data-live-summary-total>{{ $totalQueues }}</strong><span>Total antrean</span></div><div><strong data-live-summary-active>{{ $activeQueues }}</strong><span>Antrean aktif</span></div></div></div>
 
     @if ($mapItems->isEmpty())
         <div class="empty">Belum ada puskesmas aktif yang memiliki koordinat peta.</div>
@@ -47,7 +47,28 @@
     @endif
 </section>
 
-<section class="how-section" id="cara-kerja"><div><p class="eyebrow">Langkah Anda</p><h2>Cari, pilih, lalu <em>antre.</em></h2><p>Informasi layanan dan antrean tersedia dalam satu alur yang mudah diikuti.</p></div><ol><li><b>01</b><div><h3>Cari puskesmas</h3><p>Ketik nama, kecamatan, alamat, atau layanan yang Anda butuhkan.</p></div></li><li><b>02</b><div><h3>Periksa detail layanan</h3><p>Klik titik peta untuk melihat antrean, lalu buka jadwal puskesmas.</p></div></li><li><b>03</b><div><h3>Ambil antrean</h3><p>Masuk sebagai masyarakat dan pilih jadwal yang kapasitasnya masih tersedia.</p></div></li></ol></section>
+<section class="journey-showcase" id="cara-kerja" data-journey-showcase aria-labelledby="journey-title">
+    <span class="journey-orbit orbit-one" aria-hidden="true"></span><span class="journey-orbit orbit-two" aria-hidden="true"></span>
+    <header class="journey-intro" data-scroll-blur>
+        <div><p class="eyebrow">Langkah Anda</p><h2 id="journey-title">Cari, pilih, lalu <em>antre.</em></h2></div>
+        <p>Informasi layanan dan antrean tersedia dalam satu alur yang mudah diikuti.</p>
+    </header>
+    <ol class="journey-cards" aria-label="Tiga langkah menggunakan PuskesmasKu">
+        <li class="journey-card is-active" data-step-card tabindex="0" role="button" aria-expanded="true" style="--step-image:url('{{ asset('images/lihat_puskesmas.png') }}');--step-accent:#25c5e9">
+            <span class="journey-card-dot" aria-hidden="true"><i></i></span><span class="journey-card-number">01</span>
+            <div class="journey-card-content"><span class="journey-card-kicker">Mulai dari kebutuhan Anda</span><h3>Cari puskesmas</h3><div class="journey-card-body"><p>Ketik nama, kecamatan, alamat, atau layanan yang Anda butuhkan.</p><span>Nama yang sesuai langsung ditampilkan dan disorot pada peta.</span></div></div>
+        </li>
+        <li class="journey-card" data-step-card tabindex="0" role="button" aria-expanded="false" style="--step-image:url('{{ asset('images/detail_layanan.png') }}');--step-accent:#caffde">
+            <span class="journey-card-dot" aria-hidden="true"><i></i></span><span class="journey-card-number">02</span>
+            <div class="journey-card-content"><span class="journey-card-kicker">Bandingkan sebelum berkunjung</span><h3>Periksa detail layanan</h3><div class="journey-card-body"><p>Klik titik peta untuk melihat antrean, lalu buka jadwal puskesmas.</p><span>Periksa poli, dokter, hari praktik, dan kapasitas yang tersedia.</span></div></div>
+        </li>
+        <li class="journey-card" data-step-card tabindex="0" role="button" aria-expanded="false" style="--step-image:url('{{ asset('images/list_antre.png') }}');--step-accent:#ffd84d">
+            <span class="journey-card-dot" aria-hidden="true"><i></i></span><span class="journey-card-number">03</span>
+            <div class="journey-card-content"><span class="journey-card-kicker">Siapkan kunjungan Anda</span><h3>Ambil antrean</h3><div class="journey-card-body"><p>Masuk sebagai masyarakat dan pilih jadwal yang kapasitasnya masih tersedia.</p><span>Nomor antrean aktif tersimpan dan dapat dipantau dari akun Anda.</span></div></div>
+        </li>
+    </ol>
+    <div class="journey-ticker" aria-hidden="true"><div><span>Cari puskesmas</span><i>✦</i><span>Lihat antrean aktif</span><i>✦</i><span>Periksa jadwal</span><i>✦</i><span>Ambil nomor antrean</span><i>✦</i><span>Cari puskesmas</span><i>✦</i><span>Lihat antrean aktif</span><i>✦</i><span>Periksa jadwal</span><i>✦</i><span>Ambil nomor antrean</span><i>✦</i></div></div>
+</section>
 
-<section class="care-cta"><div><p class="eyebrow">Butuh pilihan yang lebih terarah?</p><h2>Cari fasilitas kesehatan dengan <em>rekomendasi.</em></h2><p>Bandingkan jarak, antrean, poli, dokter, dan jadwal praktik dalam satu halaman.</p></div><a class="button primary" href="{{ route('recommendations.index') }}">Lihat rekomendasi ↗</a></section>
+<section class="care-cta"><div class="care-cta-copy"><p class="eyebrow">Butuh pilihan yang lebih terarah?</p><h2>Cari fasilitas kesehatan dengan <em>rekomendasi.</em></h2><p>Bandingkan jarak, antrean, poli, dokter, dan jadwal praktik dalam satu halaman.</p></div><img class="care-cta-image" src="{{ asset('images/rekomendasi.png') }}" alt="Tampilan fasilitas kesehatan dari udara" width="1448" height="1086" loading="lazy"><a class="button primary" href="{{ route('recommendations.index') }}">Lihat rekomendasi ↗</a></section>
 @endsection
