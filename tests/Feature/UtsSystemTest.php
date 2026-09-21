@@ -125,6 +125,38 @@ class UtsSystemTest extends TestCase
         $this->assertDatabaseMissing('masyarakat', ['nik' => $citizen->nik]);
     }
 
+    public function test_admin_account_section_only_lists_and_manages_officers(): void
+    {
+        $admin = User::factory()->create(['email' => 'admin-section@example.test']);
+        $puskesmas = Puskesmas::factory()->create();
+        $citizen = $this->citizen();
+        $citizenAccount = User::factory()->create([
+            'nik' => $citizen->nik,
+            'email' => 'citizen-section@example.test',
+            'role' => 'MASYARAKAT',
+        ]);
+        $officer = User::factory()->create([
+            'puskesmas_id' => $puskesmas->puskesmas_id,
+            'email' => 'officer-section@example.test',
+            'role' => 'PETUGAS',
+        ]);
+
+        $this->actingAs($admin)->get(route('admin.master.index').'#akun')
+            ->assertOk()
+            ->assertSee('Akun petugas')
+            ->assertSee($officer->email)
+            ->assertDontSee($citizenAccount->email)
+            ->assertDontSee($admin->email);
+
+        $payload = [
+            'nama_lengkap' => $citizenAccount->nama_lengkap,
+            'email' => $citizenAccount->email,
+            'status_akun' => 'AKTIF',
+        ];
+        $this->put(route('admin.accounts.update', $citizenAccount), $payload)->assertNotFound();
+        $this->delete(route('admin.accounts.destroy', $citizenAccount))->assertNotFound();
+    }
+
     public function test_officer_can_crud_only_own_puskesmas_schedules(): void
     {
         [$ownRelation, $otherRelation] = $this->twoRelations();

@@ -23,7 +23,11 @@ class MasterDataController extends Controller
         return view('admin.master.index', [
             'citizens' => Citizen::with('account')->orderBy('nama_lengkap')->get(),
             'districts' => District::withCount('puskesmas')->orderBy('nama_kecamatan')->get(),
-            'accounts' => User::with('puskesmas')->orderBy('role')->orderBy('nama_lengkap')->get(),
+            'accounts' => User::query()
+                ->where('role', 'PETUGAS')
+                ->with('puskesmas')
+                ->orderBy('nama_lengkap')
+                ->get(),
             'puskesmasItems' => Puskesmas::with('district')->withCount('puskesmasServices', 'officers')->orderBy('nama_puskesmas')->get(),
             'services' => Service::withCount('puskesmasServices')->orderBy('nama_layanan')->get(),
             'relations' => PuskesmasService::with('puskesmas', 'service')->withCount('schedules')->get()
@@ -97,6 +101,8 @@ class MasterDataController extends Controller
 
     public function updateAccount(Request $request, User $account): RedirectResponse
     {
+        abort_unless($account->role === 'PETUGAS', 404);
+
         $data = $request->validate([
             'nama_lengkap' => ['required', 'string', 'max:255'],
             'email' => ['required', 'email', Rule::unique('akun', 'email')->ignore($account->akun_id, 'akun_id')],
@@ -104,10 +110,7 @@ class MasterDataController extends Controller
             'status_akun' => ['required', Rule::in(['AKTIF', 'NONAKTIF'])],
             'password' => ['nullable', 'string', 'min:8'],
         ]);
-        if ($request->user()->is($account) && $data['status_akun'] !== 'AKTIF') {
-            return $this->error('akun', 'Admin yang sedang masuk tidak dapat menonaktifkan akunnya sendiri.');
-        }
-        $data['puskesmas_id'] = $account->role === 'PETUGAS' ? ($data['puskesmas_id'] ?? null) : null;
+        $data['puskesmas_id'] = $data['puskesmas_id'] ?? null;
         if ($data['password'] ?? null) {
             $data['password_hash'] = $data['password'];
         }
@@ -117,11 +120,10 @@ class MasterDataController extends Controller
         return $this->success('akun', 'Akun diperbarui.');
     }
 
-    public function destroyAccount(Request $request, User $account): RedirectResponse
+    public function destroyAccount(User $account): RedirectResponse
     {
-        if ($request->user()->is($account) || $account->role === 'MASYARAKAT') {
-            return $this->error('akun', 'Akun sendiri atau akun masyarakat tidak dapat dihapus dari sini.');
-        }
+        abort_unless($account->role === 'PETUGAS', 404);
+
         $account->delete();
 
         return $this->success('akun', 'Akun petugas dihapus.');
