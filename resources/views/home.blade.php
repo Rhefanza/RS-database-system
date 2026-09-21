@@ -67,7 +67,6 @@
             <div class="journey-card-content"><span class="journey-card-kicker">Siapkan kunjungan Anda</span><h3>Ambil antrean</h3><div class="journey-card-body"><p>Masuk sebagai masyarakat dan pilih jadwal yang kapasitasnya masih tersedia.</p><span>Nomor antrean aktif tersimpan dan dapat dipantau dari akun Anda.</span></div></div>
         </li>
     </ol>
-    <div class="journey-ticker" aria-hidden="true"><div><span>Cari puskesmas</span><i>✦</i><span>Lihat antrean aktif</span><i>✦</i><span>Periksa jadwal</span><i>✦</i><span>Ambil nomor antrean</span><i>✦</i><span>Cari puskesmas</span><i>✦</i><span>Lihat antrean aktif</span><i>✦</i><span>Periksa jadwal</span><i>✦</i><span>Ambil nomor antrean</span><i>✦</i></div></div>
 </section>
 
 <section class="care-cta"><div class="care-cta-copy"><p class="eyebrow">Butuh pilihan yang lebih terarah?</p><h2>Cari fasilitas kesehatan dengan <em>rekomendasi.</em></h2><p>Bandingkan jarak, antrean, poli, dokter, dan jadwal praktik dalam satu halaman.</p></div><img class="care-cta-image" src="{{ asset('images/rekomendasi.png') }}" alt="Tampilan fasilitas kesehatan dari udara" width="1448" height="1086" loading="lazy"><a class="button primary" href="{{ route('recommendations.index') }}">Lihat rekomendasi ↗</a></section>
