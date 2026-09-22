@@ -19,7 +19,7 @@ class DatabaseSeeder extends Seeder
     public function run(): void
     {
         User::updateOrCreate(['email' => 'admin@puskesmas.test'], [
-            'nama_lengkap' => 'Admin Dinas Kesehatan Demo',
+            'nama_lengkap' => 'Admin Dinas Kesehatan',
             'email' => 'admin@puskesmas.test',
             'password_hash' => 'password',
             'role' => 'ADMIN',
@@ -92,7 +92,7 @@ class DatabaseSeeder extends Seeder
                 default => 'Puskesmas '.$districtName,
             };
             $puskesmas = Puskesmas::where('nama_puskesmas', $clinicName)->first()
-                ?? Puskesmas::where('nama_puskesmas', 'Puskesmas Demo '.$districtName)->first();
+                ?? Puskesmas::where('kecamatan_id', $district->kecamatan_id)->first();
             $puskesmasData = [
                 'kecamatan_id' => $district->kecamatan_id,
                 'nama_puskesmas' => $clinicName,
@@ -111,7 +111,7 @@ class DatabaseSeeder extends Seeder
             $officerEmail = 'petugas_'.Str::slug(preg_replace('/^Puskesmas\s+/i', '', $clinicName), '_').'@test';
             User::updateOrCreate(['email' => $officerEmail], [
                 'puskesmas_id' => $puskesmas->puskesmas_id,
-                'nama_lengkap' => 'Petugas Demo '.$districtName,
+                'nama_lengkap' => 'Petugas '.$districtName,
                 'password_hash' => 'password',
                 'role' => 'PETUGAS',
                 'status_akun' => 'AKTIF',

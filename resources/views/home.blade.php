@@ -48,22 +48,21 @@
 </section>
 
 <section class="journey-showcase" id="cara-kerja" data-journey-showcase aria-labelledby="journey-title">
-    <span class="journey-orbit orbit-one" aria-hidden="true"></span><span class="journey-orbit orbit-two" aria-hidden="true"></span>
     <header class="journey-intro" data-scroll-blur>
         <div><p class="eyebrow">Langkah Anda</p><h2 id="journey-title">Cari, pilih, lalu <em>antre.</em></h2></div>
         <p>Informasi layanan dan antrean tersedia dalam satu alur yang mudah diikuti.</p>
     </header>
     <ol class="journey-cards" aria-label="Tiga langkah menggunakan PuskesmasKu">
         <li class="journey-card is-active" data-step-card tabindex="0" role="button" aria-expanded="true" style="--step-image:url('{{ asset('images/lihat_puskesmas.png') }}');--step-accent:#25c5e9">
-            <span class="journey-card-dot" aria-hidden="true"><i></i></span><span class="journey-card-number">01</span>
+            <span class="journey-card-number">01</span>
             <div class="journey-card-content"><span class="journey-card-kicker">Mulai dari kebutuhan Anda</span><h3>Cari puskesmas</h3><div class="journey-card-body"><p>Ketik nama, kecamatan, alamat, atau layanan yang Anda butuhkan.</p><span>Nama yang sesuai langsung ditampilkan dan disorot pada peta.</span></div></div>
         </li>
         <li class="journey-card" data-step-card tabindex="0" role="button" aria-expanded="false" style="--step-image:url('{{ asset('images/detail_layanan.png') }}');--step-accent:#caffde">
-            <span class="journey-card-dot" aria-hidden="true"><i></i></span><span class="journey-card-number">02</span>
+            <span class="journey-card-number">02</span>
             <div class="journey-card-content"><span class="journey-card-kicker">Bandingkan sebelum berkunjung</span><h3>Periksa detail layanan</h3><div class="journey-card-body"><p>Klik titik peta untuk melihat antrean, lalu buka jadwal puskesmas.</p><span>Periksa poli, dokter, hari praktik, dan kapasitas yang tersedia.</span></div></div>
         </li>
         <li class="journey-card" data-step-card tabindex="0" role="button" aria-expanded="false" style="--step-image:url('{{ asset('images/list_antre.png') }}');--step-accent:#ffd84d">
-            <span class="journey-card-dot" aria-hidden="true"><i></i></span><span class="journey-card-number">03</span>
+            <span class="journey-card-number">03</span>
             <div class="journey-card-content"><span class="journey-card-kicker">Siapkan kunjungan Anda</span><h3>Ambil antrean</h3><div class="journey-card-body"><p>Masuk sebagai masyarakat dan pilih jadwal yang kapasitasnya masih tersedia.</p><span>Nomor antrean aktif tersimpan dan dapat dipantau dari akun Anda.</span></div></div>
         </li>
     </ol>

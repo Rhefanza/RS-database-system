@@ -27,6 +27,8 @@ function escapeHtml(value) {
 }
 
 document.addEventListener('DOMContentLoaded', () => {
+    initFlashAlerts();
+
     const panels = [...document.querySelectorAll('[data-master-panel]')];
     const tabs = [...document.querySelectorAll('[data-master-tab]')];
     if (panels.length) {
@@ -57,6 +59,15 @@ document.addEventListener('DOMContentLoaded', () => {
     initLiveQueues();
     initJourneyShowcase();
 });
+
+function initFlashAlerts() {
+    document.querySelectorAll('.flash-toast-stack .alert').forEach((alert) => {
+        window.setTimeout(() => {
+            alert.classList.add('is-leaving');
+            window.setTimeout(() => alert.remove(), 260);
+        }, 4500);
+    });
+}
 
 function initJourneyShowcase() {
     const section = document.querySelector('[data-journey-showcase]');
@@ -139,7 +150,7 @@ function initClinicSearch() {
     const clinics = decodeBase64Json(form.dataset.searchSource ?? '');
     let matches = [];
 
-    const normalizedClinicName = (name) => name.replace(/^puskesmas\s+(demo\s+)?/i, '').toLocaleLowerCase('id');
+    const normalizedClinicName = (name) => name.replace(/^puskesmas\s+/i, '').toLocaleLowerCase('id');
     const findMatches = (term) => {
         const query = term.trim().toLocaleLowerCase('id');
         if (!query) return [];
@@ -157,7 +168,7 @@ function initClinicSearch() {
         input.setAttribute('aria-expanded', 'false');
     };
     const choose = (clinic) => {
-        input.value = clinic.name.replace(/^Puskesmas Demo\s+/i, '');
+        input.value = clinic.name.replace(/^Puskesmas\s+/i, '');
         close();
         window.dispatchEvent(new CustomEvent('clinic:focus', { detail: clinic }));
         document.querySelector('#peta-surabaya')?.scrollIntoView({ behavior: matchMedia('(prefers-reduced-motion: reduce)').matches ? 'auto' : 'smooth' });

@@ -32,7 +32,7 @@ php artisan serve
 
 Buka `http://127.0.0.1:8000`.
 
-## Akun demo
+## Akun akses
 
 | Role | Email | Password |
 |---|---|---|
@@ -54,7 +54,7 @@ Antarmuka memakai Leaflet 1.9.4 dan tile standar OpenStreetMap. Atribusi OpenStr
 php artisan queue:simulate --min=2 --max=9
 ```
 
-Endpoint `GET /api/antrean-live` diperiksa halaman setiap lima detik. Hanya status `WAITING`, `CALLED`, dan `SERVING` yang ditampilkan dan dihitung sebagai antrean aktif. Data `COMPLETED` dan `CANCELLED` tetap tersimpan sebagai riwayat, tetapi tidak memakai kapasitas. Simulator memproses data dummy dan membatasi antrean dummy hari berjalan hingga 300 record agar data demonstrasi tidak tumbuh tanpa batas.
+Endpoint `GET /api/antrean-live` diperiksa halaman setiap lima detik. Hanya status `WAITING`, `CALLED`, dan `SERVING` yang ditampilkan dan dihitung sebagai antrean aktif. Data `COMPLETED` dan `CANCELLED` tetap tersimpan sebagai riwayat, tetapi tidak memakai kapasitas. Simulator memproses data dummy dan membatasi antrean dummy hari berjalan hingga 300 record agar data simulasi tidak tumbuh tanpa batas.
 
 ## Batas pengembangan saat ini
 
