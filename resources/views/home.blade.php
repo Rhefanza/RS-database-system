@@ -10,7 +10,7 @@
         <p class="eyebrow">✦ &nbsp; Layanan kesehatan Surabaya</p>
         <h1 id="hero-title">Temukan faskes<br>dan lihat <em>antreannya.</em></h1>
         <p>Cari puskesmas, lihat titiknya di peta Surabaya, lalu ambil antrean layanan secara daring.</p>
-        <div class="hero-actions"><a href="#cari-puskesmas" class="button primary">Cari puskesmas <span aria-hidden="true">↗</span></a><a class="text-link" href="{{ route('recommendations.index') }}">Lihat rekomendasi →</a></div>
+        <div class="hero-actions"><a href="#cari-puskesmas" class="button primary">Cari puskesmas <svg class="icon-chevron" aria-hidden="true" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m9 6 6 6-6 6"/></svg></a><a class="text-link" href="{{ route('recommendations.index') }}">Lihat rekomendasi <svg class="icon-chevron" aria-hidden="true" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m9 6 6 6-6 6"/></svg></a></div>
     </div>
 </section>
 
@@ -25,7 +25,7 @@
 <section class="finder-section" id="cari-puskesmas" aria-labelledby="finder-title">
     <form class="care-search" method="get" action="{{ route('home') }}#peta-surabaya" data-clinic-search data-search-source="{{ base64_encode($searchSource->toJson()) }}">
         <div class="finder-heading"><div><p class="eyebrow">Pencarian yang lebih mudah</p><h2 id="finder-title">Cari dari nama, wilayah, atau poli.</h2></div><span>Hasil muncul saat Anda mengetik</span></div>
-        <div class="finder-fields search-combobox"><div class="search-input-wrap"><label for="finder-query" class="sr-only">Nama puskesmas, kecamatan, alamat, atau layanan</label><input id="finder-query" type="search" name="q" maxlength="100" value="{{ $search ?? '' }}" placeholder="Contoh: Mulyorejo, Poli Gigi, atau Kecamatan Gubeng" autocomplete="off" aria-autocomplete="list" aria-controls="clinic-search-results" aria-expanded="false"><div class="search-suggestions" id="clinic-search-results" role="listbox" hidden></div></div><button class="button primary" type="submit">Tampilkan di peta <span aria-hidden="true">→</span></button></div>
+<div class="finder-fields search-combobox"><div class="search-input-wrap"><label for="finder-query" class="sr-only">Nama puskesmas, kecamatan, alamat, atau layanan</label><input id="finder-query" type="search" name="q" maxlength="100" value="{{ $search ?? '' }}" placeholder="Contoh: Mulyorejo, Poli Gigi, atau Kecamatan Gubeng" autocomplete="off" aria-autocomplete="list" aria-controls="clinic-search-results" aria-expanded="false"><div class="search-suggestions" id="clinic-search-results" role="listbox" hidden></div></div><button class="button primary" type="submit">Tampilkan di peta <svg class="icon-chevron" aria-hidden="true" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m9 6 6 6-6 6"/></svg></button></div>
         <div class="finder-bottom"><p>Ketik nama faskes, lalu pilih hasil untuk menyorot lokasinya pada peta.</p></div>
     </form>
 </section>
@@ -68,5 +68,5 @@
     </ol>
 </section>
 
-<section class="care-cta"><div class="care-cta-copy"><p class="eyebrow">Butuh pilihan yang lebih terarah?</p><h2>Cari fasilitas kesehatan dengan <em>rekomendasi.</em></h2><p>Bandingkan jarak, antrean, poli, dokter, dan jadwal praktik dalam satu halaman.</p></div><img class="care-cta-image" src="{{ asset('images/rekomendasi.png') }}" alt="Tampilan fasilitas kesehatan dari udara" width="1448" height="1086" loading="lazy"><a class="button primary" href="{{ route('recommendations.index') }}">Lihat rekomendasi ↗</a></section>
+<section class="care-cta"><div class="care-cta-copy"><p class="eyebrow">Butuh pilihan yang lebih terarah?</p><h2>Cari fasilitas kesehatan dengan <em>rekomendasi.</em></h2><p>Bandingkan jarak, antrean, poli, dokter, dan jadwal praktik dalam satu halaman.</p></div><img class="care-cta-image" src="{{ asset('images/rekomendasi.png') }}" alt="Tampilan fasilitas kesehatan dari udara" width="1448" height="1086" loading="lazy"><a class="button primary" href="{{ route('recommendations.index') }}">Lihat rekomendasi <svg class="icon-chevron" aria-hidden="true" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m9 6 6 6-6 6"/></svg></a></section>
 @endsection

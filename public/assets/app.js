@@ -234,7 +234,7 @@ function initSurabayaMap() {
 
     const markerColor = (active) => active <= 3 ? '#168665' : active <= 7 ? '#d79a22' : '#d44f65';
     const markerLabel = (clinic) => `<span class="map-queue-count">${clinic.active}</span><span class="map-marker-name">${escapeHtml(clinic.name)}</span>`;
-    const popupContent = (clinic) => `<div class="clinic-popup"><span>Kecamatan ${escapeHtml(clinic.district)}</span><strong>${escapeHtml(clinic.name)}</strong><p>${escapeHtml(clinic.address)}</p><p><b>${clinic.active} antrean aktif</b></p><a href="${escapeHtml(clinic.url)}">Lihat jadwal & antre →</a></div>`;
+    const popupContent = (clinic) => `<div class="clinic-popup"><span>Kecamatan ${escapeHtml(clinic.district)}</span><strong>${escapeHtml(clinic.name)}</strong><p>${escapeHtml(clinic.address)}</p><p><b>${clinic.active} antrean aktif</b></p><a href="${escapeHtml(clinic.url)}">Lihat jadwal & antre <svg class="icon-chevron" aria-hidden="true" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m9 6 6 6-6 6"/></svg></a></div>`;
     const makeMarker = (clinic) => {
         const marker = L.circleMarker([clinic.latitude, clinic.longitude], {
             radius: 15, color: '#ffffff', weight: 3, fillColor: markerColor(clinic.active), fillOpacity: 1,

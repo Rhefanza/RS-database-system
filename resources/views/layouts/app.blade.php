@@ -10,14 +10,13 @@
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=DM+Serif+Display:ital@0;1&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" integrity="sha256-p4NxAoJBhIINfQ3ynceqWgVqC41Wifii1/Lnt2MZt4=" crossorigin="">
-    <link rel="stylesheet" href="{{ asset('assets/app.css').'?v=puskesmas-logo-4' }}">
+    <link rel="stylesheet" href="{{ asset('assets/app.css').'?v=chevron-1' }}">
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin="" defer></script>
-    <script src="{{ asset('assets/app.js').'?v=puskesmas-logo-4' }}" defer></script>
+    <script src="{{ asset('assets/app.js').'?v=chevron-1' }}" defer></script>
 </head>
 <body data-live-queue-endpoint="{{ route('api.live-queues') }}">
     <a class="skip-link" href="#main-content">Lewati ke konten</a>
-    <div class="utility-bar"><span>Lebih mudah mencari. Lebih siap berkunjung.</span><span>Informasi layanan kesehatan Surabaya</span></div>
-    <header class="site-header">
+    <header class="site-header {{ auth()->user()?->role === 'ADMIN' ? 'site-header-admin' : '' }}">
         <a class="brand" href="{{ auth()->check() && auth()->user()->role === 'ADMIN' ? route('admin.master.index') : route('home') }}"><img class="brand-logo" src="{{ asset('assets/logo-puskesmasku.png') }}" alt=""><strong>PuskesmasKu</strong><small>Lebih dekat. Lebih peduli.</small></a>
         <button class="menu-toggle" type="button" aria-controls="main-navigation" aria-expanded="false" data-menu-toggle hidden>Menu <span aria-hidden="true">☰</span></button>
         <nav id="main-navigation" aria-label="Navigasi utama">

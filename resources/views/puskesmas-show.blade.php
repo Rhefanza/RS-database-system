@@ -1,7 +1,7 @@
 @extends('layouts.app')
 @section('title', $puskesmas->nama_puskesmas)
 @section('content')
-<a class="back-link" href="{{ route('home') }}#peta-surabaya">← Kembali ke peta</a>
+<a class="back-link" href="{{ route('home') }}#peta-surabaya"><svg class="icon-chevron" aria-hidden="true" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m15 6-6 6 6 6"/></svg> Kembali ke peta</a>
 <section class="detail-head"><div><p class="eyebrow">✦ Puskesmas aktif · Kecamatan {{ $puskesmas->district?->nama_kecamatan ?? 'belum diatur' }}</p><h1>{{ $puskesmas->nama_puskesmas }}</h1><p>{{ $puskesmas->alamat }}</p></div><aside class="detail-callout"><span>Informasi kontak</span>@if ($puskesmas->nomor_telepon)<a href="tel:{{ $puskesmas->nomor_telepon }}">{{ $puskesmas->nomor_telepon }}</a>@else<p>Telepon belum tersedia.</p>@endif<p>Periksa jadwal layanan sebelum mengambil antrean.</p></aside></section>
 <section class="detail-services" id="layanan"><div class="section-heading"><div><p class="eyebrow">Jadwal layanan</p><h2>Pilih layanan dan <em>hari.</em></h2></div></div>
     <div class="stack-list">
