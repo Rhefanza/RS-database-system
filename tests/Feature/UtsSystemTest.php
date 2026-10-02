@@ -435,6 +435,130 @@ class UtsSystemTest extends TestCase
         $this->assertSame(31, Puskesmas::whereNotNull('latitude')->whereNotNull('longitude')->distinct('kecamatan_id')->count('kecamatan_id'));
     }
 
+    public function test_profile_updates_merged_account_without_changing_role_or_nik(): void
+    {
+        $user = $this->account(['role' => 'MASYARAKAT', 'nik' => '3578010101900088']);
+        $this->actingAs($user)->get(route('profile.edit'))->assertOk();
+        $this->put(route('profile.update'), [
+            'nama_lengkap' => 'Nama Profil Uji', 'email' => 'profil@example.test',
+            'nomor_telepon' => '081234', 'alamat' => 'Alamat profil',
+            'password' => 'new-password', 'password_confirmation' => 'new-password',
+            'role' => 'ADMIN', 'nik' => '3578010101900000',
+        ])->assertSessionHasNoErrors()->assertRedirect();
+        $user->refresh();
+        $this->assertSame('MASYARAKAT', $user->role);
+        $this->assertSame('3578010101900088', $user->nik);
+        $this->assertSame('Alamat profil', $user->alamat);
+        $this->assertSame('081234', $user->nomor_telepon);
+        $this->assertTrue(Hash::check('new-password', $user->password_hash));
+        $this->post(route('logout'))->assertRedirect(route('home'));
+        $this->post(route('login.store'), ['email' => 'profil@example.test', 'password' => 'new-password'])
+            ->assertRedirect(route('home'));
+        $puskesmas = Puskesmas::factory()->create();
+        $officer = $this->account(['role' => 'PETUGAS', 'puskesmas_id' => $puskesmas->puskesmas_id]);
+        $this->actingAs($officer)->put(route('profile.update'), [
+            'nama_lengkap' => 'Petugas profil', 'email' => 'injected@example.test',
+        ])->assertSessionHasNoErrors();
+        $this->assertSame($officer->email, $officer->fresh()->email);
+    }
+
+    public function test_doctor_schedule_changes_appear_in_detail_and_recommendations(): void
+    {
+        [$relation] = $this->twoRelations();
+        $relation->puskesmas->update(['latitude' => -7.28, 'longitude' => 112.76]);
+        $officer = $this->account(['role' => 'PETUGAS', 'puskesmas_id' => $relation->puskesmas_id]);
+        $payload = ['layanan_id' => $relation->layanan_id, 'hari' => 'SENIN',
+            'jam_buka' => '08:00', 'jam_tutup' => '12:00', 'kapasitas' => 10, 'status' => 'AKTIF',
+            'nama_dokter' => 'dr. Dokter Uji', 'spesialisasi' => 'Umum Uji'];
+        $this->actingAs($officer)->post(route('officer.schedules.store'), $payload)->assertSessionHasNoErrors();
+        $schedule = Schedule::firstOrFail();
+        $this->put(route('officer.schedules.update', $schedule), [...$payload, 'nama_dokter' => 'dr. Dokter Baru'])
+            ->assertSessionHasNoErrors();
+        $this->post(route('logout'));
+        foreach ([route('puskesmas.show', $relation->puskesmas), route('recommendations.index')] as $url) {
+            $this->get($url)->assertOk()->assertSee('dr. Dokter Baru')->assertSee('Umum Uji')->assertDontSee('dr. Dokter Uji');
+        }
+        $schedule->update(['status' => 'NONAKTIF']);
+        $this->get(route('recommendations.index'))->assertOk()->assertDontSee('dr. Dokter Baru');
+    }
+
+    public function test_queue_ownership_dates_and_cancelled_deletion_are_enforced(): void
+    {
+        $this->travelTo(\Carbon\Carbon::parse('2026-10-05 09:00:00'));
+        [$relation] = $this->twoRelations();
+        $schedule = Schedule::create(['puskesmas_id' => $relation->puskesmas_id, 'layanan_id' => $relation->layanan_id,
+            'hari' => 'SENIN', 'jam_buka' => '08:00', 'jam_tutup' => '12:00', 'kapasitas' => 10, 'status' => 'AKTIF']);
+        $owner = $this->account(['role' => 'MASYARAKAT', 'nik' => '3578010101900088']);
+        $other = $this->account(['role' => 'MASYARAKAT', 'nik' => '3578010101900089']);
+        $this->actingAs($owner)->post(route('my-queues.store', $schedule), ['tanggal_daftar' => '2026-10-04'])
+            ->assertSessionHasErrors('tanggal_daftar');
+        $this->post(route('my-queues.store', $schedule), ['tanggal_daftar' => '2026-10-06'])->assertSessionHas('error');
+        $this->assertDatabaseCount('antrean', 0);
+        $this->post(route('my-queues.store', $schedule), ['tanggal_daftar' => '2026-10-05'])->assertRedirect(route('my-queues.index'));
+        $queue = Queue::firstOrFail();
+        $this->actingAs($other)->patch(route('my-queues.cancel', $queue))->assertForbidden();
+        $this->delete(route('my-queues.destroy', $queue))->assertForbidden();
+        $this->actingAs($owner)->delete(route('my-queues.destroy', $queue))->assertStatus(409);
+        $this->patch(route('my-queues.cancel', $queue))->assertRedirect();
+        $this->delete(route('my-queues.destroy', $queue))->assertRedirect();
+        $this->assertDatabaseCount('antrean', 0);
+        $schedule->update(['status' => 'NONAKTIF']);
+        $this->post(route('my-queues.store', $schedule), ['tanggal_daftar' => '2026-10-05'])->assertForbidden();
+    }
+
+    public function test_used_master_records_and_schedules_cannot_be_deleted(): void
+    {
+        [$relation] = $this->twoRelations();
+        $citizen = $this->citizen();
+        $schedule = Schedule::create(['puskesmas_id' => $relation->puskesmas_id, 'layanan_id' => $relation->layanan_id,
+            'hari' => 'SENIN', 'jam_buka' => '08:00', 'jam_tutup' => '12:00', 'kapasitas' => 10, 'status' => 'AKTIF']);
+        Queue::create(['akun_id' => $citizen->akun_id, 'jadwal_id' => $schedule->jadwal_id,
+            'nomor_antrean' => 1, 'tanggal_daftar' => today(), 'status_antrean' => 'COMPLETED']);
+        $admin = $this->account();
+        $this->actingAs($admin)->delete(route('admin.citizens.destroy', $citizen))->assertSessionHas('error');
+        $this->delete(route('admin.puskesmas.destroy', $relation->puskesmas))->assertSessionHas('error');
+        $this->delete(route('admin.services.destroy', $relation->layanan_id))->assertSessionHas('error');
+        $this->delete(route('admin.districts.destroy', $relation->puskesmas->kecamatan_id))->assertSessionHas('error');
+        $this->delete(route('admin.citizens.destroy', $admin))->assertNotFound();
+        $officer = $this->account(['role' => 'PETUGAS', 'puskesmas_id' => $relation->puskesmas_id]);
+        $this->actingAs($officer)->delete(route('officer.schedules.destroy', $schedule))->assertSessionHas('error');
+        $this->assertDatabaseHas('jadwal', ['jadwal_id' => $schedule->jadwal_id]);
+        $this->assertDatabaseHas('akun', ['akun_id' => $citizen->akun_id]);
+        $this->assertDatabaseCount('antrean', 1);
+    }
+
+    public function test_officer_queue_rejections_return_to_form_and_preserve_input(): void
+    {
+        $this->travelTo(\Carbon\Carbon::parse('2026-10-05 09:00:00'));
+        [$relation] = $this->twoRelations();
+        $schedule = Schedule::create(['puskesmas_id' => $relation->puskesmas_id, 'layanan_id' => $relation->layanan_id,
+            'hari' => 'SENIN', 'jam_buka' => '08:00', 'jam_tutup' => '12:00', 'kapasitas' => 2, 'status' => 'AKTIF']);
+        $citizen = $this->citizen();
+        $officer = $this->account(['role' => 'PETUGAS', 'puskesmas_id' => $relation->puskesmas_id]);
+        $url = route('officer.queues.index');
+        $payload = ['nik' => $citizen->nik, 'jadwal_id' => $schedule->jadwal_id, 'tanggal_daftar' => '2026-10-31'];
+        $this->actingAs($officer)->from($url)->post(route('officer.queues.store'), $payload)
+            ->assertRedirect($url)->assertSessionHasErrors('tanggal_daftar')
+            ->assertSessionHasInput('nik', $citizen->nik)->assertSessionHasInput('tanggal_daftar', '2026-10-31');
+        $this->assertDatabaseCount('antrean', 0);
+        $payload['tanggal_daftar'] = '2026-10-05';
+        $this->post(route('officer.queues.store'), $payload)->assertSessionHasNoErrors();
+        $this->post(route('officer.queues.store'), $payload)->assertRedirect($url)->assertSessionHasErrors('nik');
+        $service = Service::create(['nama_layanan' => 'Poli Bentrok', 'status' => 'AKTIF']);
+        $otherSchedule = Schedule::create(['puskesmas_id' => $relation->puskesmas_id, 'layanan_id' => $service->layanan_id,
+            'hari' => 'SENIN', 'jam_buka' => '10:00', 'jam_tutup' => '13:00', 'kapasitas' => 2, 'status' => 'AKTIF']);
+        $this->post(route('officer.queues.store'), [...$payload, 'jadwal_id' => $otherSchedule->jadwal_id])
+            ->assertRedirect($url)->assertSessionHasErrors('jadwal_id');
+        $second = $this->citizen(['nik' => '3578010101900089']);
+        $schedule->update(['kapasitas' => 1]);
+        $this->post(route('officer.queues.store'), [...$payload, 'nik' => $second->nik])
+            ->assertRedirect($url)->assertSessionHasErrors('jadwal_id');
+        $schedule->update(['status' => 'NONAKTIF']);
+        $this->post(route('officer.queues.store'), [...$payload, 'nik' => $second->nik])
+            ->assertRedirect($url)->assertSessionHasErrors('jadwal_id');
+        $this->assertDatabaseCount('antrean', 1);
+    }
+
     private function citizen(array $attributes = []): User
     {
         return User::create([...['role' => 'MASYARAKAT', 'status_akun' => 'NONAKTIF', 'nik' => '3578010101900095', 'nama_lengkap' => 'Warga Test', 'status_data' => 'AKTIF'], ...$attributes]);
