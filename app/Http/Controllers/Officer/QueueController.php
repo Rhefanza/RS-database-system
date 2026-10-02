@@ -12,6 +12,7 @@ use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Validation\Rule;
+use Illuminate\Validation\ValidationException;
 
 class QueueController extends Controller
 {
@@ -39,23 +40,33 @@ class QueueController extends Controller
         ]);
         $schedule = Schedule::with('puskesmas')->findOrFail($data['jadwal_id']);
         $this->authorizeQueueScope($request, $schedule);
-        abort_unless(
-            $schedule->status === 'AKTIF'
-            && $schedule->service?->status === 'AKTIF'
-            && $schedule->puskesmas?->status === 'AKTIF',
-            409,
-            'Jadwal atau puskesmas tidak aktif.'
-        );
-        abort_if($this->dayName(Carbon::parse($data['tanggal_daftar'])) !== $schedule->hari, 409, 'Tanggal tidak sesuai dengan hari jadwal.');
+        if ($this->dayName(Carbon::parse($data['tanggal_daftar'])) !== $schedule->hari) {
+            throw ValidationException::withMessages(['tanggal_daftar' => 'Tanggal tidak sesuai dengan hari jadwal. Pilih poli yang tersedia pada tanggal tersebut.']);
+        }
         DB::transaction(function () use ($data, $schedule) {
             $citizen = User::citizens()->where('nik', $data['nik'])->lockForUpdate()->firstOrFail();
             $data['akun_id'] = $citizen->akun_id;
             unset($data['nik']);
             $locked = Schedule::whereKey($schedule->jadwal_id)->lockForUpdate()->firstOrFail();
+            if ($citizen->status_data !== 'AKTIF') {
+                throw ValidationException::withMessages(['nik' => 'Data masyarakat tidak aktif.']);
+            }
+            if ($locked->status !== 'AKTIF' || $locked->service?->status !== 'AKTIF' || $locked->puskesmas?->status !== 'AKTIF') {
+                throw ValidationException::withMessages(['jadwal_id' => 'Jadwal atau puskesmas tidak aktif. Pilih jadwal lain.']);
+            }
+            if ($this->dayName(Carbon::parse($data['tanggal_daftar'])) !== $locked->hari) {
+                throw ValidationException::withMessages(['tanggal_daftar' => 'Jadwal telah berubah. Pilih kembali tanggal dan poli.']);
+            }
             $activeCount = $locked->queues()->active()->whereDate('tanggal_daftar', $data['tanggal_daftar'])->count();
-            abort_if($activeCount >= $locked->kapasitas, 409, 'Kapasitas antrean sudah penuh.');
-            abort_if($locked->queues()->active()->where('akun_id', $data['akun_id'])->whereDate('tanggal_daftar', $data['tanggal_daftar'])->exists(), 409, 'Masyarakat sudah terdaftar pada jadwal ini.');
-            abort_if(Queue::overlappingActiveFor($data['akun_id'], $locked, $data['tanggal_daftar']), 409, 'Masyarakat masih memiliki antrean aktif pada jadwal yang bertabrakan.');
+            if ($activeCount >= $locked->kapasitas) {
+                throw ValidationException::withMessages(['jadwal_id' => 'Kapasitas antrean sudah penuh.']);
+            }
+            if ($locked->queues()->active()->where('akun_id', $data['akun_id'])->whereDate('tanggal_daftar', $data['tanggal_daftar'])->exists()) {
+                throw ValidationException::withMessages(['nik' => 'Masyarakat sudah terdaftar pada jadwal ini.']);
+            }
+            if (Queue::overlappingActiveFor($data['akun_id'], $locked, $data['tanggal_daftar'])) {
+                throw ValidationException::withMessages(['jadwal_id' => 'Masyarakat masih memiliki antrean aktif pada jadwal yang bertabrakan.']);
+            }
             $data['nomor_antrean'] = ((int) $locked->queues()->whereDate('tanggal_daftar', $data['tanggal_daftar'])->max('nomor_antrean')) + 1;
             $data['status_antrean'] = 'WAITING';
             Queue::create($data);

@@ -28,6 +28,7 @@ function escapeHtml(value) {
 
 document.addEventListener('DOMContentLoaded', () => {
     initFlashAlerts();
+    initOfficerQueueForm();
 
     const panels = [...document.querySelectorAll('[data-master-panel]')];
     const tabs = [...document.querySelectorAll('[data-master-tab]')];
@@ -388,6 +389,36 @@ function initRecommendations() {
         });
         rank();
     });
+}
+
+function initOfficerQueueForm() {
+    const form = document.querySelector('[data-officer-queue-form]');
+    if (!form) return;
+    const date = form.querySelector('[name="tanggal_daftar"]');
+    const select = form.querySelector('[name="jadwal_id"]');
+    const help = form.querySelector('[data-queue-schedule-help]');
+    const submit = form.querySelector('[data-add-officer-queue]');
+    const schedules = [...select.options].filter((option) => option.value).map((option) => ({
+        value: option.value, text: option.textContent, day: option.dataset.day,
+    }));
+    const days = ['MINGGU', 'SENIN', 'SELASA', 'RABU', 'KAMIS', 'JUMAT', 'SABTU'];
+    const refresh = () => {
+        const previous = select.value;
+        const parsed = date.value ? new Date(`${date.value}T12:00:00`) : null;
+        const day = parsed && !Number.isNaN(parsed.getTime()) ? days[parsed.getDay()] : null;
+        const available = schedules.filter((schedule) => schedule.day === day);
+        select.replaceChildren(new Option('Pilih poli / jadwal', ''));
+        available.forEach((schedule) => select.add(new Option(schedule.text, schedule.value)));
+        select.value = available.some((schedule) => schedule.value === previous) ? previous : '';
+        select.disabled = !available.length;
+        submit.disabled = !available.length;
+        help.textContent = !day ? 'Pilih tanggal terlebih dahulu.' : available.length
+            ? `Menampilkan poli yang buka pada hari ${day.toLowerCase()}.`
+            : `Tidak ada jadwal layanan pada hari ${day.toLowerCase()}. Pilih tanggal lain atau tambahkan jadwal layanan.`;
+    };
+    date.addEventListener('change', refresh);
+    date.addEventListener('input', refresh);
+    refresh();
 }
 
 function initLiveQueues() {
