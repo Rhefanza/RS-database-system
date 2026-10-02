@@ -58,7 +58,45 @@ document.addEventListener('DOMContentLoaded', () => {
     initRecommendations();
     initLiveQueues();
     initJourneyShowcase();
+    initScrollMotion();
 });
+
+function initScrollMotion() {
+    const reducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    const sections = [...document.querySelectorAll('[data-reveal]')];
+    if (!reducedMotion && 'IntersectionObserver' in window && sections.length) {
+        document.documentElement.classList.add('motion-ready');
+        const observer = new IntersectionObserver((entries) => {
+            entries.forEach((entry) => {
+                if (!entry.isIntersecting) return;
+                entry.target.classList.add('is-visible');
+                observer.unobserve(entry.target);
+            });
+        }, { threshold: 0.12, rootMargin: '0px 0px -35px 0px' });
+        sections.forEach((section) => observer.observe(section));
+    }
+
+    const feature = document.querySelector('[data-expand-on-scroll]');
+    if (!feature || reducedMotion) return;
+    const panel = feature.querySelector('.care-cta');
+    let scheduled = false;
+    const update = () => {
+        const bounds = feature.getBoundingClientRect();
+        const range = Math.max(feature.offsetHeight - window.innerHeight, 1);
+        const progress = Math.min(1, Math.max(0, -bounds.top / range));
+        panel.style.setProperty('--feature-scale', (0.91 + progress * 0.09).toFixed(3));
+        panel.style.setProperty('--feature-radius', `${Math.round(28 - progress * 12)}px`);
+        scheduled = false;
+    };
+    const schedule = () => {
+        if (scheduled) return;
+        scheduled = true;
+        requestAnimationFrame(update);
+    };
+    window.addEventListener('scroll', schedule, { passive: true });
+    window.addEventListener('resize', schedule);
+    update();
+}
 
 function initFlashAlerts() {
     document.querySelectorAll('.flash-toast-stack .alert').forEach((alert) => {
@@ -218,6 +256,8 @@ function initClinicSearch() {
 function initSurabayaMap() {
     const element = document.querySelector('[data-leaflet-map]');
     if (!element) return;
+    const locationButton = document.querySelector('[data-use-map-location]');
+    const locationStatus = document.querySelector('[data-map-location-status]');
     if (!window.L) {
         element.innerHTML = '<p class="map-load-error">Peta belum dapat dimuat. Periksa koneksi internet lalu muat ulang halaman.</p>';
         return;
@@ -226,6 +266,7 @@ function initSurabayaMap() {
     const clinics = decodeBase64Json(element.dataset.mapItems ?? '');
     const clinicById = new Map(clinics.map((clinic) => [String(clinic.id), clinic]));
     const markers = new Map();
+    let userMarker;
     const map = L.map(element, { scrollWheelZoom: false, zoomControl: true }).setView([-7.2756, 112.7508], 11);
     L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png', {
         maxZoom: 19,
@@ -249,6 +290,33 @@ function initSurabayaMap() {
     const updateZoomLabels = () => element.classList.toggle('show-faskes-labels', map.getZoom() >= 13);
     map.on('zoomend', updateZoomLabels);
     updateZoomLabels();
+
+    locationButton?.addEventListener('click', () => {
+        if (!navigator.geolocation) {
+            locationStatus.textContent = 'Peramban ini tidak mendukung pembacaan lokasi.';
+            return;
+        }
+        locationButton.disabled = true;
+        locationStatus.textContent = 'Sedang mencari lokasi Anda…';
+        navigator.geolocation.getCurrentPosition(({ coords }) => {
+            const point = [coords.latitude, coords.longitude];
+            if (userMarker) userMarker.setLatLng(point);
+            else {
+                userMarker = L.circleMarker(point, {
+                    radius: 11, color: '#ffffff', weight: 3, fillColor: '#238689', fillOpacity: 1,
+                }).addTo(map).bindPopup('Lokasi Anda saat ini');
+            }
+            map.flyTo(point, 14, { animate: !window.matchMedia('(prefers-reduced-motion: reduce)').matches });
+            userMarker.openPopup();
+            element.scrollIntoView({ behavior: window.matchMedia('(prefers-reduced-motion: reduce)').matches ? 'auto' : 'smooth', block: 'center' });
+            locationStatus.textContent = 'Lokasi Anda sudah ditandai di peta.';
+            locationButton.querySelector('strong').textContent = 'Perbarui lokasi saya';
+            locationButton.disabled = false;
+        }, () => {
+            locationStatus.textContent = 'Lokasi belum dapat dibaca. Izinkan akses lokasi di peramban lalu coba lagi.';
+            locationButton.disabled = false;
+        }, { enableHighAccuracy: false, timeout: 10000, maximumAge: 300000 });
+    });
 
     window.addEventListener('clinic:focus', ({ detail }) => {
         const marker = markers.get(String(detail.id));

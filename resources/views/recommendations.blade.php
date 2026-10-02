@@ -1,16 +1,16 @@
 @extends('layouts.app')
 @section('title', 'Rekomendasi faskes')
 @section('content')
-<section class="recommendation-hero">
+<section class="recommendation-hero" data-reveal>
     <div><p class="eyebrow">Rekomendasi berbasis lokasi</p><h1>Lima pilihan yang lebih <em>dekat dan lengang.</em></h1><p>Kami mengambil 10 faskes terdekat, lalu memilih lima dengan antrean aktif lebih sedikit.</p></div>
     <div class="recommendation-location-panel"><span>Lokasi pembanding</span><strong data-recommendation-origin>Pusat Kota Surabaya</strong><button class="button primary" type="button" data-use-recommendation-location>Gunakan lokasi saya</button><small data-recommendation-status role="status" aria-live="polite">Izinkan lokasi untuk mendapatkan urutan yang lebih sesuai.</small></div>
 </section>
 
-<section class="recommendation-results" aria-labelledby="recommendation-title">
+<section class="recommendation-results" aria-labelledby="recommendation-title" data-reveal>
     <div class="section-heading"><div><p class="eyebrow">Hasil rekomendasi</p><h2 id="recommendation-title">Pilihan untuk kunjungan Anda.</h2></div><span class="count">5 dari {{ $recommendations->count() }} faskes</span></div>
     <div class="recommendation-list" data-recommendation-list>
         @foreach($recommendations->sortBy('active')->values() as $item)
-            <article class="recommendation-card" data-recommendation-card data-puskesmas-id="{{ $item['id'] }}" data-lat="{{ $item['latitude'] }}" data-lng="{{ $item['longitude'] }}" data-active="{{ $item['active'] }}" @if($loop->iteration > 5) hidden @endif>
+            <article class="recommendation-card" data-reveal data-recommendation-card data-puskesmas-id="{{ $item['id'] }}" data-lat="{{ $item['latitude'] }}" data-lng="{{ $item['longitude'] }}" data-active="{{ $item['active'] }}" @if($loop->iteration > 5) hidden @endif>
                 <div class="recommendation-rank" data-recommendation-rank>{{ str_pad((string) min($loop->iteration, 5), 2, '0', STR_PAD_LEFT) }}</div>
                 <div class="recommendation-main">
                     <div class="recommendation-title-row"><div><span class="district-pill">Kecamatan {{ $item['district'] }}</span><h3>{{ $item['name'] }}</h3><p>{{ $item['address'] }}</p></div><div class="recommendation-metrics"><div><strong data-recommendation-distance>—</strong><span>Jarak</span></div><div><strong data-live-active>{{ $item['active'] }}</strong><span>Antrean aktif</span></div></div></div>

@@ -3,7 +3,7 @@
 @section('title', 'Peta antrean puskesmas Surabaya')
 
 @section('content')
-<section class="care-hero" aria-labelledby="hero-title">
+<section class="care-hero" aria-labelledby="hero-title" data-reveal>
     <img src="{{ asset('images/antre.png') }}" class="care-hero-photo" alt="Petugas kesehatan melayani masyarakat yang sedang mengantre" width="1448" height="1086" fetchpriority="high">
     <div class="care-hero-shade" aria-hidden="true"></div>
     <div class="care-hero-copy">
@@ -22,17 +22,15 @@
     ])->values();
 @endphp
 
-<section class="finder-section" id="cari-puskesmas" aria-labelledby="finder-title">
+<section class="finder-section" id="cari-puskesmas" aria-labelledby="finder-title" data-reveal>
     <form class="care-search" method="get" action="{{ route('home') }}#peta-surabaya" data-clinic-search data-search-source="{{ base64_encode($searchSource->toJson()) }}">
         <div class="finder-heading"><div><p class="eyebrow">Pencarian yang lebih mudah</p><h2 id="finder-title">Cari dari nama, wilayah, atau poli.</h2></div><span>Hasil muncul saat Anda mengetik</span></div>
 <div class="finder-fields search-combobox"><div class="search-input-wrap"><label for="finder-query" class="sr-only">Nama puskesmas, kecamatan, alamat, atau layanan</label><input id="finder-query" type="search" name="q" maxlength="100" value="{{ $search ?? '' }}" placeholder="Contoh: Mulyorejo, Poli Gigi, atau Kecamatan Gubeng" autocomplete="off" aria-autocomplete="list" aria-controls="clinic-search-results" aria-expanded="false"><div class="search-suggestions" id="clinic-search-results" role="listbox" hidden></div></div><button class="button primary" type="submit">Tampilkan di peta <svg class="icon-chevron" aria-hidden="true" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m9 6 6 6-6 6"/></svg></button></div>
-        <div class="finder-bottom"><p>Ketik nama faskes, lalu pilih hasil untuk menyorot lokasinya pada peta.</p></div>
+        <div class="finder-bottom"><p>Ketik nama faskes, lalu pilih hasil untuk menyorot lokasinya pada peta.</p><button class="location-button" type="button" data-use-map-location><span aria-hidden="true">⌖</span><strong>Temukan lokasi saya di peta</strong></button><span class="map-location-status" data-map-location-status role="status" aria-live="polite"></span></div>
     </form>
 </section>
 
-<section class="care-promises" aria-label="Manfaat menggunakan layanan"><div><span aria-hidden="true">⌕</span><p><strong>Cari lebih mudah</strong><small>Nama berawalan sama langsung ditampilkan.</small></p></div><div><span aria-hidden="true">⌖</span><p><strong>Lihat di peta</strong><small>31 titik faskes pada peta Surabaya.</small></p></div><div><span aria-hidden="true">≋</span><p><strong>Ambil antrean</strong><small>Pilih layanan dan nomor antrean yang tersedia.</small></p></div></section>
-
-<section class="home-map-section" id="peta-surabaya" aria-labelledby="map-title">
+<section class="home-map-section" id="peta-surabaya" aria-labelledby="map-title" data-reveal>
     <div class="section-heading map-section-heading"><div><p class="eyebrow">Peta layanan hari ini</p><h2 id="map-title">Semua faskes dalam <em>satu peta.</em></h2><p>Klik titik untuk melihat nama faskes, alamat, dan jumlah antrean aktif.</p></div><div class="map-summary" aria-label="Ringkasan peta"><div><strong>{{ $mapItems->count() }}</strong><span>Faskes</span></div><div><strong data-live-summary-total>{{ $totalQueues }}</strong><span>Total antrean</span></div><div><strong data-live-summary-active>{{ $activeQueues }}</strong><span>Antrean aktif</span></div></div></div>
 
     @if ($mapItems->isEmpty())
@@ -47,7 +45,7 @@
     @endif
 </section>
 
-<section class="journey-showcase" id="cara-kerja" data-journey-showcase aria-labelledby="journey-title">
+<section class="journey-showcase" id="cara-kerja" data-journey-showcase data-reveal aria-labelledby="journey-title">
     <header class="journey-intro" data-scroll-blur>
         <div><p class="eyebrow">Langkah Anda</p><h2 id="journey-title">Cari, pilih, lalu <em>antre.</em></h2></div>
         <p>Informasi layanan dan antrean tersedia dalam satu alur yang mudah diikuti.</p>
@@ -68,5 +66,5 @@
     </ol>
 </section>
 
-<section class="care-cta"><div class="care-cta-copy"><p class="eyebrow">Butuh pilihan yang lebih terarah?</p><h2>Cari fasilitas kesehatan dengan <em>rekomendasi.</em></h2><p>Bandingkan jarak, antrean, poli, dokter, dan jadwal praktik dalam satu halaman.</p></div><img class="care-cta-image" src="{{ asset('images/rekomendasi.png') }}" alt="Tampilan fasilitas kesehatan dari udara" width="1448" height="1086" loading="lazy"><a class="button primary" href="{{ route('recommendations.index') }}">Lihat rekomendasi <svg class="icon-chevron" aria-hidden="true" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m9 6 6 6-6 6"/></svg></a></section>
+<section class="recommendation-feature" data-expand-on-scroll aria-labelledby="feature-title"><div class="care-cta" data-reveal><div class="care-cta-copy"><p class="eyebrow">Butuh pilihan yang lebih terarah?</p><h2 id="feature-title">Cari fasilitas kesehatan dengan <em>rekomendasi.</em></h2><p>Bandingkan jarak, antrean, poli, dokter, dan jadwal praktik dalam satu halaman.</p><a class="button primary" href="{{ route('recommendations.index') }}">Lihat rekomendasi <svg class="icon-chevron" aria-hidden="true" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m9 6 6 6-6 6"/></svg></a></div><img class="care-cta-image" src="{{ asset('images/rekomendasi.png') }}" alt="Tampilan fasilitas kesehatan dari udara" width="1448" height="1086" loading="lazy"></div></section>
 @endsection
