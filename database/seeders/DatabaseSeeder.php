@@ -2,11 +2,8 @@
 
 namespace Database\Seeders;
 
-use App\Models\Citizen;
 use App\Models\District;
-use App\Models\Doctor;
 use App\Models\Puskesmas;
-use App\Models\PuskesmasService;
 use App\Models\Queue;
 use App\Models\Schedule;
 use App\Models\Service;
@@ -29,7 +26,9 @@ class DatabaseSeeder extends Seeder
         $citizens = collect(range(1, 80))->map(function (int $number) {
             $suffix = str_pad((string) $number, 4, '0', STR_PAD_LEFT);
 
-            return Citizen::updateOrCreate(['nik' => '357801010190'.$suffix], [
+            return User::firstOrCreate(['nik' => '357801010190'.$suffix], [
+                'role' => 'MASYARAKAT',
+                'status_akun' => 'NONAKTIF',
                 'nama_lengkap' => 'Masyarakat Dummy '.str_pad((string) $number, 2, '0', STR_PAD_LEFT),
                 'nomor_telepon' => '08123000'.$suffix,
                 'alamat' => 'Alamat sintetis nomor '.$number.', Surabaya',
@@ -38,7 +37,8 @@ class DatabaseSeeder extends Seeder
         });
 
         foreach ($citizens->take(3) as $index => $citizen) {
-            User::updateOrCreate(['email' => 'masyarakat'.($index + 1).'@puskesmas.test'], [
+            User::updateOrCreate(['nik' => $citizen->nik], [
+                'email' => 'masyarakat'.($index + 1).'@puskesmas.test',
                 'nik' => $citizen->nik,
                 'nama_lengkap' => $citizen->nama_lengkap,
                 'password_hash' => 'password',
@@ -120,24 +120,14 @@ class DatabaseSeeder extends Seeder
             $schedules = collect();
             foreach ([0, 1, 3] as $offset) {
                 $service = $services[($clinicIndex + $offset) % $services->count()];
-                $relation = PuskesmasService::updateOrCreate([
+                $doctorName = $doctorNames[($clinicIndex + $offset * 2) % count($doctorNames)];
+                $schedules->push(Schedule::updateOrCreate([
                     'puskesmas_id' => $puskesmas->puskesmas_id,
                     'layanan_id' => $service->layanan_id,
-                ], [
-                    'status' => 'AKTIF',
-                ]);
-                $doctorName = $doctorNames[($clinicIndex + $offset * 2) % count($doctorNames)];
-                Doctor::updateOrCreate([
-                    'puskesmas_layanan_id' => $relation->puskesmas_layanan_id,
-                    'nama_dokter' => $doctorName,
-                ], [
-                    'spesialisasi' => $specializations[$service->nama_layanan],
-                    'status' => 'AKTIF',
-                ]);
-                $schedules->push(Schedule::updateOrCreate([
-                    'puskesmas_layanan_id' => $relation->puskesmas_layanan_id,
                     'hari' => $today,
                 ], [
+                    'nama_dokter' => $doctorName,
+                    'spesialisasi' => $specializations[$service->nama_layanan],
                     'jam_buka' => $offset === 3 ? '09:00' : '08:00',
                     'jam_tutup' => $offset === 3 ? '13:00' : '12:00',
                     'kapasitas' => 50,
@@ -158,7 +148,7 @@ class DatabaseSeeder extends Seeder
                     'nomor_antrean' => $queueIndex + 1,
                     'tanggal_daftar' => today(),
                 ], [
-                    'nik' => $citizen->nik,
+                    'akun_id' => $citizen->akun_id,
                     'status_antrean' => match ($queueIndex) {
                         0 => 'COMPLETED',
                         1 => 'SERVING',

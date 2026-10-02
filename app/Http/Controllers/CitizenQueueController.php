@@ -2,7 +2,7 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\Citizen;
+use App\Models\User;
 use App\Models\Queue;
 use App\Models\Schedule;
 use Carbon\Carbon;
@@ -15,8 +15,8 @@ class CitizenQueueController extends Controller
 {
     public function index(Request $request): View
     {
-        $queues = Queue::with('schedule.puskesmasService.puskesmas', 'schedule.puskesmasService.service')
-            ->where('nik', $request->user()->nik)
+        $queues = Queue::with('schedule.puskesmas', 'schedule.service')
+            ->where('akun_id', $request->user()->akun_id)
             ->active()
             ->latest('tanggal_daftar')
             ->latest('nomor_antrean')
@@ -29,12 +29,12 @@ class CitizenQueueController extends Controller
     {
         $validated = $request->validate(['tanggal_daftar' => ['required', 'date', 'after_or_equal:today']]);
         $date = Carbon::parse($validated['tanggal_daftar']);
-        $schedule->load('puskesmasService.puskesmas', 'puskesmasService.service');
+        $schedule->load('puskesmas', 'service');
         abort_unless(
-            $request->user()->nik
+            $request->user()->nik && $request->user()->status_data === 'AKTIF'
             && $schedule->status === 'AKTIF'
-            && $schedule->puskesmasService?->status === 'AKTIF'
-            && $schedule->puskesmasService?->puskesmas?->status === 'AKTIF',
+            && $schedule->service?->status === 'AKTIF'
+            && $schedule->puskesmas?->status === 'AKTIF',
             403
         );
         if ($this->dayName($date) !== $schedule->hari) {
@@ -42,15 +42,15 @@ class CitizenQueueController extends Controller
         }
 
         $result = DB::transaction(function () use ($request, $schedule, $date) {
-            Citizen::whereKey($request->user()->nik)->lockForUpdate()->firstOrFail();
+            User::citizens()->whereKey($request->user()->akun_id)->lockForUpdate()->firstOrFail();
             $locked = Schedule::whereKey($schedule->getKey())->lockForUpdate()->firstOrFail();
 
-            $existing = $locked->queues()->active()->where('nik', $request->user()->nik)->whereDate('tanggal_daftar', $date)->first();
+            $existing = $locked->queues()->active()->where('akun_id', $request->user()->akun_id)->whereDate('tanggal_daftar', $date)->first();
             if ($existing) {
                 return ['status' => 'existing', 'queue' => $existing];
             }
 
-            $conflict = Queue::overlappingActiveFor($request->user()->nik, $locked, $date->toDateString());
+            $conflict = Queue::overlappingActiveFor($request->user()->akun_id, $locked, $date->toDateString());
             if ($conflict) {
                 return ['status' => 'conflict', 'queue' => $conflict];
             }
@@ -63,7 +63,7 @@ class CitizenQueueController extends Controller
             return [
                 'status' => 'created',
                 'queue' => $locked->queues()->create([
-                    'nik' => $request->user()->nik,
+                    'akun_id' => $request->user()->akun_id,
                     'nomor_antrean' => ((int) $locked->queues()->whereDate('tanggal_daftar', $date)->max('nomor_antrean')) + 1,
                     'tanggal_daftar' => $date,
                     'status_antrean' => 'WAITING',
@@ -79,8 +79,8 @@ class CitizenQueueController extends Controller
             $conflict = $result['queue'];
 
             return back()->with('error', 'Jadwal bertabrakan dengan antrean aktif Anda di '
-                .$conflict->schedule->puskesmasService->puskesmas->nama_puskesmas.' · '
-                .$conflict->schedule->puskesmasService->service->nama_layanan.' ('
+                .$conflict->schedule->puskesmas->nama_puskesmas.' · '
+                .$conflict->schedule->service->nama_layanan.' ('
                 .substr($conflict->schedule->jam_buka, 0, 5).'–'.substr($conflict->schedule->jam_tutup, 0, 5).').');
         }
 
@@ -95,7 +95,7 @@ class CitizenQueueController extends Controller
 
     public function cancel(Request $request, Queue $queue): RedirectResponse
     {
-        abort_unless($queue->nik === $request->user()->nik, 403);
+        abort_unless((int) $queue->akun_id === (int) $request->user()->akun_id, 403);
         abort_unless($queue->status_antrean === 'WAITING', 409, 'Hanya antrean menunggu yang dapat dibatalkan.');
         $queue->update(['status_antrean' => 'CANCELLED']);
 
@@ -104,7 +104,7 @@ class CitizenQueueController extends Controller
 
     public function destroy(Request $request, Queue $queue): RedirectResponse
     {
-        abort_unless($queue->nik === $request->user()->nik, 403);
+        abort_unless((int) $queue->akun_id === (int) $request->user()->akun_id, 403);
         abort_unless($queue->status_antrean === 'CANCELLED', 409, 'Batalkan antrean sebelum menghapusnya.');
         $queue->delete();
 

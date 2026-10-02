@@ -3,7 +3,6 @@
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
-use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class Service extends Model
@@ -14,14 +13,9 @@ class Service extends Model
 
     protected $fillable = ['nama_layanan', 'deskripsi', 'status'];
 
-    public function puskesmas(): BelongsToMany
-    {
-        return $this->belongsToMany(Puskesmas::class, 'puskesmas_layanan', 'layanan_id', 'puskesmas_id')
-            ->withPivot(['puskesmas_layanan_id', 'status'])->withTimestamps();
-    }
 
-    public function puskesmasServices(): HasMany
+    public function schedules(): HasMany
     {
-        return $this->hasMany(PuskesmasService::class, 'layanan_id', 'layanan_id');
+        return $this->hasMany(Schedule::class, 'layanan_id', 'layanan_id');
     }
 }

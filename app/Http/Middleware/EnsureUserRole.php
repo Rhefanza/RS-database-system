@@ -12,6 +12,8 @@ class EnsureUserRole
     {
         abort_unless($request->user() && in_array($request->user()->role, $roles, true), 403);
 
+        abort_unless($request->user()->status_akun === 'AKTIF' && $request->user()->status_data === 'AKTIF' && $request->user()->password_hash !== null, 403);
+
         if ($request->user()->role === 'PETUGAS') {
             abort_unless(
                 $request->user()->puskesmas_id

@@ -3,7 +3,7 @@
 namespace App\Http\Controllers\Officer;
 
 use App\Http\Controllers\Controller;
-use App\Models\PuskesmasService;
+use App\Models\Service;
 use App\Models\Schedule;
 use Illuminate\Contracts\View\View;
 use Illuminate\Http\RedirectResponse;
@@ -16,20 +16,17 @@ class ScheduleController extends Controller
 {
     public function index(Request $request): View
     {
-        $relations = PuskesmasService::with('puskesmas', 'service')->where('status', 'AKTIF')
+        $services = Service::where('status', 'AKTIF')->orderBy('nama_layanan')->get();
+        $schedules = Schedule::with('puskesmas', 'service')
             ->when($request->user()->role === 'PETUGAS', fn ($query) => $query->where('puskesmas_id', $request->user()->puskesmas_id))
-            ->get();
-        $schedules = Schedule::with('puskesmasService.puskesmas', 'puskesmasService.service')
-            ->when($request->user()->role === 'PETUGAS', fn ($query) => $query->whereHas('puskesmasService', fn ($relation) => $relation->where('puskesmas_id', $request->user()->puskesmas_id)))
             ->orderBy('hari')->get();
 
-        return view('officer.schedules.index', compact('relations', 'schedules'));
+        return view('officer.schedules.index', compact('services', 'schedules'));
     }
 
     public function store(Request $request): RedirectResponse
     {
         $data = $this->data($request);
-        $this->authorizeRelation($request, (int) $data['puskesmas_layanan_id']);
         Schedule::create($data);
 
         return back()->with('success', 'Jadwal dan kapasitas ditambahkan.');
@@ -39,7 +36,6 @@ class ScheduleController extends Controller
     {
         $this->authorizeSchedule($request, $schedule);
         $data = $this->data($request, $schedule);
-        $this->authorizeRelation($request, (int) $data['puskesmas_layanan_id']);
         DB::transaction(function () use ($schedule, $data): void {
             $locked = Schedule::whereKey($schedule->getKey())->lockForUpdate()->firstOrFail();
             $activeMaximum = (int) ($locked->queues()
@@ -49,6 +45,12 @@ class ScheduleController extends Controller
                 ->pluck('total')
                 ->max() ?? 0);
             abort_if((int) $data['kapasitas'] < $activeMaximum, 409, "Kapasitas tidak boleh lebih kecil dari {$activeMaximum} antrean aktif yang sudah terdaftar.");
+            if ($locked->queues()->active()->exists()) {
+                foreach (['layanan_id', 'hari', 'jam_buka', 'jam_tutup'] as $field) {
+                    $current = in_array($field, ['jam_buka', 'jam_tutup']) ? substr($locked->$field, 0, 5) : (string) $locked->$field;
+                    abort_if($current !== (string) $data[$field], 409, 'Selesaikan antrean aktif sebelum mengubah layanan atau waktu jadwal.');
+                }
+            }
             $locked->update($data);
         });
 
@@ -68,10 +70,15 @@ class ScheduleController extends Controller
 
     private function data(Request $request, ?Schedule $schedule = null): array
     {
+        if ($request->filled('puskesmas_id')) {
+            abort_unless((int) $request->input('puskesmas_id') === (int) $request->user()->puskesmas_id, 403);
+        }
         $validator = Validator::make($request->all(), [
-            'puskesmas_layanan_id' => ['required', 'exists:puskesmas_layanan,puskesmas_layanan_id'],
+            'layanan_id' => ['required', Rule::exists('layanan', 'layanan_id')->where('status', 'AKTIF')],
+            'nama_dokter' => ['nullable', 'string', 'max:1000'],
+            'spesialisasi' => ['nullable', 'string', 'max:1000'],
             'hari' => ['required', Rule::in(['SENIN', 'SELASA', 'RABU', 'KAMIS', 'JUMAT', 'SABTU', 'MINGGU']), Rule::unique('jadwal', 'hari')
-                ->where('puskesmas_layanan_id', $request->input('puskesmas_layanan_id'))->ignore($schedule?->jadwal_id, 'jadwal_id')],
+                ->where('puskesmas_id', $request->user()->puskesmas_id)->where('layanan_id', $request->input('layanan_id'))->ignore($schedule?->jadwal_id, 'jadwal_id')],
             'jam_buka' => ['required', 'date_format:H:i'],
             'jam_tutup' => ['required', 'date_format:H:i', 'after:jam_buka'],
             'kapasitas' => ['required', 'integer', 'min:1', 'max:1000'],
@@ -98,24 +105,13 @@ class ScheduleController extends Controller
             }
         });
 
-        return $validator->validate();
-    }
-
-    private function authorizeRelation(Request $request, int $id): void
-    {
-        if ($request->user()->role === 'PETUGAS') {
-            abort_unless(PuskesmasService::whereKey($id)
-                ->where('puskesmas_id', $request->user()->puskesmas_id)
-                ->where('status', 'AKTIF')
-                ->whereHas('puskesmas', fn ($query) => $query->where('status', 'AKTIF'))
-                ->exists(), 403);
-        }
+        return $validator->validate() + ['puskesmas_id' => $request->user()->puskesmas_id];
     }
 
     private function authorizeSchedule(Request $request, Schedule $schedule): void
     {
         if ($request->user()->role === 'PETUGAS') {
-            abort_unless($schedule->puskesmasService()->where('puskesmas_id', $request->user()->puskesmas_id)->exists(), 403);
+            abort_unless((int) $schedule->puskesmas_id === (int) $request->user()->puskesmas_id, 403);
         }
     }
 }

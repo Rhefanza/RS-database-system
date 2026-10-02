@@ -10,9 +10,9 @@
         @else
             <label>Email<input type="email" name="email" value="{{ old('email', $user->email) }}" required></label>
         @endif
-        @if ($user->citizen)
-            <label>Nomor telepon<input name="nomor_telepon" value="{{ old('nomor_telepon', $user->citizen->nomor_telepon) }}"></label>
-            <label class="span-2">Alamat<textarea name="alamat">{{ old('alamat', $user->citizen->alamat) }}</textarea></label>
+        @if ($user->role === 'MASYARAKAT')
+            <label>Nomor telepon<input name="nomor_telepon" value="{{ old('nomor_telepon', $user->nomor_telepon) }}"></label>
+            <label class="span-2">Alamat<textarea name="alamat">{{ old('alamat', $user->alamat) }}</textarea></label>
         @endif
         <label>Password baru (opsional)<input type="password" name="password" minlength="8"></label>
         <label>Ulangi password<input type="password" name="password_confirmation" minlength="8"></label>

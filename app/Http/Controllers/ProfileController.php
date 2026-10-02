@@ -12,7 +12,7 @@ class ProfileController extends Controller
 {
     public function edit(Request $request): View
     {
-        return view('profile.edit', ['user' => $request->user()->load('citizen')]);
+        return view('profile.edit', ['user' => $request->user()]);
     }
 
     public function update(Request $request): RedirectResponse
@@ -37,8 +37,7 @@ class ProfileController extends Controller
             if ($validated['password'] ?? null) {
                 $account['password_hash'] = $validated['password'];
             }
-            $user->update($account);
-            $user->citizen?->update([
+            $user->update($account + [
                 'nama_lengkap' => $validated['nama_lengkap'],
                 'nomor_telepon' => $validated['nomor_telepon'] ?? null,
                 'alamat' => $validated['alamat'] ?? null,

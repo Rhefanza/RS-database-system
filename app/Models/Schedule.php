@@ -12,16 +12,21 @@ class Schedule extends Model
 
     protected $primaryKey = 'jadwal_id';
 
-    protected $fillable = ['puskesmas_layanan_id', 'hari', 'jam_buka', 'jam_tutup', 'kapasitas', 'status'];
+    protected $fillable = ['puskesmas_id', 'layanan_id', 'nama_dokter', 'spesialisasi', 'hari', 'jam_buka', 'jam_tutup', 'kapasitas', 'status'];
 
     protected function casts(): array
     {
         return ['kapasitas' => 'integer'];
     }
 
-    public function puskesmasService(): BelongsTo
+    public function puskesmas(): BelongsTo
     {
-        return $this->belongsTo(PuskesmasService::class, 'puskesmas_layanan_id', 'puskesmas_layanan_id');
+        return $this->belongsTo(Puskesmas::class, 'puskesmas_id', 'puskesmas_id');
+    }
+
+    public function service(): BelongsTo
+    {
+        return $this->belongsTo(Service::class, 'layanan_id', 'layanan_id');
     }
 
     public function queues(): HasMany

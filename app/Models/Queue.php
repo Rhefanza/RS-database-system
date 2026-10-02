@@ -14,7 +14,7 @@ class Queue extends Model
 
     protected $primaryKey = 'antrean_id';
 
-    protected $fillable = ['nik', 'jadwal_id', 'nomor_antrean', 'tanggal_daftar', 'status_antrean'];
+    protected $fillable = ['akun_id', 'jadwal_id', 'nomor_antrean', 'tanggal_daftar', 'status_antrean'];
 
     protected function casts(): array
     {
@@ -26,22 +26,22 @@ class Queue extends Model
         return $query->whereIn('status_antrean', self::ACTIVE_STATUSES);
     }
 
-    public static function overlappingActiveFor(string $nik, Schedule $schedule, string $date): ?self
+    public static function overlappingActiveFor(int $accountId, Schedule $schedule, string $date): ?self
     {
         return self::query()
             ->active()
-            ->where('nik', $nik)
+            ->where('akun_id', $accountId)
             ->whereDate('tanggal_daftar', $date)
             ->whereHas('schedule', fn (Builder $query) => $query
                 ->where('jam_buka', '<', $schedule->jam_tutup)
                 ->where('jam_tutup', '>', $schedule->jam_buka))
-            ->with('schedule.puskesmasService.puskesmas', 'schedule.puskesmasService.service')
+            ->with('schedule.puskesmas', 'schedule.service')
             ->first();
     }
 
-    public function citizen(): BelongsTo
+    public function account(): BelongsTo
     {
-        return $this->belongsTo(Citizen::class, 'nik', 'nik');
+        return $this->belongsTo(User::class, 'akun_id', 'akun_id');
     }
 
     public function schedule(): BelongsTo

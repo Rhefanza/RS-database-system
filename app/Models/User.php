@@ -5,6 +5,8 @@ namespace App\Models;
 use Database\Factories\UserFactory;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 
@@ -17,7 +19,9 @@ class User extends Authenticatable
 
     protected $primaryKey = 'akun_id';
 
-    protected $fillable = ['nik', 'puskesmas_id', 'nama_lengkap', 'email', 'password_hash', 'role', 'status_akun'];
+    protected $fillable = ['nik', 'puskesmas_id', 'nama_lengkap', 'email', 'password_hash', 'role', 'status_akun', 'nomor_telepon', 'alamat', 'status_data'];
+
+    protected $attributes = ['status_data' => 'AKTIF'];
 
     protected $hidden = ['password_hash'];
 
@@ -33,12 +37,17 @@ class User extends Authenticatable
 
     public function getAuthPassword(): string
     {
-        return $this->password_hash;
+        return $this->password_hash ?? '';
     }
 
-    public function citizen(): BelongsTo
+    public function scopeCitizens(Builder $query): Builder
     {
-        return $this->belongsTo(Citizen::class, 'nik', 'nik');
+        return $query->where('role', 'MASYARAKAT');
+    }
+
+    public function queues(): HasMany
+    {
+        return $this->hasMany(Queue::class, 'akun_id', 'akun_id');
     }
 
     public function puskesmas(): BelongsTo

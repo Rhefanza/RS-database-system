@@ -2,8 +2,7 @@
 
 namespace App\Console\Commands;
 
-use App\Models\Citizen;
-use App\Models\PuskesmasService;
+use App\Models\User;
 use App\Models\Queue;
 use App\Models\Schedule;
 use Illuminate\Console\Command;
@@ -93,7 +92,7 @@ class SimulateQueues extends Command
     {
         $dummyQueues = Queue::query()
             ->whereDate('tanggal_daftar', today())
-            ->whereHas('citizen', fn ($citizen) => $citizen->where('nama_lengkap', 'like', 'Masyarakat Dummy %'));
+            ->whereHas('account', fn ($citizen) => $citizen->where('nama_lengkap', 'like', 'Masyarakat Dummy %'));
 
         if ((clone $dummyQueues)->count() < self::MAX_DUMMY_QUEUES) {
             return null;
@@ -114,7 +113,7 @@ class SimulateQueues extends Command
         $queue = Queue::query()
             ->whereDate('tanggal_daftar', today())
             ->whereIn('status_antrean', ['WAITING', 'CALLED', 'SERVING'])
-            ->whereHas('citizen', fn ($citizen) => $citizen->where('nama_lengkap', 'like', 'Masyarakat Dummy %'))
+            ->whereHas('account', fn ($citizen) => $citizen->where('nama_lengkap', 'like', 'Masyarakat Dummy %'))
             ->lockForUpdate()
             ->inRandomOrder()
             ->first();
@@ -135,10 +134,9 @@ class SimulateQueues extends Command
         $schedules = Schedule::query()
             ->where('status', 'AKTIF')
             ->where('hari', $this->todayName())
-            ->whereHas('puskesmasService', fn ($relation) => $relation
-                ->where('status', 'AKTIF')
-                ->whereHas('puskesmas', fn ($puskesmas) => $puskesmas->where('status', 'AKTIF')))
-            ->with('puskesmasService.puskesmas')
+            ->whereHas('service', fn ($service) => $service->where('status', 'AKTIF'))
+            ->whereHas('puskesmas', fn ($puskesmas) => $puskesmas->where('status', 'AKTIF'))
+            ->with('puskesmas')
             ->inRandomOrder()
             ->get()
             ->filter(fn (Schedule $item) => $item->queues()->active()->whereDate('tanggal_daftar', today())->count() < $item->kapasitas);
@@ -146,15 +144,15 @@ class SimulateQueues extends Command
         if ($prioritizeUnrepresentedPuskesmas) {
             $representedPuskesmasIds = Queue::query()
                 ->whereDate('tanggal_daftar', today())
-                ->whereHas('citizen', fn ($citizen) => $citizen->where('nama_lengkap', 'like', 'Masyarakat Dummy %'))
-                ->with('schedule.puskesmasService')
+                ->whereHas('account', fn ($citizen) => $citizen->where('nama_lengkap', 'like', 'Masyarakat Dummy %'))
+                ->with('schedule')
                 ->get()
-                ->pluck('schedule.puskesmasService.puskesmas_id')
+                ->pluck('schedule.puskesmas_id')
                 ->filter()
                 ->unique();
 
             $schedules = $schedules->reject(fn (Schedule $item) => $representedPuskesmasIds
-                ->contains($item->puskesmasService->puskesmas_id));
+                ->contains($item->puskesmas_id));
         }
 
         $schedule = $schedules->first();
@@ -163,54 +161,50 @@ class SimulateQueues extends Command
             return null;
         }
 
-        $citizen = Citizen::query()
+        $citizen = User::citizens()
             ->where('status_data', 'AKTIF')
             ->where('nama_lengkap', 'like', 'Masyarakat Dummy %')
             ->inRandomOrder()
             ->get()
-            ->first(fn (Citizen $candidate) => ! Queue::overlappingActiveFor($candidate->nik, $schedule, today()->toDateString()));
+            ->first(fn (User $candidate) => ! Queue::overlappingActiveFor($candidate->akun_id, $schedule, today()->toDateString()));
 
         if (! $citizen) {
             return null;
         }
 
-        Citizen::whereKey($citizen->nik)->lockForUpdate()->firstOrFail();
+        User::citizens()->whereKey($citizen->akun_id)->lockForUpdate()->firstOrFail();
         $lockedSchedule = Schedule::whereKey($schedule->jadwal_id)->lockForUpdate()->firstOrFail();
 
         if ($lockedSchedule->queues()->active()->whereDate('tanggal_daftar', today())->count() >= $lockedSchedule->kapasitas
-            || Queue::overlappingActiveFor($citizen->nik, $lockedSchedule, today()->toDateString())) {
+            || Queue::overlappingActiveFor($citizen->akun_id, $lockedSchedule, today()->toDateString())) {
             return null;
         }
 
         $number = ((int) $lockedSchedule->queues()->whereDate('tanggal_daftar', today())->max('nomor_antrean')) + 1;
         $lockedSchedule->queues()->create([
-            'nik' => $citizen->nik,
+            'akun_id' => $citizen->akun_id,
             'nomor_antrean' => $number,
             'tanggal_daftar' => today(),
             'status_antrean' => 'WAITING',
         ]);
 
-        return "Antrean #{$number} masuk di {$schedule->puskesmasService->puskesmas->nama_puskesmas}.";
+        return "Antrean #{$number} masuk di {$schedule->puskesmas->nama_puskesmas}.";
     }
 
     private function ensureTodaySchedules(): void
     {
-        foreach (PuskesmasService::query()
-            ->where('status', 'AKTIF')
-            ->whereHas('puskesmas', fn ($puskesmas) => $puskesmas->where('status', 'AKTIF'))
-            ->with('schedules')->get() as $relation) {
-            if ($relation->schedules->contains('hari', $this->todayName())) {
-                continue;
-            }
-
-            $template = $relation->schedules->where('status', 'AKTIF')->first();
-            if (! $template) {
-                continue;
-            }
-
-            Schedule::create([
-                'puskesmas_layanan_id' => $relation->puskesmas_layanan_id,
+        $templates = Schedule::where('status', 'AKTIF')
+            ->whereHas('puskesmas', fn ($query) => $query->where('status', 'AKTIF'))
+            ->whereHas('service', fn ($query) => $query->where('status', 'AKTIF'))
+            ->get()->unique(fn ($schedule) => $schedule->puskesmas_id.'|'.$schedule->layanan_id);
+        foreach ($templates as $template) {
+            Schedule::firstOrCreate([
+                'puskesmas_id' => $template->puskesmas_id,
+                'layanan_id' => $template->layanan_id,
                 'hari' => $this->todayName(),
+            ], [
+                'nama_dokter' => $template->nama_dokter,
+                'spesialisasi' => $template->spesialisasi,
                 'jam_buka' => $template->jam_buka,
                 'jam_tutup' => $template->jam_tutup,
                 'kapasitas' => $template->kapasitas,

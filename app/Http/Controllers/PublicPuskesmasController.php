@@ -5,13 +5,18 @@ namespace App\Http\Controllers;
 use App\Models\Puskesmas;
 use App\Models\Queue;
 use Illuminate\Http\JsonResponse;
+use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\View\View;
 
 class PublicPuskesmasController extends Controller
 {
-    public function index(Request $request): View
+    public function index(Request $request): View|RedirectResponse
     {
+        if ($request->user()?->role === 'PETUGAS') {
+            return redirect()->route('officer.queues.index');
+        }
+
         $search = mb_substr(trim((string) $request->query('q')), 0, 100);
         $mapItems = $this->liveQueueData(true);
 
@@ -23,8 +28,12 @@ class PublicPuskesmasController extends Controller
         ]);
     }
 
-    public function recommendations(): View
+    public function recommendations(Request $request): View|RedirectResponse
     {
+        if ($request->user()?->role === 'PETUGAS') {
+            return redirect()->route('officer.queues.index');
+        }
+
         $recommendations = $this->liveQueueData(true);
 
         return view('recommendations', compact('recommendations'));
@@ -61,34 +70,21 @@ class PublicPuskesmasController extends Controller
         abort_unless($puskesmas->status === 'AKTIF', 404);
         $puskesmas->load([
             'district',
-            'puskesmasServices' => fn ($query) => $query->where('status', 'AKTIF')
-                ->with([
-                    'service',
-                    'doctors' => fn ($doctors) => $doctors->where('status', 'AKTIF')->orderBy('nama_dokter'),
-                    'schedules' => fn ($schedule) => $schedule->where('status', 'AKTIF')->with([
-                        'queues' => fn ($queue) => $queue->active()->whereDate('tanggal_daftar', '>=', today()),
-                    ]),
-                ]),
+            'schedules' => fn ($query) => $query->where('status', 'AKTIF')
+                ->whereHas('service', fn ($service) => $service->where('status', 'AKTIF'))
+                ->with(['service', 'queues' => fn ($queue) => $queue->active()->whereDate('tanggal_daftar', '>=', today())]),
         ]);
-
         return view('puskesmas-show', compact('puskesmas'));
     }
 
     private function liveQueueData(bool $coordinatesOnly = false)
     {
-        $query = Puskesmas::query()
-            ->where('status', 'AKTIF')
-            ->with([
-                'district',
-                'puskesmasServices' => fn ($relation) => $relation->where('status', 'AKTIF')->with([
-                    'service',
-                    'doctors' => fn ($doctors) => $doctors->where('status', 'AKTIF')->orderBy('nama_dokter'),
-                    'schedules' => fn ($schedule) => $schedule->where('status', 'AKTIF')->with([
-                        'queues' => fn ($queue) => $queue->whereDate('tanggal_daftar', today()),
-                    ]),
-                ]),
-            ])
-            ->orderBy('nama_puskesmas');
+        $query = Puskesmas::where('status', 'AKTIF')->with([
+            'district',
+            'schedules' => fn ($query) => $query->where('status', 'AKTIF')
+                ->whereHas('service', fn ($service) => $service->where('status', 'AKTIF'))
+                ->with(['service', 'queues' => fn ($queue) => $queue->whereDate('tanggal_daftar', today())]),
+        ])->orderBy('nama_puskesmas');
 
         if ($coordinatesOnly) {
             $query->whereBetween('latitude', [-7.5, -7.0])
@@ -96,8 +92,7 @@ class PublicPuskesmasController extends Controller
         }
 
         return $query->get()->map(function (Puskesmas $puskesmas): array {
-            $queues = $puskesmas->puskesmasServices
-                ->flatMap(fn ($relation) => $relation->schedules)
+            $queues = $puskesmas->schedules
                 ->flatMap(fn ($schedule) => $schedule->queues);
             $activeQueues = $queues->whereIn('status_antrean', Queue::ACTIVE_STATUSES);
 
@@ -112,15 +107,14 @@ class PublicPuskesmasController extends Controller
                 'total' => $queues->count(),
                 'active' => $activeQueues->count(),
                 'completed' => $queues->where('status_antrean', 'COMPLETED')->count(),
-                'services' => $puskesmas->puskesmasServices->pluck('service.nama_layanan')->filter()->unique()->values(),
-                'service_details' => $puskesmas->puskesmasServices->map(fn ($relation): array => [
-                    'name' => $relation->service?->nama_layanan,
-                    'description' => $relation->service?->deskripsi,
-                    'doctors' => $relation->doctors->map(fn ($doctor): array => [
-                        'name' => $doctor->nama_dokter,
-                        'specialization' => $doctor->spesialisasi,
-                    ])->values(),
-                    'schedules' => $relation->schedules->map(fn ($schedule): array => [
+                'services' => $puskesmas->schedules->pluck('service.nama_layanan')->filter()->unique()->values(),
+                'service_details' => $puskesmas->schedules->groupBy('layanan_id')->map(fn ($schedules): array => [
+                    'name' => $schedules->first()->service->nama_layanan,
+                    'description' => $schedules->first()->service->deskripsi,
+                    'doctors' => $schedules->filter(fn ($schedule) => filled($schedule->nama_dokter))
+                        ->unique(fn ($schedule) => $schedule->nama_dokter.'|'.$schedule->spesialisasi)
+                        ->map(fn ($schedule): array => ['name' => $schedule->nama_dokter, 'specialization' => $schedule->spesialisasi])->values(),
+                    'schedules' => $schedules->map(fn ($schedule): array => [
                         'day' => ucfirst(strtolower($schedule->hari)),
                         'open' => substr($schedule->jam_buka, 0, 5),
                         'close' => substr($schedule->jam_tutup, 0, 5),

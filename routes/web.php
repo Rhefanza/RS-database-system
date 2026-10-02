@@ -63,11 +63,5 @@ Route::middleware('auth')->group(function () {
         Route::post('/layanan', [MasterDataController::class, 'storeService'])->name('admin.services.store');
         Route::put('/layanan/{service}', [MasterDataController::class, 'updateService'])->name('admin.services.update');
         Route::delete('/layanan/{service}', [MasterDataController::class, 'destroyService'])->name('admin.services.destroy');
-        Route::post('/relasi', [MasterDataController::class, 'storeRelation'])->name('admin.relations.store');
-        Route::put('/relasi/{relation}', [MasterDataController::class, 'updateRelation'])->name('admin.relations.update');
-        Route::delete('/relasi/{relation}', [MasterDataController::class, 'destroyRelation'])->name('admin.relations.destroy');
-        Route::post('/dokter', [MasterDataController::class, 'storeDoctor'])->name('admin.doctors.store');
-        Route::put('/dokter/{doctor}', [MasterDataController::class, 'updateDoctor'])->name('admin.doctors.update');
-        Route::delete('/dokter/{doctor}', [MasterDataController::class, 'destroyDoctor'])->name('admin.doctors.destroy');
     });
 });

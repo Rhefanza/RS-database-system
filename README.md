@@ -14,21 +14,27 @@ Prototipe Laravel 12 untuk simulasi informasi dan pengambilan antrean puskesmas 
 ## Role
 
 - `MASYARAKAT`: mengambil dan mengelola antrean milik sendiri.
-- `PETUGAS`: ditetapkan admin pada tepat satu puskesmas dan hanya dapat mengelola jadwal serta antrean puskesmas tersebut.
-- `ADMIN`: mengelola kecamatan, masyarakat, akun, puskesmas, layanan, relasi layanan, dan dokter.
+- `PETUGAS`: ditetapkan admin pada tepat satu puskesmas; memilih layanan, mengisi keterangan dokter pada jadwal, dan mengelola antreannya.
+- `ADMIN`: mengelola kecamatan, masyarakat (akun yang belum/sudah aktivasi), petugas, puskesmas, dan layanan.
 
 ## Struktur database
 
-Sembilan tabel bisnis digunakan: `kecamatan`, `masyarakat`, `akun`, `puskesmas`, `layanan`, `puskesmas_layanan`, `jadwal`, `dokter`, dan `antrean`. Detail relasi tersedia di `DATABASE.md`.
+Enam tabel bisnis digunakan: `kecamatan`, `akun`, `puskesmas`, `layanan`, `jadwal`, dan `antrean`. Tabel teknis Laravel (`migrations`, `sessions`, `cache`, `cache_locks`) terpisah dari enam tabel bisnis. Detail relasi tersedia di `DATABASE.md`.
 
 ## Menjalankan aplikasi
 
 ```bash
 composer install
 php artisan key:generate
-php artisan migrate:fresh --seed
+php artisan migrate
+# Hanya untuk database baru/kosong:
+php artisan db:seed
 php artisan serve
 ```
+
+Gunakan PHP 8.2+ (di Laragon pilih PHP 8.3), aktifkan MySQL, dan sesuaikan `.env`. Jalankan `key:generate` hanya pada instalasi baru; jangan mengganti APP_KEY instalasi yang sudah digunakan.
+
+Untuk database lama, cadangkan database, hentikan simulator, lalu jalankan `php artisan migrate` tanpa seeding ulang. Migrasi `2026_10_02_000007` memindahkan data lama ke enam tabel dan mempertahankan ID akun aktif, jadwal, serta antrean. Pemulihan menggunakan cadangan SQL karena migrasi penggabungan ini tidak mendukung rollback otomatis.
 
 Buka `http://127.0.0.1:8000`.
 
@@ -42,7 +48,7 @@ Buka `http://127.0.0.1:8000`.
 
 NIK dummy yang belum diaktivasi: `3578010101900004`.
 
-Seeder membuat 31 kecamatan, 31 puskesmas, 80 masyarakat, 6 layanan, 93 relasi layanan, 93 dokter, 93 jadwal hari ini, dan antrean dummy yang tersebar pada seluruh puskesmas.
+Seeder membuat 31 kecamatan, 31 puskesmas, 80 akun masyarakat, 6 layanan, 93 jadwal hari ini beserta keterangan dokter, dan antrean dummy yang tersebar pada seluruh puskesmas.
 
 ## Peta
 

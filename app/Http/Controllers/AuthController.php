@@ -18,7 +18,7 @@ class AuthController extends Controller
     {
         $credentials = $request->validate(['email' => ['required', 'email'], 'password' => ['required', 'string']]);
 
-        if (! Auth::attempt([...$credentials, 'status_akun' => 'AKTIF'])) {
+        if (! Auth::attempt([...$credentials, 'status_akun' => 'AKTIF', 'status_data' => 'AKTIF'])) {
             return back()->withErrors(['email' => 'Email, kata sandi, atau status akun tidak sesuai.'])->onlyInput('email');
         }
 
@@ -33,7 +33,12 @@ class AuthController extends Controller
 
         $request->session()->regenerate();
 
-        return redirect()->intended($this->destination($request->user()->role))
+        $redirect = $user->role === 'PETUGAS'
+            ? redirect()->to($this->destination($user->role))
+            : redirect()->intended($this->destination($user->role));
+        $request->session()->forget('url.intended');
+
+        return $redirect
             ->with('success', 'Selamat datang, '.$request->user()->nama_lengkap.'.');
     }
 
@@ -50,7 +55,7 @@ class AuthController extends Controller
     {
         return match ($role) {
             'ADMIN' => route('admin.master.index'),
-            'PETUGAS' => route('officer.schedules.index'),
+            'PETUGAS' => route('officer.queues.index'),
             default => route('home'),
         };
     }
