@@ -2,7 +2,7 @@
 @section('title', 'Masuk')
 @section('content')
 <section class="auth-wrap">
-    <div class="auth-card">
+    <div class="auth-card" data-reveal>
         <p class="eyebrow">3 role · 1 halaman masuk</p>
         <h1>Masuk ke sistem</h1>
         <p>Gunakan akun masyarakat, petugas, atau Admin/Dinkes.</p>

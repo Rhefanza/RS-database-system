@@ -10,9 +10,9 @@
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=DM+Serif+Display:ital@0;1&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" integrity="sha256-p4NxAoJBhIINfQ3ynceqWgVqC41Wifii1/Lnt2MZt4=" crossorigin="">
-    <link rel="stylesheet" href="{{ asset('assets/app.css').'?v=dark-teal-queue-1' }}">
+    <link rel="stylesheet" href="{{ asset('assets/app.css').'?v=service-motion-3' }}">
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin="" defer></script>
-    <script src="{{ asset('assets/app.js').'?v=dark-teal-queue-1' }}" defer></script>
+    <script src="{{ asset('assets/app.js').'?v=service-motion-2' }}" defer></script>
 </head>
 <body data-live-queue-endpoint="{{ route('api.live-queues') }}">
     @php
@@ -25,7 +25,7 @@
     @endphp
     <a class="skip-link" href="#main-content">Lewati ke konten</a>
     <header class="site-header {{ auth()->user()?->role === 'ADMIN' ? 'site-header-admin' : '' }}">
-        <a class="brand" href="{{ $brandDestination }}"><img class="brand-logo" src="{{ asset('assets/logo-puskesmasku.png') }}" alt=""><strong>PuskesmasKu</strong><small>Lebih dekat. Lebih peduli.</small></a>
+        <a class="brand" href="{{ $brandDestination }}"><img class="brand-logo" src="{{ asset('assets/logo-puskesmasku.png') }}" alt=""><strong>PuskesmasKu</strong></a>
         <button class="menu-toggle" type="button" aria-controls="main-navigation" aria-expanded="false" data-menu-toggle hidden>Menu <span aria-hidden="true">☰</span></button>
         <nav id="main-navigation" aria-label="Navigasi utama">
             @auth

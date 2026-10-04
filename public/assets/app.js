@@ -64,8 +64,14 @@ document.addEventListener('DOMContentLoaded', () => {
 
 function initScrollMotion() {
     const reducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
-    const sections = [...document.querySelectorAll('[data-reveal]')];
+    const sections = [...document.querySelectorAll('[data-reveal], .auth-card, .page-title, .tabs, .panel-section .section-heading, .panel-section .panel, .panel-section .record, .detail-head, .detail-services .section-heading, .detail-services .list-card, .queue-card')];
     if (!reducedMotion && 'IntersectionObserver' in window && sections.length) {
+        sections.forEach((section, index) => {
+            section.classList.add('reveal-surface');
+            if (section.matches('.record, .list-card, .queue-card')) {
+                section.style.setProperty('--reveal-delay', `${(index % 4) * 75}ms`);
+            }
+        });
         document.documentElement.classList.add('motion-ready');
         const observer = new IntersectionObserver((entries) => {
             entries.forEach((entry) => {
@@ -73,7 +79,7 @@ function initScrollMotion() {
                 entry.target.classList.add('is-visible');
                 observer.unobserve(entry.target);
             });
-        }, { threshold: 0.12, rootMargin: '0px 0px -35px 0px' });
+        }, { threshold: 0.01, rootMargin: '0px 0px -35px 0px' });
         sections.forEach((section) => observer.observe(section));
     }
 

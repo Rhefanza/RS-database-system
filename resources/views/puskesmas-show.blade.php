@@ -6,7 +6,7 @@
 <section class="detail-services" id="layanan"><div class="section-heading"><div><p class="eyebrow">Jadwal layanan</p><h2>Pilih layanan dan <em>hari.</em></h2></div></div>
     <div class="stack-list">
     @forelse ($puskesmas->schedules->groupBy('layanan_id') as $schedules)
-        <article class="list-card"><div><h3>{{ $schedules->first()->service->nama_layanan }}</h3><p>{{ $schedules->first()->service->deskripsi }}</p></div>
+        <article class="list-card service-detail-card"><div class="service-detail-intro">@include('components.service-art', ['name' => $schedules->first()->service->nama_layanan, 'class' => 'service-art service-art-detail'])<div><h3>{{ $schedules->first()->service->nama_layanan }}</h3><p>{{ $schedules->first()->service->deskripsi }}</p></div></div>
             <div class="schedule-list">@forelse ($schedules as $schedule)
                 @php
                     $map = ['MINGGU' => 0, 'SENIN' => 1, 'SELASA' => 2, 'RABU' => 3, 'KAMIS' => 4, 'JUMAT' => 5, 'SABTU' => 6];
