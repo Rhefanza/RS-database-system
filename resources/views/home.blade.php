@@ -4,7 +4,7 @@
 
 @section('content')
 <section class="care-hero" aria-labelledby="hero-title" data-reveal>
-    <img src="{{ asset('images/antre.png') }}" class="care-hero-photo" alt="Petugas kesehatan melayani masyarakat yang sedang mengantre" width="1448" height="1086" fetchpriority="high">
+    <img src="{{ asset('images/beranda/antre.png') }}" class="care-hero-photo" alt="Petugas kesehatan melayani masyarakat yang sedang mengantre" width="1448" height="1086" fetchpriority="high">
     <div class="care-hero-shade" aria-hidden="true"></div>
     <div class="care-hero-copy">
         <h1 id="hero-title">Temukan faskes<br>dan lihat <em>antreannya.</em></h1>
@@ -49,20 +49,20 @@
         <div><h2 id="journey-title">Cari, pilih, lalu <em>antre.</em></h2><p>Informasi layanan dan antrean tersedia dalam satu alur yang mudah diikuti.</p></div>
     </header>
     <ol class="journey-cards" aria-label="Tiga langkah menggunakan PuskesmasKu">
-        <li class="journey-card is-active" data-step-card tabindex="0" role="button" aria-expanded="true" style="--step-image:url('{{ asset('images/lihat_puskesmas.png') }}');--step-accent:#25c5e9">
+        <li class="journey-card is-active" data-step-card tabindex="0" role="button" aria-expanded="true" style="--step-image:url('{{ asset('images/langkah/lihat_puskesmas.png') }}');--step-accent:#25c5e9">
             <span class="journey-card-number">01</span>
             <div class="journey-card-content"><span class="journey-card-kicker">Mulai dari kebutuhan Anda</span><h3>Cari puskesmas</h3><div class="journey-card-body"><p>Ketik nama, kecamatan, alamat, atau layanan yang Anda butuhkan.</p><span>Nama yang sesuai langsung ditampilkan dan disorot pada peta.</span></div></div>
         </li>
-        <li class="journey-card" data-step-card tabindex="0" role="button" aria-expanded="false" style="--step-image:url('{{ asset('images/detail_layanan.png') }}');--step-accent:#caffde">
+        <li class="journey-card" data-step-card tabindex="0" role="button" aria-expanded="false" style="--step-image:url('{{ asset('images/langkah/detail_layanan.png') }}');--step-accent:#caffde">
             <span class="journey-card-number">02</span>
             <div class="journey-card-content"><span class="journey-card-kicker">Bandingkan sebelum berkunjung</span><h3>Periksa detail layanan</h3><div class="journey-card-body"><p>Klik titik peta untuk melihat antrean, lalu buka jadwal puskesmas.</p><span>Periksa poli, dokter, hari praktik, dan kapasitas yang tersedia.</span></div></div>
         </li>
-        <li class="journey-card" data-step-card tabindex="0" role="button" aria-expanded="false" style="--step-image:url('{{ asset('images/list_antre.png') }}');--step-accent:#ffd84d">
+        <li class="journey-card" data-step-card tabindex="0" role="button" aria-expanded="false" style="--step-image:url('{{ asset('images/langkah/list_antre.png') }}');--step-accent:#ffd84d">
             <span class="journey-card-number">03</span>
             <div class="journey-card-content"><span class="journey-card-kicker">Siapkan kunjungan Anda</span><h3>Ambil antrean</h3><div class="journey-card-body"><p>Masuk sebagai masyarakat dan pilih jadwal yang kapasitasnya masih tersedia.</p><span>Nomor antrean aktif tersimpan dan dapat dipantau dari akun Anda.</span></div></div>
         </li>
     </ol>
 </section>
 
-<section class="recommendation-feature" data-expand-on-scroll aria-labelledby="feature-title"><div class="care-cta" data-reveal><div class="care-cta-copy"><h2 id="feature-title">Cari fasilitas kesehatan dengan <em>rekomendasi.</em></h2><p>Bandingkan jarak, antrean, poli, dokter, dan jadwal praktik dalam satu halaman.</p><a class="button primary" href="{{ route('recommendations.index') }}">Lihat rekomendasi <svg class="icon-chevron" aria-hidden="true" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m9 6 6 6-6 6"/></svg></a></div><img class="care-cta-image" src="{{ asset('images/rekomendasi.png') }}" alt="Tampilan fasilitas kesehatan dari udara" width="1448" height="1086" loading="lazy"></div></section>
+<section class="recommendation-feature" data-expand-on-scroll aria-labelledby="feature-title"><div class="care-cta" data-reveal><div class="care-cta-copy"><h2 id="feature-title">Cari fasilitas kesehatan dengan <em>rekomendasi.</em></h2><p>Bandingkan jarak, antrean, poli, dokter, dan jadwal praktik dalam satu halaman.</p><a class="button primary" href="{{ route('recommendations.index') }}">Lihat rekomendasi <svg class="icon-chevron" aria-hidden="true" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m9 6 6 6-6 6"/></svg></a></div><img class="care-cta-image" src="{{ asset('images/rekomendasi/rekomendasi.png') }}" alt="Tampilan fasilitas kesehatan dari udara" width="1448" height="1086" loading="lazy"></div></section>
 @endsection

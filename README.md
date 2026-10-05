@@ -15,22 +15,35 @@ Prototipe Laravel 12 untuk simulasi informasi dan pengambilan antrean puskesmas 
 
 - `MASYARAKAT`: mengambil dan mengelola antrean milik sendiri.
 - `PETUGAS`: ditetapkan admin pada tepat satu puskesmas dan hanya dapat mengelola jadwal serta antrean puskesmas tersebut.
-- `ADMIN`: mengelola kecamatan, masyarakat, akun, puskesmas, layanan, relasi layanan, dan dokter.
+- `ADMIN`: mengelola kecamatan, masyarakat, akun petugas, puskesmas, dan layanan. Petugas mengelola jadwal beserta keterangan dokter dan antrean puskesmasnya.
 
 ## Struktur database
 
-Sembilan tabel bisnis digunakan: `kecamatan`, `masyarakat`, `akun`, `puskesmas`, `layanan`, `puskesmas_layanan`, `jadwal`, `dokter`, dan `antrean`. Detail relasi tersedia di `DATABASE.md`.
+Enam tabel bisnis digunakan: `kecamatan`, `akun`, `puskesmas`, `layanan`, `jadwal`, dan `antrean`. Data masyarakat berada di `akun`; layanan puskesmas dan keterangan dokter berada di `jadwal`. Detail relasi tersedia di `DATABASE.md`.
+
+Tabel `migrations`, `sessions`, `cache`, dan `cache_locks` adalah tabel teknis Laravel dan tidak dihitung sebagai tabel bisnis.
 
 ## Menjalankan aplikasi
 
-```bash
-composer install
-php artisan key:generate
-php artisan migrate:fresh --seed
-php artisan serve
+Aktifkan MySQL pada Laragon, buka terminal di folder proyek, lalu untuk database yang sudah berisi data jalankan:
 
+```bash
+php artisan optimize:clear
+php artisan migrate
+php artisan serve
+```
+
+`migrate` hanya menjalankan migrasi yang belum diterapkan. Bila migrasi penyederhanaan sudah berstatus `Ran`, hasilnya `Nothing to migrate` dan database tidak dibuat ulang. Hentikan simulator dengan Ctrl+C sebelum menjalankan migrasi yang mengubah struktur tabel. Cadangkan database melalui Export SQL HeidiSQL sebelum memigrasikan database lama.
+
+Untuk instalasi baru saja: jalankan `composer install`, salin `.env.example` menjadi `.env`, isi koneksi database, lalu jalankan `php artisan key:generate`, `php artisan migrate`, dan `php artisan db:seed`. Seeder mengisi data simulasi dan dapat memperbarui akun/jadwal contoh; tidak perlu dijalankan lagi pada database yang sudah digunakan.
+
+Pada terminal kedua, simulator opsional dapat dijalankan dengan:
+
+```bash
 php artisan queue:simulate --min=2 --max=9
 ```
+
+Jangan gunakan `php artisan migrate:fresh --seed` untuk pembaruan database yang sudah berisi data: perintah tersebut menghapus seluruh tabel sebelum membuatnya ulang. Migrasi penggabungan tidak mendukung `migrate:rollback`; pemulihan struktur lama memakai cadangan SQL dan kode versi sebelumnya.
 
 Buka `http://127.0.0.1:8000`.
 
@@ -44,9 +57,11 @@ Buka `http://127.0.0.1:8000`.
 
 NIK dummy yang belum diaktivasi: `3578010101900004`.
 
-Seeder membuat 31 kecamatan, 31 puskesmas, 80 masyarakat, 6 layanan, 93 relasi layanan, 93 dokter, 93 jadwal hari ini, dan antrean dummy yang tersebar pada seluruh puskesmas.
+Pada instalasi baru, seeder membuat 31 kecamatan, 31 puskesmas, 112 akun (80 masyarakat, 31 petugas, 1 admin), 6 layanan, 93 jadwal hari ini dengan keterangan dokter, dan antrean dummy yang tersebar pada seluruh puskesmas.
 
 ## Peta
+
+Semua gambar lokal berada di `public/images`, dibagi ke folder `logo`, `beranda`, `langkah`, `rekomendasi`, `layanan`, dan `arsip`. Panduan penggunaan tersedia di `public/images/README.md`. CSS dan JavaScript tetap berada di `public/assets`.
 
 Antarmuka memakai Leaflet 1.9.4 dan tile standar OpenStreetMap. Atribusi OpenStreetMap selalu ditampilkan pada peta. Jarak dihitung dengan rumus Haversine di perangkat pengguna dan lokasi pengguna tidak disimpan ke database.
 
