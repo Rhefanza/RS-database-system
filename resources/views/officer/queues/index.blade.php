@@ -2,6 +2,7 @@
 @section('title', 'Kelola Antrean')
 @section('content')
 <div class="page-title"><div><p class="eyebrow">Antrean aktif</p><h1>Data antrean</h1><p>Daftar operasional hanya memuat status <span class="status waiting">WAITING</span>, <span class="status called">CALLED</span>, dan <span class="status serving">SERVING</span>. Data <span class="status completed">COMPLETED</span> (selesai) atau <span class="status cancelled">CANCELLED</span> (dibatalkan) tetap tersimpan sebagai arsip.</p></div></div>
+@include('components.puskesmas-banner', ['facility' => auth()->user()->puskesmas])
 <section class="panel"><h2>Tambah antrean manual</h2><form method="post" action="{{ route('officer.queues.store') }}" class="form-grid" data-officer-queue-form>@csrf
     <label>Masyarakat<select name="nik" required><option value="">Pilih NIK</option>@foreach($citizens as $citizen)<option value="{{ $citizen->nik }}" @selected(old('nik') === $citizen->nik)>{{ $citizen->nik }} · {{ $citizen->nama_lengkap }}</option>@endforeach</select></label>
     <label>Tanggal<input type="date" name="tanggal_daftar" value="{{ old('tanggal_daftar', today()->toDateString()) }}" min="{{ today()->toDateString() }}" required></label>

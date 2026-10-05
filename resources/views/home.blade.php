@@ -17,7 +17,7 @@
     $searchSource = $mapItems->map(fn ($item) => [
         'id' => $item['id'], 'name' => $item['name'], 'district' => $item['district'],
         'address' => $item['address'], 'services' => $item['services'], 'url' => $item['url'],
-        'latitude' => $item['latitude'], 'longitude' => $item['longitude'], 'active' => $item['active'],
+        'photo_url' => $item['photo_url'], 'latitude' => $item['latitude'], 'longitude' => $item['longitude'], 'active' => $item['active'],
     ])->values();
 @endphp
 

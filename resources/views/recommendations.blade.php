@@ -11,6 +11,7 @@
     <div class="recommendation-list" data-recommendation-list>
         @foreach($recommendations->sortBy('active')->values() as $item)
             <article class="recommendation-card" data-reveal data-recommendation-card data-puskesmas-id="{{ $item['id'] }}" data-lat="{{ $item['latitude'] }}" data-lng="{{ $item['longitude'] }}" data-active="{{ $item['active'] }}" @if($loop->iteration > 5) hidden @endif>
+                <img class="puskesmas-photo recommendation-puskesmas-photo" src="{{ $item['photo_url'] }}" alt="Ilustrasi suasana layanan puskesmas" loading="lazy" decoding="async">
                 <div class="recommendation-rank" data-recommendation-rank>{{ str_pad((string) min($loop->iteration, 5), 2, '0', STR_PAD_LEFT) }}</div>
                 <div class="recommendation-main">
                     <div class="recommendation-title-row"><div><span class="district-pill">Kecamatan {{ $item['district'] }}</span><h3>{{ $item['name'] }}</h3><p>{{ $item['address'] }}</p></div><div class="recommendation-metrics"><div><strong data-recommendation-distance>—</strong><span>Jarak</span></div><div><strong data-live-active>{{ $item['active'] }}</strong><span>Antrean aktif</span></div></div></div>

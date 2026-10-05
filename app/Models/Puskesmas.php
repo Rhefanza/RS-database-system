@@ -23,6 +23,14 @@ class Puskesmas extends Model
     }
 
 
+    /** Shared illustration assignment: 20 supplied photos cover all existing facility IDs. */
+    public function getPhotoUrlAttribute(): string
+    {
+        $index = (max(1, (int) $this->getKey()) - 1) % 20 + 1;
+
+        return asset(sprintf('images/puskesmas/photo-%02d.png', $index));
+    }
+
     public function district(): BelongsTo
     {
         return $this->belongsTo(District::class, 'kecamatan_id', 'kecamatan_id');

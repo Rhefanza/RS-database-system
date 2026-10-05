@@ -237,3 +237,22 @@ input:focus,select:focus,textarea:focus{border-color:var(--dark-cyan);outline:3p
 .service-detail-card .schedule-row{background:rgba(255,255,255,.92)}
 @media(max-width:850px){.service-detail-card>.service-detail-intro{min-height:230px;align-items:center}.service-detail-card>.schedule-list{padding:20px}}
 @media(max-width:560px){.service-detail-card>.service-detail-intro{padding:24px;min-height:210px}.service-detail-card>.schedule-list{padding:16px}}
+
+/* Facility photographs: additive styles only; existing controls keep their layout. */
+.puskesmas-photo{display:block;width:100%;object-fit:cover;object-position:center 40%;border-radius:12px;background:var(--mint-cream)}
+.recommendation-puskesmas-photo{grid-column:1/-1;height:clamp(220px,27vw,340px)}
+.queue-puskesmas-photo{grid-column:1/-1;height:clamp(200px,24vw,280px)}
+.puskesmas-photo-record{flex-wrap:wrap}.admin-puskesmas-photo{flex:0 0 100%;height:clamp(220px,24vw,300px)}
+.puskesmas-photo-record>div{min-width:0;flex:1}.puskesmas-photo-record>details{flex:0 0 auto}.puskesmas-photo-record>details[open]{flex-basis:100%}
+.detail-head.has-puskesmas-photo{position:relative;isolation:isolate;overflow:hidden;min-height:360px}
+.detail-puskesmas-photo{position:absolute;inset:0 0 0 auto;z-index:-2;width:68%;height:100%;object-fit:cover;object-position:center 40%}
+.detail-head.has-puskesmas-photo::before{content:"";position:absolute;inset:0;z-index:-1;background:linear-gradient(90deg,#165c62 0%,#165c62f2 30%,#165c6280 65%,#165c6266 100%)}
+.puskesmas-banner{position:relative;isolation:isolate;overflow:hidden;margin:0 0 24px;border-radius:16px;background:var(--dark-cyan)}
+.puskesmas-banner>img{display:block;width:100%;height:clamp(260px,30vw,380px);object-fit:cover;object-position:center 40%}
+.puskesmas-banner::after{content:"";position:absolute;inset:0;z-index:0;background:linear-gradient(180deg,transparent 30%,#021225bb 100%);pointer-events:none}
+.puskesmas-banner>figcaption{position:absolute;z-index:1;bottom:24px;left:28px;right:28px;color:#fff;font:400 clamp(24px,3vw,38px)/1.15 var(--serif);text-shadow:0 2px 8px #0006}
+.popup-puskesmas-photo{display:block;width:100%;height:150px;object-fit:cover;object-position:center 40%;border-radius:8px;margin-bottom:6px}
+.search-puskesmas-photo{width:140px;height:96px;object-fit:cover;object-position:center 40%;border-radius:8px;grid-column:1;grid-row:1/4}
+.search-suggestions button:has(.search-puskesmas-photo){grid-template-columns:140px minmax(0,1fr);column-gap:14px;align-items:center}
+.search-suggestions button:has(.search-puskesmas-photo)>:not(img){grid-column:2}
+@media(max-width:600px){.recommendation-puskesmas-photo,.queue-puskesmas-photo,.admin-puskesmas-photo{height:220px}.detail-head.has-puskesmas-photo{min-height:440px}.detail-puskesmas-photo{width:100%}.detail-head.has-puskesmas-photo::before{background:linear-gradient(180deg,#165c62e6 0%,#165c6299 45%,#165c62e6 100%)}.puskesmas-banner>img{height:260px}.puskesmas-banner>figcaption{left:20px;bottom:20px}.search-puskesmas-photo{width:112px;height:84px}.search-suggestions button:has(.search-puskesmas-photo){grid-template-columns:112px minmax(0,1fr);column-gap:10px}}
