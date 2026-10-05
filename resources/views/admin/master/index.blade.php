@@ -1,7 +1,7 @@
 @extends('layouts.app')
 @section('title', 'Data Master')
 @section('content')
-<div class="page-title"><div><p class="eyebrow">Admin / Dinas Kesehatan</p><h1>Data master UTS</h1><p>Kelola kecamatan, masyarakat, petugas, puskesmas, dan layanan. Petugas mengelola jadwal, keterangan dokter, dan antrean.</p></div></div>
+<div class="page-title"><div><p class="eyebrow">Admin / Dinas Kesehatan</p><h1>Data master UTS</h1><p>Kelola data kecamatan, masyarakat, akun petugas, puskesmas, dan layanan. Tetapkan puskesmas untuk setiap petugas. Layanan dihubungkan ke puskesmas melalui jadwal yang dibuat petugas.</p></div></div>
 <nav class="tabs" aria-label="Kategori data">
     <a href="#kecamatan" data-master-tab="kecamatan">Kecamatan</a><a href="#masyarakat" data-master-tab="masyarakat">Masyarakat</a><a href="#akun" data-master-tab="akun">Akun petugas</a><a href="#puskesmas" data-master-tab="puskesmas">Puskesmas</a><a href="#layanan" data-master-tab="layanan">Layanan</a>
 </nav>

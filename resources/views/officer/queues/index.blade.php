@@ -1,7 +1,7 @@
 @extends('layouts.app')
 @section('title', 'Kelola Antrean')
 @section('content')
-<div class="page-title"><div><p class="eyebrow">Antrean aktif</p><h1>Data antrean</h1><p>Daftar operasional hanya memuat status WAITING, CALLED, dan SERVING. Data selesai atau dibatalkan tetap tersimpan sebagai arsip.</p></div><a class="button secondary" href="{{ route('officer.schedules.index') }}">Kelola jadwal</a></div>
+<div class="page-title"><div><p class="eyebrow">Antrean aktif</p><h1>Data antrean</h1><p>Daftar operasional hanya memuat status <span class="status waiting">WAITING</span>, <span class="status called">CALLED</span>, dan <span class="status serving">SERVING</span>. Data <span class="status completed">COMPLETED</span> (selesai) atau <span class="status cancelled">CANCELLED</span> (dibatalkan) tetap tersimpan sebagai arsip.</p></div></div>
 <section class="panel"><h2>Tambah antrean manual</h2><form method="post" action="{{ route('officer.queues.store') }}" class="form-grid" data-officer-queue-form>@csrf
     <label>Masyarakat<select name="nik" required><option value="">Pilih NIK</option>@foreach($citizens as $citizen)<option value="{{ $citizen->nik }}" @selected(old('nik') === $citizen->nik)>{{ $citizen->nik }} · {{ $citizen->nama_lengkap }}</option>@endforeach</select></label>
     <label>Tanggal<input type="date" name="tanggal_daftar" value="{{ old('tanggal_daftar', today()->toDateString()) }}" min="{{ today()->toDateString() }}" required></label>
@@ -9,6 +9,13 @@
     <button class="button primary" data-add-officer-queue>Tambah antrean</button>
 </form></section>
 <section><div class="section-heading"><div><p class="eyebrow">Sedang berjalan</p><h2>{{ $queues->count() }} antrean aktif</h2></div></div><div class="stack-list">
-@forelse($queues as $queue)@php($nextStatuses = ['WAITING' => ['WAITING','CALLED','CANCELLED'], 'CALLED' => ['CALLED','SERVING','CANCELLED'], 'SERVING' => ['SERVING','COMPLETED','CANCELLED']][$queue->status_antrean])<article class="queue-card"><div class="queue-number">{{ str_pad($queue->nomor_antrean,3,'0',STR_PAD_LEFT) }}</div><div><span class="status {{ strtolower($queue->status_antrean) }}">{{ $queue->status_antrean }}</span><h3>{{ $queue->account->nama_lengkap }}</h3><p>{{ $queue->schedule->puskesmas->nama_puskesmas }} · {{ $queue->schedule->service->nama_layanan }} · {{ $queue->tanggal_daftar->format('d-m-Y') }}</p></div><div class="actions"><form method="post" action="{{ route('officer.queues.update',$queue) }}" class="inline-form">@csrf @method('patch')<select name="status_antrean">@foreach($nextStatuses as $status)<option @selected($queue->status_antrean===$status)>{{ $status }}</option>@endforeach</select><button class="button secondary">Ubah</button></form></div></article>@empty<div class="empty">Tidak ada antrean aktif.</div>@endforelse
+@forelse($queues as $queue)
+    @php($nextStatuses = ['WAITING' => ['WAITING','CALLED','CANCELLED'], 'CALLED' => ['CALLED','SERVING','CANCELLED'], 'SERVING' => ['SERVING','COMPLETED','CANCELLED']][$queue->status_antrean])
+    <article class="queue-card officer-queue-card">
+        <div class="queue-number" aria-label="Nomor antrean {{ $queue->nomor_antrean }}"><small>Nomor</small><strong>{{ str_pad($queue->nomor_antrean,3,'0',STR_PAD_LEFT) }}</strong></div>
+        <div class="officer-queue-details"><span class="status {{ strtolower($queue->status_antrean) }}">{{ $queue->status_antrean }}</span><h3>{{ $queue->account->nama_lengkap }}</h3><p>{{ $queue->schedule->puskesmas->nama_puskesmas }} · {{ $queue->schedule->service->nama_layanan }} · {{ $queue->tanggal_daftar->format('d-m-Y') }}</p></div>
+        <div class="actions"><form method="post" action="{{ route('officer.queues.update',$queue) }}" class="inline-form">@csrf @method('patch')<select name="status_antrean" aria-label="Status nomor antrean {{ $queue->nomor_antrean }}">@foreach($nextStatuses as $status)<option @selected($queue->status_antrean===$status)>{{ $status }}</option>@endforeach</select><button class="button secondary">Ubah</button></form></div>
+    </article>
+@empty<div class="empty">Tidak ada antrean aktif.</div>@endforelse
 </div></section>
 @endsection

@@ -10,7 +10,7 @@
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=DM+Serif+Display:ital@0;1&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" integrity="sha256-p4NxAoJBhIINfQ3ynceqWgVqC41Wifii1/Lnt2MZt4=" crossorigin="">
-    <link rel="stylesheet" href="{{ asset('assets/app.css').'?v=service-card-natural-1' }}">
+    <link rel="stylesheet" href="{{ asset('assets/app.css').'?v=hero-button-blue-1' }}">
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin="" defer></script>
     <script src="{{ asset('assets/app.js').'?v=citizen-delete-1' }}" defer></script>
 </head>
@@ -30,10 +30,10 @@
         <nav id="main-navigation" aria-label="Navigasi utama">
             @auth
                 @if (auth()->user()->role === 'ADMIN')
-                    <a href="{{ route('admin.master.index') }}">Data master</a>
+                    <a href="{{ route('admin.master.index') }}" @if(request()->routeIs('admin.*')) class="is-current" aria-current="page" @endif>Data master</a>
                 @elseif ($role === 'PETUGAS')
-                    <a href="{{ route('officer.queues.index') }}">Kelola antrean</a>
-                    <a href="{{ route('officer.schedules.index') }}">Jadwal layanan</a>
+                    <a href="{{ route('officer.queues.index') }}" @if(request()->routeIs('officer.queues.*')) class="is-current" aria-current="page" @endif>Kelola antrean</a>
+                    <a href="{{ route('officer.schedules.index') }}" @if(request()->routeIs('officer.schedules.*')) class="is-current" aria-current="page" @endif>Jadwal layanan</a>
                 @else
                     <a href="{{ route('home') }}">Beranda</a>
                     <a href="{{ route('home') }}#peta-surabaya">Puskesmas</a>
@@ -41,7 +41,7 @@
                     <a class="nav-recommendation" href="{{ route('recommendations.index') }}">Lihat rekomendasi</a>
                     @if (auth()->user()->role === 'MASYARAKAT')<a href="{{ route('my-queues.index') }}">Antrean saya</a>@endif
                 @endif
-                <a href="{{ route('profile.edit') }}">Profil</a>
+                <a href="{{ route('profile.edit') }}" @if(request()->routeIs('profile.*')) class="is-current" aria-current="page" @endif>Profil</a>
                 <form method="post" action="{{ route('logout') }}">@csrf<button class="link-button" type="submit">Keluar</button></form>
             @else
                 <a href="{{ route('home') }}">Beranda</a>
@@ -53,6 +53,9 @@
             @endauth
         </nav>
     </header>
+    @if (in_array($role, ['PETUGAS', 'ADMIN'], true))
+        <div class="internal-role-bar">@include('components.role-badge')</div>
+    @endif
     <div class="flash-toast-stack" aria-live="polite" aria-atomic="false">
         @if (session('success'))<div class="alert success" role="status">{{ session('success') }}</div>@endif
         @if (session('error'))<div class="alert error" role="alert">{{ session('error') }}</div>@endif

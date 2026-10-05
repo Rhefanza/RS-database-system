@@ -218,7 +218,17 @@ input:focus,select:focus,textarea:focus{border-color:var(--dark-cyan);outline:3p
 .citizen-queue-card .queue-number small{font-size:10px;font-weight:500}.citizen-queue-card .queue-number strong{font-size:25px}
 .citizen-queue-details{min-width:0;overflow-wrap:anywhere}.citizen-queue-details h3{margin:5px 0}.citizen-queue-card .actions{justify-content:flex-end}.citizen-queue-card .actions form{margin:0}.queue-number-help{font-size:12px;color:var(--muted);margin:0 0 16px}
 @media(max-width:600px){.citizen-queue-list .citizen-queue-card{grid-template-columns:60px minmax(0,1fr);gap:14px;padding:16px}.citizen-queue-card .queue-number{width:60px;height:60px}.citizen-queue-card .queue-number strong{font-size:22px}.citizen-queue-card .actions{grid-column:2;justify-content:flex-start}.citizen-queue-card .actions:empty{display:none}}
-.care-hero .hero-actions .button.primary:active,.care-hero .hero-actions .button.primary:focus,body:has(#cari-puskesmas:target) .care-hero .hero-actions .button.primary{background:var(--sky-aqua);color:var(--ink-black);border-color:var(--sky-aqua)}
+.care-hero .hero-actions .button.primary{background:#2563eb;color:#fff;border-color:#2563eb}
+.care-hero .hero-actions .button.primary:hover{background:#1d4ed8;color:#fff;border-color:#1d4ed8}
+.care-hero .hero-actions .button.primary:active,.care-hero .hero-actions .button.primary:focus,body:has(#cari-puskesmas:target) .care-hero .hero-actions .button.primary{background:#000;color:#fff;border-color:#000}
+.internal-role-bar{display:flex;justify-content:flex-end;padding:10px max(4vw,1rem) 0}.role-badge{flex-shrink:0;padding:6px 16px;border:1px solid #087f72;border-radius:8px;background:#087f72;color:#fff;line-height:1.4}.role-badge strong{font-size:12px;font-weight:700}
+.site-header nav a.is-current{background:#087f72;color:#fff;padding:7px 12px;border-radius:8px}.site-header nav a.is-current:hover{background:#06685e;color:#fff}
+#puskesmas .split>form.panel{max-height:calc(100dvh - 125px);overflow-y:auto;overscroll-behavior-y:contain;scrollbar-width:thin;scrollbar-color:#21898b transparent;scrollbar-gutter:stable}
+@media(max-width:850px){#puskesmas .split>form.panel{max-height:70dvh}}
+.officer-queue-card{display:grid;grid-template-columns:76px minmax(0,1fr) 210px;align-items:center;gap:22px}
+.officer-queue-card .queue-number{width:76px;height:76px;align-content:center;gap:2px;line-height:1.1}.officer-queue-card .queue-number small{font-size:10px;font-weight:500}.officer-queue-card .queue-number strong{font-size:25px}
+.officer-queue-details{min-width:0;overflow-wrap:anywhere}.officer-queue-details h3{margin:5px 0}.officer-queue-card .actions{justify-content:flex-end;min-width:0}.officer-queue-card .inline-form{margin:0;width:100%;flex-wrap:nowrap}.officer-queue-card .inline-form select{min-width:0}
+@media(max-width:600px){.officer-queue-card{grid-template-columns:60px minmax(0,1fr);gap:14px;padding:16px}.officer-queue-card .queue-number{width:60px;height:60px}.officer-queue-card .queue-number strong{font-size:22px}.officer-queue-card .actions{grid-column:2;justify-content:flex-start}.officer-queue-card .inline-form{max-width:230px}}
 .detail-services .service-detail-card{position:relative;isolation:isolate;overflow:hidden;padding:0;gap:0;background:#333}
 .service-detail-card>.service-detail-intro{position:relative;z-index:1;min-height:280px;padding:32px;min-width:0}
 .service-detail-card>.service-art-detail{position:absolute;inset:0;width:100%;height:100%;max-width:none;object-fit:cover;border:0;border-radius:0;opacity:1;pointer-events:none;z-index:0;transform:none}
