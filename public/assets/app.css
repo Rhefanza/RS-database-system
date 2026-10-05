@@ -213,3 +213,18 @@ input:focus,select:focus,textarea:focus{border-color:var(--dark-cyan);outline:3p
 @media(max-width:800px){.service-art-recommendation{height:160px}.auth-wrap{padding:28px}}
 @media(max-width:560px){.auth-wrap{min-height:0;margin-top:6px;padding:16px;border-radius:18px}.auth-card{padding:24px}.service-record{grid-template-columns:74px minmax(0,1fr);gap:12px}.service-art-admin{width:74px;height:74px}.service-record details{grid-column:1/-1}.service-record h3{font-size:21px}.service-detail-intro{align-items:flex-start}.service-art-detail{width:78px;height:78px}.journey-intro>div>p{font-size:11px}.location-button{width:auto}}
 @media(prefers-reduced-motion:reduce){.motion-ready .reveal-surface:not(.care-cta){opacity:1;transform:none;transition:none}.record{transition:none}}
+.citizen-queue-list .citizen-queue-card{display:grid;grid-template-columns:76px minmax(0,1fr) 150px;align-items:center;gap:22px}
+.citizen-queue-card .queue-number{width:76px;height:76px;align-content:center;gap:2px;line-height:1.1}
+.citizen-queue-card .queue-number small{font-size:10px;font-weight:500}.citizen-queue-card .queue-number strong{font-size:25px}
+.citizen-queue-details{min-width:0;overflow-wrap:anywhere}.citizen-queue-details h3{margin:5px 0}.citizen-queue-card .actions{justify-content:flex-end}.citizen-queue-card .actions form{margin:0}.queue-number-help{font-size:12px;color:var(--muted);margin:0 0 16px}
+@media(max-width:600px){.citizen-queue-list .citizen-queue-card{grid-template-columns:60px minmax(0,1fr);gap:14px;padding:16px}.citizen-queue-card .queue-number{width:60px;height:60px}.citizen-queue-card .queue-number strong{font-size:22px}.citizen-queue-card .actions{grid-column:2;justify-content:flex-start}.citizen-queue-card .actions:empty{display:none}}
+.care-hero .hero-actions .button.primary:active,.care-hero .hero-actions .button.primary:focus,body:has(#cari-puskesmas:target) .care-hero .hero-actions .button.primary{background:var(--sky-aqua);color:var(--ink-black);border-color:var(--sky-aqua)}
+.detail-services .service-detail-card{position:relative;isolation:isolate;overflow:hidden;padding:0;gap:0;background:#333}
+.service-detail-card>.service-detail-intro{position:relative;z-index:1;min-height:280px;padding:32px;min-width:0}
+.service-detail-card>.service-art-detail{position:absolute;inset:0;width:100%;height:100%;max-width:none;object-fit:cover;border:0;border-radius:0;opacity:1;pointer-events:none;z-index:0;transform:none}
+.service-detail-card::after{content:"";position:absolute;inset:0;z-index:0;background:linear-gradient(90deg,rgba(0,0,0,.65) 0%,rgba(0,0,0,.3) 40%,rgba(0,0,0,.08) 100%);pointer-events:none}
+.service-detail-copy{position:relative;min-width:0}.detail-services .service-detail-copy h3{color:#fff}.detail-services .service-detail-copy p{color:#fff;margin-bottom:0}
+.service-detail-card>.schedule-list{position:relative;z-index:1;min-width:0;padding:26px;background:transparent}
+.service-detail-card .schedule-row{background:rgba(255,255,255,.92)}
+@media(max-width:850px){.service-detail-card>.service-detail-intro{min-height:230px;align-items:center}.service-detail-card>.schedule-list{padding:20px}}
+@media(max-width:560px){.service-detail-card>.service-detail-intro{padding:24px;min-height:210px}.service-detail-card>.schedule-list{padding:16px}}

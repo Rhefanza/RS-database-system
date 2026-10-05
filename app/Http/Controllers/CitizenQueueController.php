@@ -93,20 +93,16 @@ class CitizenQueueController extends Controller
         return redirect()->route('my-queues.index')->with('success', 'Antrean nomor '.$queue->nomor_antrean.' berhasil diambil.');
     }
 
-    public function cancel(Request $request, Queue $queue): RedirectResponse
-    {
-        abort_unless((int) $queue->akun_id === (int) $request->user()->akun_id, 403);
-        abort_unless($queue->status_antrean === 'WAITING', 409, 'Hanya antrean menunggu yang dapat dibatalkan.');
-        $queue->update(['status_antrean' => 'CANCELLED']);
-
-        return back()->with('success', 'Antrean berhasil dibatalkan.');
-    }
-
     public function destroy(Request $request, Queue $queue): RedirectResponse
     {
         abort_unless((int) $queue->akun_id === (int) $request->user()->akun_id, 403);
-        abort_unless($queue->status_antrean === 'CANCELLED', 409, 'Batalkan antrean sebelum menghapusnya.');
-        $queue->delete();
+        $deleted = Queue::whereKey($queue->getKey())
+            ->where('akun_id', $request->user()->akun_id)
+            ->whereIn('status_antrean', ['WAITING', 'CANCELLED'])
+            ->delete();
+        if (! $deleted) {
+            return back()->with('error', 'Hanya antrean menunggu atau dibatalkan yang dapat dihapus.');
+        }
 
         return back()->with('success', 'Data antrean berhasil dihapus.');
     }

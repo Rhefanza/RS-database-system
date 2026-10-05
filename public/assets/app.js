@@ -28,6 +28,11 @@ function escapeHtml(value) {
 
 document.addEventListener('DOMContentLoaded', () => {
     initFlashAlerts();
+    document.querySelectorAll('[data-confirm-delete-queue]').forEach((form) => {
+        form.addEventListener('submit', (event) => {
+            if (!window.confirm('Hapus antrean ini? Data antrean akan dihapus permanen.')) event.preventDefault();
+        });
+    });
     initOfficerQueueForm();
 
     const panels = [...document.querySelectorAll('[data-master-panel]')];

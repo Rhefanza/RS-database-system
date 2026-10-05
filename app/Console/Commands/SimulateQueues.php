@@ -61,6 +61,7 @@ class SimulateQueues extends Command
 
     private function simulateTick(): string
     {
+        Queue::expired()->delete();
         return DB::transaction(function (): string {
             // Refresh on every tick so a puskesmas added while the long-running
             // simulator is active can immediately join the simulation.

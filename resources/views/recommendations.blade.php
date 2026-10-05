@@ -19,7 +19,7 @@
                             <section class="recommendation-service">@include('components.service-art', ['name' => $service['name'], 'class' => 'service-art service-art-recommendation'])<div><h4>{{ $service['name'] }}</h4><p>{{ $service['description'] }}</p></div><div class="doctor-list">@forelse($service['doctors'] as $doctor)<span><b>{{ $doctor['name'] }}</b><small>{{ $doctor['specialization'] }}</small></span>@empty<span><b>Dokter belum dijadwalkan</b></span>@endforelse</div><div class="practice-list">@forelse($service['schedules'] as $schedule)<span>{{ $schedule['day'] }} · {{ $schedule['open'] }}–{{ $schedule['close'] }}</span>@empty<span>Jadwal belum tersedia</span>@endforelse</div></section>
                         @endforeach
                     </div>
-                    <div class="recommendation-actions"><a class="button primary" href="{{ $item['url'] }}">Lihat jadwal & ambil antrean</a>@if($item['phone'])<a class="button ghost" href="tel:{{ $item['phone'] }}">{{ $item['phone'] }}</a>@endif</div>
+                    <div class="recommendation-actions"><a class="button primary" href="{{ $item['url'] }}">Lihat jadwal & ambil antrean</a></div>
                 </div>
             </article>
         @endforeach

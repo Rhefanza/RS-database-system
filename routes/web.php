@@ -31,7 +31,6 @@ Route::middleware('auth')->group(function () {
     Route::middleware('role:MASYARAKAT')->group(function () {
         Route::get('/antrean-saya', [CitizenQueueController::class, 'index'])->name('my-queues.index');
         Route::post('/antrean/{schedule}', [CitizenQueueController::class, 'store'])->name('my-queues.store');
-        Route::patch('/antrean/{queue}/batal', [CitizenQueueController::class, 'cancel'])->name('my-queues.cancel');
         Route::delete('/antrean/{queue}', [CitizenQueueController::class, 'destroy'])->name('my-queues.destroy');
     });
 

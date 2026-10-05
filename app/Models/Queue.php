@@ -26,6 +26,19 @@ class Queue extends Model
         return $query->whereIn('status_antrean', self::ACTIVE_STATUSES);
     }
 
+    public function scopeExpired(Builder $query): Builder
+    {
+        $cutoff = now()->subHours(24);
+
+        return $query->active()->where(function (Builder $query) use ($cutoff) {
+            $query->whereDate('tanggal_daftar', '<', $cutoff->toDateString())
+                ->orWhere(fn (Builder $query) => $query
+                    ->whereDate('tanggal_daftar', $cutoff->toDateString())
+                    ->whereHas('schedule', fn (Builder $schedule) => $schedule
+                        ->where('jam_tutup', '<=', $cutoff->format('H:i:s'))));
+        });
+    }
+
     public static function overlappingActiveFor(int $accountId, Schedule $schedule, string $date): ?self
     {
         return self::query()

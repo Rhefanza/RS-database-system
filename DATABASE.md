@@ -32,7 +32,9 @@ Tabel migrations, sessions, cache, dan cache_locks adalah penyimpanan teknis Lar
 - Layanan puskesmas diturunkan dari jadwal. Layanan tanpa jadwal belum tampil sebagai layanan puskesmas.
 - Nomor antrean unik per jadwal dan tanggal. Kapasitas dan benturan waktu diperiksa dalam transaksi dengan penguncian akun lalu jadwal.
 - WAITING, CALLED, SERVING memakai kapasitas. COMPLETED dan CANCELLED adalah riwayat.
-- Alur status: WAITING → CALLED → SERVING → COMPLETED; status aktif dapat dibatalkan.
+- Antrean WAITING, CALLED, dan SERVING dihapus otomatis setelah 24 jam dari tanggal layanan + jam tutup jadwal (Asia/Jakarta). Antrean masa depan, COMPLETED, dan CANCELLED tetap disimpan. Pembersihan berjalan setiap menit melalui scheduler, ketika halaman/API diakses, dan setiap putaran simulator. Jalankan `php artisan schedule:work` untuk pembersihan saat website tidak diakses.
+- Masyarakat dapat menghapus antrean miliknya berstatus WAITING setelah konfirmasi. Penghapusan membebaskan kapasitas; CALLED, SERVING, dan COMPLETED tidak dapat dihapus oleh masyarakat. Antrean CANCELLED tidak ditampilkan pada halaman masyarakat; endpoint hapus tetap menerima CANCELLED untuk kompatibilitas data lama.
+- Alur status: WAITING → CALLED → SERVING → COMPLETED; petugas dapat membatalkan status aktif. Masyarakat hanya mengambil atau menghapus antrean, tanpa aksi pembatalan.
 - Jadwal dengan antrean aktif tidak dapat dipindah layanan/hari/jam. Jadwal, akun, puskesmas, dan layanan yang masih dirujuk tidak dihapus; nonaktifkan bila perlu.
 
 ## Migrasi dari sembilan tabel

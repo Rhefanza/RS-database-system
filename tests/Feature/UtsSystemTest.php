@@ -218,7 +218,7 @@ class UtsSystemTest extends TestCase
         $this->assertDatabaseHas('jadwal', ['jadwal_id' => $schedule->jadwal_id, 'kapasitas' => 2]);
     }
 
-    public function test_citizen_queue_respects_capacity_and_can_be_cancelled_and_deleted(): void
+    public function test_citizen_queue_respects_capacity_and_can_be_deleted(): void
     {
         [$relation] = $this->twoRelations();
         $day = ['Sunday' => 'MINGGU', 'Monday' => 'SENIN', 'Tuesday' => 'SELASA', 'Wednesday' => 'RABU', 'Thursday' => 'KAMIS', 'Friday' => 'JUMAT', 'Saturday' => 'SABTU'][today()->format('l')];
@@ -238,7 +238,7 @@ class UtsSystemTest extends TestCase
             ->assertRedirect(route('puskesmas.show', $relation->puskesmas))
             ->assertSessionHas('error', 'Kapasitas antrean sudah penuh.');
         $queue = Queue::firstOrFail();
-        $this->actingAs($first)->patch(route('my-queues.cancel', $queue))->assertRedirect();
+        $this->actingAs($first)->delete(route('my-queues.destroy', $queue))->assertRedirect();
 
         $this->actingAs($second)->post(route('my-queues.store', $schedule), ['tanggal_daftar' => today()->toDateString()])
             ->assertRedirect(route('my-queues.index'));
@@ -248,7 +248,7 @@ class UtsSystemTest extends TestCase
         $this->actingAs($first)->post(route('my-queues.store', $schedule), ['tanggal_daftar' => today()->toDateString()])
             ->assertRedirect(route('my-queues.index'));
         $this->assertSame(1, Queue::active()->count());
-        $this->assertDatabaseCount('antrean', 3);
+        $this->assertDatabaseCount('antrean', 2);
         $this->get(route('my-queues.index'))
             ->assertOk()
             ->assertSee('Antrean aktif saya')
@@ -496,10 +496,10 @@ class UtsSystemTest extends TestCase
         $this->assertDatabaseCount('antrean', 0);
         $this->post(route('my-queues.store', $schedule), ['tanggal_daftar' => '2026-10-05'])->assertRedirect(route('my-queues.index'));
         $queue = Queue::firstOrFail();
-        $this->actingAs($other)->patch(route('my-queues.cancel', $queue))->assertForbidden();
-        $this->delete(route('my-queues.destroy', $queue))->assertForbidden();
-        $this->actingAs($owner)->delete(route('my-queues.destroy', $queue))->assertStatus(409);
-        $this->patch(route('my-queues.cancel', $queue))->assertRedirect();
+        $this->actingAs($other)->delete(route('my-queues.destroy', $queue))->assertForbidden();
+        $queue->update(['status_antrean' => 'CALLED']);
+        $this->actingAs($owner)->delete(route('my-queues.destroy', $queue))->assertSessionHas('error');
+        $queue->update(['status_antrean' => 'WAITING']);
         $this->delete(route('my-queues.destroy', $queue))->assertRedirect();
         $this->assertDatabaseCount('antrean', 0);
         $schedule->update(['status' => 'NONAKTIF']);
@@ -557,6 +557,37 @@ class UtsSystemTest extends TestCase
         $this->post(route('officer.queues.store'), [...$payload, 'nik' => $second->nik])
             ->assertRedirect($url)->assertSessionHasErrors('jadwal_id');
         $this->assertDatabaseCount('antrean', 1);
+    }
+
+    public function test_citizen_can_delete_waiting_queue_and_free_capacity_but_not_processed_queue(): void
+    {
+        [$relation] = $this->twoRelations();
+        $day = ['Sunday' => 'MINGGU', 'Monday' => 'SENIN', 'Tuesday' => 'SELASA', 'Wednesday' => 'RABU', 'Thursday' => 'KAMIS', 'Friday' => 'JUMAT', 'Saturday' => 'SABTU'][today()->format('l')];
+        $schedule = Schedule::create(['puskesmas_id' => $relation->puskesmas_id, 'layanan_id' => $relation->layanan_id,
+            'hari' => $day, 'jam_buka' => '08:00', 'jam_tutup' => '12:00', 'kapasitas' => 1, 'status' => 'AKTIF']);
+        $owner = $this->account(['role' => 'MASYARAKAT', 'nik' => '3578010101900088']);
+        $other = $this->account(['role' => 'MASYARAKAT', 'nik' => '3578010101900089']);
+        $queue = Queue::create(['akun_id' => $owner->akun_id, 'jadwal_id' => $schedule->jadwal_id,
+            'nomor_antrean' => 1, 'tanggal_daftar' => today(), 'status_antrean' => 'WAITING']);
+        $this->actingAs($owner)->get(route('my-queues.index'))->assertSee('Hapus antrean')->assertSee('data-confirm-delete-queue', false);
+        $this->get(route('my-queues.index'))->assertDontSee('Batalkan');
+        $this->patch('/antrean/'.$queue->antrean_id.'/batal')->assertNotFound();
+        $this->actingAs($other)->delete(route('my-queues.destroy', $queue))->assertForbidden();
+        $this->actingAs($owner)->delete(route('my-queues.destroy', $queue))->assertSessionHas('success');
+        $this->assertDatabaseMissing('antrean', ['antrean_id' => $queue->antrean_id]);
+        $this->actingAs($other)->post(route('my-queues.store', $schedule), ['tanggal_daftar' => today()->toDateString()])
+            ->assertRedirect(route('my-queues.index'))->assertSessionHas('success');
+        $replacement = Queue::firstOrFail();
+        foreach (['CALLED', 'SERVING', 'COMPLETED'] as $status) {
+            $replacement->update(['status_antrean' => $status]);
+            $this->delete(route('my-queues.destroy', $replacement))->assertSessionHas('error');
+            $this->assertDatabaseHas('antrean', ['antrean_id' => $replacement->antrean_id, 'status_antrean' => $status]);
+        }
+        $replacement->update(['status_antrean' => 'CANCELLED']);
+        $this->get(route('my-queues.index'))->assertDontSee('Antrean dibatalkan')->assertDontSee('Hapus antrean');
+        $this->actingAs($owner)->get(route('my-queues.index'))->assertDontSee('Antrean dibatalkan');
+        $this->actingAs($other)->delete(route('my-queues.destroy', $replacement))->assertSessionHas('success');
+        $this->assertDatabaseCount('antrean', 0);
     }
 
     private function citizen(array $attributes = []): User
