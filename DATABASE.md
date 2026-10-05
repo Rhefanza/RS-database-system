@@ -13,6 +13,20 @@
 
 Tabel migrations, sessions, cache, dan cache_locks adalah penyimpanan teknis Laravel.
 
+Data masyarakat tetap mempunyai menu sendiri di halaman admin, tetapi menu tersebut membaca tabel `akun` dengan role `MASYARAKAT`. Menu dokter dan relasi layanan terpisah digantikan pengaturan layanan, dokter, dan spesialisasi pada halaman jadwal petugas. Masyarakat belum aktivasi memakai `status_akun=NONAKTIF` dengan email/password kosong; tidak ada nilai enum `BELUM_AKTIF` pada implementasi ini.
+
+```mermaid
+erDiagram
+    KECAMATAN ||--o{ PUSKESMAS : memiliki
+    PUSKESMAS o|--o{ AKUN : penugasan_petugas
+    PUSKESMAS ||--o{ JADWAL : menyediakan
+    LAYANAN ||--o{ JADWAL : dijadwalkan
+    AKUN ||--o{ ANTREAN : masyarakat_mengambil
+    JADWAL ||--o{ ANTREAN : mempunyai
+```
+
+Relasi akun–puskesmas bersifat opsional pada skema karena akun admin dan masyarakat tidak memiliki penugasan; aplikasi mewajibkan puskesmas untuk petugas. Hanya akun masyarakat yang dapat menjadi pemilik antrean. Puskesmas dan layanan berhubungan N:M melalui jadwal.
+
 ## Relasi
 
 - kecamatan 1 → banyak puskesmas, melalui puskesmas.kecamatan_id.
