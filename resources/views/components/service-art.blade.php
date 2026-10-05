@@ -1,5 +1,5 @@
 @php
-    $serviceImage = 'assets/services/'.\Illuminate\Support\Str::slug($name).'.png';
+    $serviceImage = 'images/layanan/'.\Illuminate\Support\Str::slug($name).'.png';
 @endphp
 @if (is_file(public_path($serviceImage)))
     <img class="{{ $class ?? 'service-art' }}" src="{{ asset($serviceImage) }}?v=service-photos-1" alt="" loading="lazy">

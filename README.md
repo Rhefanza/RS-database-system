@@ -61,6 +61,8 @@ Pada instalasi baru, seeder membuat 31 kecamatan, 31 puskesmas, 112 akun (80 mas
 
 ## Peta
 
+Semua gambar lokal berada di `public/images`, dibagi ke folder `logo`, `beranda`, `langkah`, `rekomendasi`, `layanan`, dan `arsip`. Panduan penggunaan tersedia di `public/images/README.md`. CSS dan JavaScript tetap berada di `public/assets`.
+
 Antarmuka memakai Leaflet 1.9.4 dan tile standar OpenStreetMap. Atribusi OpenStreetMap selalu ditampilkan pada peta. Jarak dihitung dengan rumus Haversine di perangkat pengguna dan lokasi pengguna tidak disimpan ke database.
 
 ## Simulator antrean

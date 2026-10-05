@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <meta name="description" content="Cari layanan puskesmas, lihat jadwal, dan siapkan antrean.">
     <title>@yield('title', 'PuskesmasKu') · PuskesmasKu</title>
-    <link rel="icon" type="image/png" href="{{ asset('assets/logo-puskesmasku.png') }}">
+    <link rel="icon" type="image/png" href="{{ asset('images/logo/logo-puskesmasku.png') }}">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=DM+Serif+Display:ital@0;1&display=swap" rel="stylesheet">
@@ -25,7 +25,7 @@
     @endphp
     <a class="skip-link" href="#main-content">Lewati ke konten</a>
     <header class="site-header {{ auth()->user()?->role === 'ADMIN' ? 'site-header-admin' : '' }}">
-        <a class="brand" href="{{ $brandDestination }}"><img class="brand-logo" src="{{ asset('assets/logo-puskesmasku.png') }}" alt=""><strong>PuskesmasKu</strong></a>
+        <a class="brand" href="{{ $brandDestination }}"><img class="brand-logo" src="{{ asset('images/logo/logo-puskesmasku.png') }}" alt=""><strong>PuskesmasKu</strong></a>
         <button class="menu-toggle" type="button" aria-controls="main-navigation" aria-expanded="false" data-menu-toggle hidden>Menu <span aria-hidden="true">☰</span></button>
         <nav id="main-navigation" aria-label="Navigasi utama">
             @auth
@@ -62,6 +62,6 @@
         @yield('content')
     </main>
     <div class="live-toast-stack" data-live-toast-stack aria-live="polite" aria-atomic="false"></div>
-    <footer class="site-footer"><div class="footer-main"><div><a class="brand" href="{{ $brandDestination }}"><img class="brand-logo" src="{{ asset('assets/logo-puskesmasku.png') }}" alt=""><strong>PuskesmasKu</strong></a><p>{{ match ($role) { 'ADMIN' => 'Area pengelolaan data master Dinas Kesehatan.', 'PETUGAS' => 'Kelola jadwal layanan dan antrean puskesmas Anda.', default => 'Temukan layanan puskesmas dan siapkan kunjungan dengan lebih mudah.' } }}</p></div>@if($role === 'PETUGAS')<div><strong>Operasional</strong><a href="{{ route('officer.queues.index') }}">Kelola antrean</a><a href="{{ route('officer.schedules.index') }}">Jadwal layanan</a></div>@elseif($role !== 'ADMIN')<div><strong>Jelajahi</strong><a href="{{ route('home') }}#peta-surabaya">Peta puskesmas</a><a href="{{ route('recommendations.index') }}">Lihat rekomendasi</a><a href="{{ route('home') }}#cara-kerja">Cara kerja</a></div><div><strong>Informasi</strong><p>Informasi layanan dan antrean diperbarui secara berkala.</p></div>@endif</div><div class="footer-bottom">PuskesmasKu · {{ now()->year }}</div></footer>
+    <footer class="site-footer"><div class="footer-main"><div><a class="brand" href="{{ $brandDestination }}"><img class="brand-logo" src="{{ asset('images/logo/logo-puskesmasku.png') }}" alt=""><strong>PuskesmasKu</strong></a><p>{{ match ($role) { 'ADMIN' => 'Area pengelolaan data master Dinas Kesehatan.', 'PETUGAS' => 'Kelola jadwal layanan dan antrean puskesmas Anda.', default => 'Temukan layanan puskesmas dan siapkan kunjungan dengan lebih mudah.' } }}</p></div>@if($role === 'PETUGAS')<div><strong>Operasional</strong><a href="{{ route('officer.queues.index') }}">Kelola antrean</a><a href="{{ route('officer.schedules.index') }}">Jadwal layanan</a></div>@elseif($role !== 'ADMIN')<div><strong>Jelajahi</strong><a href="{{ route('home') }}#peta-surabaya">Peta puskesmas</a><a href="{{ route('recommendations.index') }}">Lihat rekomendasi</a><a href="{{ route('home') }}#cara-kerja">Cara kerja</a></div><div><strong>Informasi</strong><p>Informasi layanan dan antrean diperbarui secara berkala.</p></div>@endif</div><div class="footer-bottom">PuskesmasKu · {{ now()->year }}</div></footer>
 </body>
 </html>
