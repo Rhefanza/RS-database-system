@@ -183,9 +183,11 @@ input:focus,select:focus,textarea:focus{border-color:var(--dark-cyan);outline:3p
 .record:hover{border-color:#23868980;box-shadow:0 15px 34px #02122518}
 .service-art{display:block;flex-shrink:0;object-fit:cover;object-position:center;border-radius:12px;background:var(--mint-cream)}
 .service-art-fallback{display:grid;place-items:center;background:var(--tea-green);color:var(--green-dark);font:400 44px var(--serif)}
-.service-record{display:grid;grid-template-columns:104px minmax(0,1fr) auto;align-items:center;gap:18px;min-height:135px;padding:15px 20px}
-.service-art-admin{width:104px;height:104px}
+.service-record{display:grid;grid-template-columns:minmax(0,1fr) auto;align-items:center;gap:17px;padding:18px}
+.service-record>.admin-service-photo-frame{grid-column:1/-1;width:100%;height:clamp(220px,24vw,300px)}
+.service-art-admin{width:100%;height:100%;object-position:center 44%}
 .service-record-copy{min-width:0}
+.service-record>details{grid-column:2;justify-self:end}
 .service-record h3{margin:5px 0 4px;color:var(--ink-black);font:400 25px/1.15 var(--serif)}
 .service-record p{font-size:12px}
 .service-record details[open]{grid-column:1/-1;width:100%;border-top:1px solid var(--line)}
@@ -211,7 +213,7 @@ input:focus,select:focus,textarea:focus{border-color:var(--dark-cyan);outline:3p
 .motion-ready .reveal-surface:not(.care-cta){opacity:0;transform:translateY(26px);transition:opacity 1s ease,transform 1.1s cubic-bezier(.2,.7,.2,1),border-color .3s ease,box-shadow .4s ease;transition-delay:var(--reveal-delay,0ms)}
 .motion-ready .reveal-surface.is-visible:not(.care-cta){opacity:1;transform:translateY(0)}
 @media(max-width:800px){.service-art-recommendation{height:160px}.auth-wrap{padding:28px}}
-@media(max-width:560px){.auth-wrap{min-height:0;margin-top:6px;padding:16px;border-radius:18px}.auth-card{padding:24px}.service-record{grid-template-columns:74px minmax(0,1fr);gap:12px}.service-art-admin{width:74px;height:74px}.service-record details{grid-column:1/-1}.service-record h3{font-size:21px}.service-detail-intro{align-items:flex-start}.service-art-detail{width:78px;height:78px}.journey-intro>div>p{font-size:11px}.location-button{width:auto}}
+@media(max-width:560px){.auth-wrap{min-height:0;margin-top:6px;padding:16px;border-radius:18px}.auth-card{padding:24px}.service-record h3{font-size:21px}.service-detail-intro{align-items:flex-start}.service-art-detail{width:78px;height:78px}.journey-intro>div>p{font-size:11px}.location-button{width:auto}}
 @media(prefers-reduced-motion:reduce){.motion-ready .reveal-surface:not(.care-cta){opacity:1;transform:none;transition:none}.record{transition:none}}
 .citizen-queue-list .citizen-queue-card{display:grid;grid-template-columns:76px minmax(0,1fr) 150px;align-items:center;gap:22px}
 .citizen-queue-card .queue-number{width:76px;height:76px;align-content:center;gap:2px;line-height:1.1}
@@ -249,8 +251,10 @@ input:focus,select:focus,textarea:focus{border-color:var(--dark-cyan);outline:3p
 .queue-photo-title{position:absolute;z-index:2;right:24px;bottom:22px;left:24px;max-width:calc(100% - 48px);color:#fff;font:400 clamp(23px,2.6vw,34px)/1.15 var(--serif);text-shadow:0 2px 12px #02122599;overflow-wrap:break-word}
 .puskesmas-photo-record{flex-wrap:wrap}.puskesmas-photo-record>div{min-width:0;flex:1}.puskesmas-photo-record>.admin-photo-frame{flex:0 0 100%;height:clamp(220px,24vw,300px)}
 .puskesmas-photo-record>details{flex:0 0 auto}.puskesmas-photo-record>details[open]{flex-basis:100%}
-.admin-service-photo-frame{width:104px;height:104px}.service-photo-frame{width:100%;height:130px;border-radius:0}
-.admin-service-photo-frame::after,.service-photo-frame::after{background:linear-gradient(115deg,#23868924,transparent 50%),linear-gradient(180deg,transparent 45%,#02122552 100%);box-shadow:none}
+.service-photo-frame{width:100%;height:130px;border-radius:0}
+.service-record>.admin-service-photo-frame::after{background:linear-gradient(110deg,#2386892e 0%,transparent 52%),linear-gradient(180deg,transparent 24%,#165c6240 64%,#02122591 100%);box-shadow:inset 0 -22px 34px #0212252b}
+.puskesmas-photo-record>.admin-photo-frame::after{background:linear-gradient(110deg,#23868933 0%,transparent 52%),linear-gradient(180deg,transparent 24%,#165c623b 62%,#0212258c 100%);box-shadow:inset 0 -22px 34px #02122529}
+.service-photo-frame::after{background:linear-gradient(115deg,#23868924,transparent 50%),linear-gradient(180deg,transparent 45%,#02122552 100%);box-shadow:none}
 .detail-head.has-puskesmas-photo{position:relative;isolation:isolate;overflow:hidden;min-height:360px}
 .detail-puskesmas-photo{position:absolute;inset:0 0 0 auto;z-index:-2;width:68%;height:100%;object-fit:cover;object-position:center 40%}
 .detail-head.has-puskesmas-photo::before{content:"";position:absolute;inset:0;z-index:-1;background:linear-gradient(90deg,#165c62 0%,#165c62f2 30%,#165c6280 65%,#165c6266 100%)}
@@ -264,5 +268,5 @@ input:focus,select:focus,textarea:focus{border-color:var(--dark-cyan);outline:3p
 .search-suggestions button:has(.search-puskesmas-photo){grid-template-columns:140px minmax(0,1fr);column-gap:14px;align-items:center}
 .search-suggestions button:has(.search-puskesmas-photo)>:not(.photo-frame){grid-column:2}
 @media(max-width:800px){.service-photo-frame{height:160px}}
-@media(max-width:600px){.recommendation-photo-frame,.queue-photo-frame,.puskesmas-photo-record>.admin-photo-frame{height:220px}.queue-photo-title{right:18px;bottom:18px;left:18px;max-width:calc(100% - 36px);font-size:24px}.detail-head.has-puskesmas-photo{min-height:440px}.detail-puskesmas-photo{width:100%}.detail-head.has-puskesmas-photo::before{background:linear-gradient(180deg,#165c62e6 0%,#165c6299 45%,#165c62e6 100%)}.puskesmas-banner>img{height:260px}.puskesmas-banner>figcaption{left:20px;bottom:20px}.search-photo-frame{width:112px;height:84px}.search-suggestions button:has(.search-puskesmas-photo){grid-template-columns:112px minmax(0,1fr);column-gap:10px}}
-@media(max-width:560px){.admin-service-photo-frame{width:74px;height:74px}}
+@media(max-width:600px){.recommendation-photo-frame,.queue-photo-frame,.puskesmas-photo-record>.admin-photo-frame,.service-record>.admin-service-photo-frame{height:220px}.queue-photo-title{right:18px;bottom:18px;left:18px;max-width:calc(100% - 36px);font-size:24px}.detail-head.has-puskesmas-photo{min-height:440px}.detail-puskesmas-photo{width:100%}.detail-head.has-puskesmas-photo::before{background:linear-gradient(180deg,#165c62e6 0%,#165c6299 45%,#165c62e6 100%)}.puskesmas-banner>img{height:260px}.puskesmas-banner>figcaption{left:20px;bottom:20px}.search-photo-frame{width:112px;height:84px}.search-suggestions button:has(.search-puskesmas-photo){grid-template-columns:112px minmax(0,1fr);column-gap:10px}}
+@media(max-width:560px){.service-record{grid-template-columns:1fr}.service-record>details{grid-column:1;justify-self:start}}
