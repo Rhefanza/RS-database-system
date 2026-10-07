@@ -2,6 +2,8 @@
 
 ## Enam tabel bisnis
 
+Semua primary key dan foreign key pada enam tabel bisnis menggunakan `INT UNSIGNED` (4 byte; maksimum 4.294.967.295), sejak migrasi `2026_10_07_000008_use_integer_business_ids`. Migrasi menjaga nilai ID, AUTO_INCREMENT, nullable, indeks, dan relasi; tidak menggunakan `migrate:fresh`. Tabel teknis Laravel tidak diubah.
+
 | Tabel | Isi utama | Kunci utama |
 |---|---|---|
 | `kecamatan` | Nama wilayah | `kecamatan_id` |
