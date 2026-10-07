@@ -1,6 +1,9 @@
 @extends('layouts.app')
 @section('title', 'Profil')
 @section('content')
+@if ($user->role === 'PETUGAS')
+    @include('components.puskesmas-banner', ['facility' => $user->puskesmas])
+@endif
 <section class="panel narrow"><p class="eyebrow">Akun {{ strtolower($user->role) }}</p><h1>Profil saya</h1>
     <form method="post" action="{{ route('profile.update') }}" class="form-grid">@csrf @method('put')
         @if ($user->nik)<label>NIK<input value="{{ $user->nik }}" disabled></label>@endif

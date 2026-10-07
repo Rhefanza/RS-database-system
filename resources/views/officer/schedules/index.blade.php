@@ -2,6 +2,7 @@
 @section('title', 'Kelola Jadwal')
 @section('content')
 <div class="page-title"><div><p class="eyebrow">Petugas puskesmas</p><h1>Jadwal & kapasitas</h1><p>Anda hanya dapat mengelola layanan di {{ auth()->user()->puskesmas?->nama_puskesmas ?? 'puskesmas yang ditetapkan admin' }}.</p></div><a class="button secondary" href="{{ route('officer.queues.index') }}">Kelola antrean</a></div>
+@include('components.puskesmas-banner', ['facility' => auth()->user()->puskesmas])
 <section class="panel"><h2>Tambah jadwal</h2><form method="post" action="{{ route('officer.schedules.store') }}" class="form-grid">@csrf
     <label class="span-2">Layanan<select name="layanan_id" required><option value="">Pilih layanan</option>@foreach ($services as $service)<option value="{{ $service->layanan_id }}">{{ $service->nama_layanan }}</option>@endforeach</select></label>
     <label>Nama dokter<input name="nama_dokter" maxlength="1000" placeholder="Opsional"></label><label>Spesialisasi<input name="spesialisasi" maxlength="1000" placeholder="Opsional"></label>

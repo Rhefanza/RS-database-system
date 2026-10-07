@@ -102,6 +102,7 @@ class PublicPuskesmasController extends Controller
                 'district' => $puskesmas->district?->nama_kecamatan ?? 'Kecamatan belum diatur',
                 'address' => $puskesmas->alamat,
                 'phone' => $puskesmas->nomor_telepon,
+                'photo_url' => $puskesmas->photo_url,
                 'latitude' => (float) $puskesmas->latitude,
                 'longitude' => (float) $puskesmas->longitude,
                 'total' => $queues->count(),
