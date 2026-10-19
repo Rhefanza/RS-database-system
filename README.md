@@ -14,8 +14,8 @@ Prototipe Laravel 12 untuk simulasi informasi dan pengambilan antrean puskesmas 
 ## Role
 
 - `MASYARAKAT`: mengambil dan mengelola antrean milik sendiri.
-- `PETUGAS`: ditetapkan admin pada tepat satu puskesmas dan hanya dapat mengelola jadwal serta antrean puskesmas tersebut.
-- `ADMIN`: mengelola kecamatan, masyarakat, akun petugas, puskesmas, dan layanan. Petugas mengelola jadwal beserta keterangan dokter dan antrean puskesmasnya.
+- `PETUGAS`: ditetapkan admin pada tepat satu puskesmas dan hanya dapat mengelola jadwal serta antrean puskesmas tersebut. Petugas juga mendaftarkan dan mengelola data masyarakat (NIK) pada menu Data masyarakat.
+- `ADMIN`: mengelola kecamatan, akun petugas, puskesmas, dan layanan. Petugas mengelola jadwal beserta keterangan dokter dan antrean puskesmasnya.
 
 ## Struktur database
 

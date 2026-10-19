@@ -4,7 +4,7 @@ Dokumen pembelajaran mata kuliah Basis Data, berdasarkan implementasi proyek pad
 
 ## 1. Gambaran sistem
 
-PuskesmasKu menyediakan informasi fasilitas kesehatan, jadwal poli, rekomendasi, dan pengambilan antrean. Admin mengelola data master, petugas mengelola jadwal dan antrean puskesmasnya, sedangkan masyarakat mengambil serta melihat antreannya.
+PuskesmasKu menyediakan informasi fasilitas kesehatan, jadwal poli, rekomendasi, dan pengambilan antrean. Admin mengelola data master, petugas mengelola jadwal dan antrean puskesmasnya serta mendaftarkan data masyarakat, sedangkan masyarakat mengambil serta melihat antreannya.
 
 Arsitektur:
 
@@ -166,8 +166,8 @@ SQL langsung melalui HeidiSQL dapat melewati aturan controller. Contohnya foreig
 
 | Role | Create | Read | Update | Delete |
 |---|---|---|---|---|
-| Admin | Master kecamatan, masyarakat, petugas, puskesmas, layanan | Data master | Data/status master dan penugasan petugas | Master yang memenuhi aturan penghapusan |
-| Petugas | Jadwal dan antrean manual pada puskesmas sendiri | Jadwal dan antrean aktif puskesmas sendiri | Jadwal, dokter, kapasitas, status antrean | Jadwal yang tidak dirujuk; antrean selesai/dibatalkan sesuai endpoint |
+| Admin | Master kecamatan, petugas, puskesmas, layanan | Data master | Data/status master dan penugasan petugas | Master yang memenuhi aturan penghapusan |
+| Petugas | Jadwal dan antrean manual pada puskesmas sendiri; data masyarakat | Jadwal dan antrean aktif puskesmas sendiri; data masyarakat | Jadwal, dokter, kapasitas, status antrean; data/status masyarakat | Jadwal yang tidak dirujuk; antrean selesai/dibatalkan sesuai endpoint; masyarakat tanpa antrean |
 | Masyarakat | Mengambil antrean | Informasi puskesmas, rekomendasi, antrean sendiri | Profil; aktivasi akun | Antrean sendiri berstatus WAITING |
 
 Masyarakat tidak mempunyai tombol pembatalan lagi. Endpoint hapus masih menerima CANCELLED untuk kompatibilitas data lama, tetapi daftar masyarakat hanya menampilkan antrean aktif. Admin tidak otomatis mendapat akses route petugas: middleware membedakan role.

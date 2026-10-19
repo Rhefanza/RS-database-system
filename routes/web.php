@@ -4,6 +4,7 @@ use App\Http\Controllers\ActivationController;
 use App\Http\Controllers\Admin\MasterDataController;
 use App\Http\Controllers\AuthController;
 use App\Http\Controllers\CitizenQueueController;
+use App\Http\Controllers\Officer\CitizenController;
 use App\Http\Controllers\Officer\QueueController;
 use App\Http\Controllers\Officer\ScheduleController;
 use App\Http\Controllers\ProfileController;
@@ -43,6 +44,10 @@ Route::middleware('auth')->group(function () {
         Route::post('/antrean', [QueueController::class, 'store'])->name('officer.queues.store');
         Route::patch('/antrean/{queue}', [QueueController::class, 'update'])->name('officer.queues.update');
         Route::delete('/antrean/{queue}', [QueueController::class, 'destroy'])->name('officer.queues.destroy');
+        Route::get('/masyarakat', [CitizenController::class, 'index'])->name('officer.citizens.index');
+        Route::post('/masyarakat', [CitizenController::class, 'store'])->name('officer.citizens.store');
+        Route::put('/masyarakat/{citizen}', [CitizenController::class, 'update'])->name('officer.citizens.update');
+        Route::delete('/masyarakat/{citizen}', [CitizenController::class, 'destroy'])->name('officer.citizens.destroy');
     });
 
     Route::prefix('admin')->middleware('role:ADMIN')->group(function () {
@@ -50,9 +55,6 @@ Route::middleware('auth')->group(function () {
         Route::post('/kecamatan', [MasterDataController::class, 'storeDistrict'])->name('admin.districts.store');
         Route::put('/kecamatan/{district}', [MasterDataController::class, 'updateDistrict'])->name('admin.districts.update');
         Route::delete('/kecamatan/{district}', [MasterDataController::class, 'destroyDistrict'])->name('admin.districts.destroy');
-        Route::post('/masyarakat', [MasterDataController::class, 'storeCitizen'])->name('admin.citizens.store');
-        Route::put('/masyarakat/{citizen}', [MasterDataController::class, 'updateCitizen'])->name('admin.citizens.update');
-        Route::delete('/masyarakat/{citizen}', [MasterDataController::class, 'destroyCitizen'])->name('admin.citizens.destroy');
         Route::post('/petugas', [MasterDataController::class, 'storeOfficer'])->name('admin.officers.store');
         Route::put('/akun/{account}', [MasterDataController::class, 'updateAccount'])->name('admin.accounts.update');
         Route::delete('/akun/{account}', [MasterDataController::class, 'destroyAccount'])->name('admin.accounts.destroy');

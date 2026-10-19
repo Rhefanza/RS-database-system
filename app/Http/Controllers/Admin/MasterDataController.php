@@ -19,7 +19,6 @@ class MasterDataController extends Controller
     public function index(): View
     {
         return view('admin.master.index', [
-            'citizens' => User::citizens()->orderBy('nama_lengkap')->get(),
             'districts' => District::withCount('puskesmas')->orderBy('nama_kecamatan')->get(),
             'accounts' => User::query()
                 ->where('role', 'PETUGAS')
@@ -53,32 +52,6 @@ class MasterDataController extends Controller
         $district->delete();
 
         return $this->success('kecamatan', 'Kecamatan dihapus.');
-    }
-
-    public function storeCitizen(Request $request): RedirectResponse
-    {
-        User::create($this->citizenData($request) + ['role' => 'MASYARAKAT', 'status_akun' => 'NONAKTIF']);
-
-        return $this->success('masyarakat', 'Data masyarakat ditambahkan.');
-    }
-
-    public function updateCitizen(Request $request, User $citizen): RedirectResponse
-    {
-        abort_unless($citizen->role === 'MASYARAKAT', 404);
-        $citizen->update($this->citizenData($request, $citizen));
-
-        return $this->success('masyarakat', 'Data masyarakat diperbarui.');
-    }
-
-    public function destroyCitizen(User $citizen): RedirectResponse
-    {
-        abort_unless($citizen->role === 'MASYARAKAT', 404);
-        if ($citizen->queues()->exists()) {
-            return $this->error('masyarakat', 'Data masih dipakai antrean. Nonaktifkan saja.');
-        }
-        $citizen->delete();
-
-        return $this->success('masyarakat', 'Data masyarakat dihapus.');
     }
 
     public function storeOfficer(Request $request): RedirectResponse
@@ -175,17 +148,6 @@ class MasterDataController extends Controller
         $service->delete();
 
         return $this->success('layanan', 'Layanan dihapus.');
-    }
-
-    private function citizenData(Request $request, ?User $citizen = null): array
-    {
-        return $request->validate([
-            'nik' => ['required', 'digits:16', Rule::unique('akun', 'nik')->ignore($citizen?->akun_id, 'akun_id')],
-            'nama_lengkap' => ['required', 'string', 'max:255'],
-            'nomor_telepon' => ['nullable', 'string', 'max:20'],
-            'alamat' => ['nullable', 'string', 'max:1000'],
-            'status_data' => ['required', Rule::in(['AKTIF', 'NONAKTIF'])],
-        ]);
     }
 
     private function puskesmasData(Request $request, ?Puskesmas $puskesmas = null): array

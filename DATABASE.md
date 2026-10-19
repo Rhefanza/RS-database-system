@@ -15,7 +15,7 @@ Semua primary key dan foreign key pada enam tabel bisnis menggunakan `INT UNSIGN
 
 Tabel migrations, sessions, cache, dan cache_locks adalah penyimpanan teknis Laravel.
 
-Data masyarakat tetap mempunyai menu sendiri di halaman admin, tetapi menu tersebut membaca tabel `akun` dengan role `MASYARAKAT`. Menu dokter dan relasi layanan terpisah digantikan pengaturan layanan, dokter, dan spesialisasi pada halaman jadwal petugas. Masyarakat belum aktivasi memakai `status_akun=NONAKTIF` dengan email/password kosong; tidak ada nilai enum `BELUM_AKTIF` pada implementasi ini.
+Data masyarakat mempunyai menu sendiri di halaman petugas (`/pengelola/masyarakat`), tetapi menu tersebut membaca tabel `akun` dengan role `MASYARAKAT`. Menu dokter dan relasi layanan terpisah digantikan pengaturan layanan, dokter, dan spesialisasi pada halaman jadwal petugas. Masyarakat belum aktivasi memakai `status_akun=NONAKTIF` dengan email/password kosong; tidak ada nilai enum `BELUM_AKTIF` pada implementasi ini.
 
 ```mermaid
 erDiagram
@@ -40,7 +40,7 @@ Relasi akun–puskesmas bersifat opsional pada skema karena akun admin dan masya
 
 ## Aturan
 
-- Data masyarakat disiapkan admin sebagai baris akun role MASYARAKAT, password/email kosong dan status_akun NONAKTIF. NIK unik.
+- Data masyarakat disiapkan petugas sebagai baris akun role MASYARAKAT, password/email kosong dan status_akun NONAKTIF. NIK unik.
 - Aktivasi hanya untuk NIK masyarakat berstatus_data AKTIF yang belum memiliki password. Aktivasi memperbarui baris akun yang sama dalam transaksi; password disimpan sebagai hash.
 - Login mensyaratkan status_akun dan status_data AKTIF. Petugas harus terhubung ke puskesmas aktif.
 - Petugas hanya mengubah jadwal dan antrean puskesmasnya. Puskesmas jadwal ditetapkan dari akun petugas.

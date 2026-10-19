@@ -9,7 +9,7 @@
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=DM+Serif+Display:ital@0;1&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" integrity="sha256-p4NxAoJBhIINfQ3ynceqWgVqC41Wifii1/Lnt2MZt4=" crossorigin="">
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin="">
     <link rel="stylesheet" href="{{ asset('assets/app.css').'?v=admin-photo-cards-1' }}">
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin="" defer></script>
     <script src="{{ asset('assets/app.js').'?v=photo-depth-1' }}" defer></script>
@@ -34,6 +34,7 @@
                 @elseif ($role === 'PETUGAS')
                     <a href="{{ route('officer.queues.index') }}" @if(request()->routeIs('officer.queues.*')) class="is-current" aria-current="page" @endif>Kelola antrean</a>
                     <a href="{{ route('officer.schedules.index') }}" @if(request()->routeIs('officer.schedules.*')) class="is-current" aria-current="page" @endif>Jadwal layanan</a>
+                    <a href="{{ route('officer.citizens.index') }}" @if(request()->routeIs('officer.citizens.*')) class="is-current" aria-current="page" @endif>Data masyarakat</a>
                 @else
                     <a href="{{ route('home') }}">Beranda</a>
                     <a href="{{ route('home') }}#peta-surabaya">Puskesmas</a>
@@ -65,6 +66,6 @@
         @yield('content')
     </main>
     <div class="live-toast-stack" data-live-toast-stack aria-live="polite" aria-atomic="false"></div>
-    <footer class="site-footer"><div class="footer-main"><div><a class="brand" href="{{ $brandDestination }}"><img class="brand-logo" src="{{ asset('images/logo/logo-puskesmasku.png') }}" alt=""><strong>PuskesmasKu</strong></a><p>{{ match ($role) { 'ADMIN' => 'Area pengelolaan data master Dinas Kesehatan.', 'PETUGAS' => 'Kelola jadwal layanan dan antrean puskesmas Anda.', default => 'Temukan layanan puskesmas dan siapkan kunjungan dengan lebih mudah.' } }}</p></div>@if($role === 'PETUGAS')<div><strong>Operasional</strong><a href="{{ route('officer.queues.index') }}">Kelola antrean</a><a href="{{ route('officer.schedules.index') }}">Jadwal layanan</a></div>@elseif($role !== 'ADMIN')<div><strong>Jelajahi</strong><a href="{{ route('home') }}#peta-surabaya">Peta puskesmas</a><a href="{{ route('recommendations.index') }}">Lihat rekomendasi</a><a href="{{ route('home') }}#cara-kerja">Cara kerja</a></div><div><strong>Informasi</strong><p>Informasi layanan dan antrean diperbarui secara berkala.</p></div>@endif</div><div class="footer-bottom">PuskesmasKu · {{ now()->year }}</div></footer>
+    <footer class="site-footer"><div class="footer-main"><div><a class="brand" href="{{ $brandDestination }}"><img class="brand-logo" src="{{ asset('images/logo/logo-puskesmasku.png') }}" alt=""><strong>PuskesmasKu</strong></a><p>{{ match ($role) { 'ADMIN' => 'Area pengelolaan data master Dinas Kesehatan.', 'PETUGAS' => 'Kelola jadwal layanan, antrean, dan data masyarakat.', default => 'Temukan layanan puskesmas dan siapkan kunjungan dengan lebih mudah.' } }}</p></div>@if($role === 'PETUGAS')<div><strong>Operasional</strong><a href="{{ route('officer.queues.index') }}">Kelola antrean</a><a href="{{ route('officer.schedules.index') }}">Jadwal layanan</a><a href="{{ route('officer.citizens.index') }}">Data masyarakat</a></div>@elseif($role !== 'ADMIN')<div><strong>Jelajahi</strong><a href="{{ route('home') }}#peta-surabaya">Peta puskesmas</a><a href="{{ route('recommendations.index') }}">Lihat rekomendasi</a><a href="{{ route('home') }}#cara-kerja">Cara kerja</a></div><div><strong>Informasi</strong><p>Informasi layanan dan antrean diperbarui secara berkala.</p></div>@endif</div><div class="footer-bottom">PuskesmasKu · {{ now()->year }}</div></footer>
 </body>
 </html>

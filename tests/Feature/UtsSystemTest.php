@@ -99,32 +99,47 @@ class UtsSystemTest extends TestCase
         $admin = $this->account();
         $this->actingAs($admin)->post(route('admin.districts.store'), ['nama_kecamatan' => 'Kecamatan Uji CRUD'])->assertRedirect();
         $district = District::where('nama_kecamatan', 'Kecamatan Uji CRUD')->firstOrFail();
-        $this->actingAs($admin)->post(route('admin.citizens.store'), [
-            'nik' => '3578010101900020', 'nama_lengkap' => 'Warga Uji', 'nomor_telepon' => '0812', 'alamat' => 'Surabaya', 'status_data' => 'AKTIF',
-        ])->assertRedirect();
         $this->post(route('admin.puskesmas.store'), ['kecamatan_id' => $district->kecamatan_id, 'nama_puskesmas' => 'Puskesmas Uji', 'alamat' => 'Jalan Uji', 'status' => 'AKTIF'])->assertRedirect();
         $this->post(route('admin.services.store'), ['nama_layanan' => 'Poli Uji', 'deskripsi' => 'Layanan uji', 'status' => 'AKTIF'])->assertRedirect();
         $puskesmas = Puskesmas::firstOrFail();
         $service = Service::firstOrFail();
         $this->post(route('admin.officers.store'), ['nama_lengkap' => 'Petugas Uji', 'password' => 'password123', 'puskesmas_id' => $puskesmas->puskesmas_id])->assertRedirect();
 
-        $this->assertDatabaseHas('akun', ['nik' => '3578010101900020']);
         $this->assertDatabaseHas('akun', ['email' => 'petugas_uji@test', 'role' => 'PETUGAS', 'puskesmas_id' => $puskesmas->puskesmas_id]);
 
-        $citizen = User::where('nik', '3578010101900020')->firstOrFail();
         $officer = User::where('email', 'petugas_uji@test')->firstOrFail();
-        $this->put(route('admin.citizens.update', $citizen), ['nik' => $citizen->nik, 'nama_lengkap' => 'Warga Diperbarui', 'status_data' => 'NONAKTIF'])->assertRedirect();
         $this->put(route('admin.puskesmas.update', $puskesmas), ['kecamatan_id' => $district->kecamatan_id, 'nama_puskesmas' => 'Puskesmas Diperbarui', 'alamat' => 'Jalan Baru', 'status' => 'AKTIF'])->assertRedirect();
         $this->put(route('admin.services.update', $service), ['nama_layanan' => 'Poli Diperbarui', 'status' => 'AKTIF'])->assertRedirect();
         $this->put(route('admin.accounts.update', $officer), ['nama_lengkap' => 'Petugas Baru', 'puskesmas_id' => $puskesmas->puskesmas_id, 'status_akun' => 'NONAKTIF'])->assertRedirect();
-        $this->assertDatabaseHas('akun', ['nik' => $citizen->nik, 'nama_lengkap' => 'Warga Diperbarui']);
 
         $this->delete(route('admin.accounts.destroy', $officer))->assertRedirect();
         $this->delete(route('admin.services.destroy', $service))->assertRedirect();
         $this->delete(route('admin.puskesmas.destroy', $puskesmas))->assertRedirect();
         $this->delete(route('admin.districts.destroy', $district))->assertRedirect();
-        $this->delete(route('admin.citizens.destroy', $citizen))->assertRedirect();
+        $this->post('/admin/masyarakat', ['nik' => '3578010101900020', 'nama_lengkap' => 'Warga Admin', 'status_data' => 'AKTIF'])->assertNotFound();
+        $this->get(route('admin.master.index'))->assertOk()->assertDontSee('Tambah masyarakat');
+    }
+
+    public function test_officer_can_crud_citizens(): void
+    {
+        $puskesmas = Puskesmas::factory()->create();
+        $officer = $this->account(['role' => 'PETUGAS', 'puskesmas_id' => $puskesmas->puskesmas_id]);
+        $this->actingAs($officer)->get(route('officer.citizens.index'))->assertOk()->assertSee('Tambah masyarakat');
+        $this->post(route('officer.citizens.store'), [
+            'nik' => '3578010101900020', 'nama_lengkap' => 'Warga Uji', 'nomor_telepon' => '0812', 'alamat' => 'Surabaya', 'status_data' => 'AKTIF',
+        ])->assertRedirect();
+        $this->assertDatabaseHas('akun', ['nik' => '3578010101900020', 'role' => 'MASYARAKAT', 'status_akun' => 'NONAKTIF', 'password_hash' => null]);
+
+        $citizen = User::where('nik', '3578010101900020')->firstOrFail();
+        $this->put(route('officer.citizens.update', $citizen), ['nik' => $citizen->nik, 'nama_lengkap' => 'Warga Diperbarui', 'status_data' => 'NONAKTIF'])->assertRedirect();
+        $this->assertDatabaseHas('akun', ['nik' => $citizen->nik, 'nama_lengkap' => 'Warga Diperbarui', 'status_data' => 'NONAKTIF']);
+        $this->put(route('officer.citizens.update', $officer), ['nik' => '3578010101900021', 'nama_lengkap' => 'Bukan Warga', 'status_data' => 'AKTIF'])->assertNotFound();
+
+        $this->delete(route('officer.citizens.destroy', $citizen))->assertRedirect();
         $this->assertDatabaseMissing('akun', ['nik' => $citizen->nik]);
+
+        $this->actingAs($this->account(['email' => 'admin-citizen@example.test']))
+            ->get(route('officer.citizens.index'))->assertForbidden();
     }
 
     public function test_admin_account_section_only_lists_and_manages_officers(): void
@@ -515,13 +530,13 @@ class UtsSystemTest extends TestCase
         Queue::create(['akun_id' => $citizen->akun_id, 'jadwal_id' => $schedule->jadwal_id,
             'nomor_antrean' => 1, 'tanggal_daftar' => today(), 'status_antrean' => 'COMPLETED']);
         $admin = $this->account();
-        $this->actingAs($admin)->delete(route('admin.citizens.destroy', $citizen))->assertSessionHas('error');
-        $this->delete(route('admin.puskesmas.destroy', $relation->puskesmas))->assertSessionHas('error');
+        $this->actingAs($admin)->delete(route('admin.puskesmas.destroy', $relation->puskesmas))->assertSessionHas('error');
         $this->delete(route('admin.services.destroy', $relation->layanan_id))->assertSessionHas('error');
         $this->delete(route('admin.districts.destroy', $relation->puskesmas->kecamatan_id))->assertSessionHas('error');
-        $this->delete(route('admin.citizens.destroy', $admin))->assertNotFound();
         $officer = $this->account(['role' => 'PETUGAS', 'puskesmas_id' => $relation->puskesmas_id]);
-        $this->actingAs($officer)->delete(route('officer.schedules.destroy', $schedule))->assertSessionHas('error');
+        $this->actingAs($officer)->delete(route('officer.citizens.destroy', $citizen))->assertSessionHas('error');
+        $this->delete(route('officer.citizens.destroy', $admin))->assertNotFound();
+        $this->delete(route('officer.schedules.destroy', $schedule))->assertSessionHas('error');
         $this->assertDatabaseHas('jadwal', ['jadwal_id' => $schedule->jadwal_id]);
         $this->assertDatabaseHas('akun', ['akun_id' => $citizen->akun_id]);
         $this->assertDatabaseCount('antrean', 1);
