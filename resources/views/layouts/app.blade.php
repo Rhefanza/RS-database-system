@@ -10,9 +10,10 @@
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=DM+Serif+Display:ital@0;1&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin="">
-    <link rel="stylesheet" href="{{ asset('assets/app.css').'?v=admin-photo-cards-1' }}">
+    <link rel="stylesheet" href="{{ asset('assets/app.css').'?v=analytics-2' }}">
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin="" defer></script>
     <script src="{{ asset('assets/app.js').'?v=photo-depth-1' }}" defer></script>
+    @stack('head')
 </head>
 <body data-live-queue-endpoint="{{ route('api.live-queues') }}">
     @php
@@ -30,11 +31,13 @@
         <nav id="main-navigation" aria-label="Navigasi utama">
             @auth
                 @if (auth()->user()->role === 'ADMIN')
-                    <a href="{{ route('admin.master.index') }}" @if(request()->routeIs('admin.*')) class="is-current" aria-current="page" @endif>Data master</a>
+                    <a href="{{ route('admin.master.index') }}" @if(request()->routeIs('admin.*') && ! request()->routeIs('admin.analytics.*')) class="is-current" aria-current="page" @endif>Data master</a>
+                    <a href="{{ route('admin.analytics.index') }}" @if(request()->routeIs('admin.analytics.*')) class="is-current" aria-current="page" @endif>Analitik</a>
                 @elseif ($role === 'PETUGAS')
                     <a href="{{ route('officer.queues.index') }}" @if(request()->routeIs('officer.queues.*')) class="is-current" aria-current="page" @endif>Kelola antrean</a>
                     <a href="{{ route('officer.schedules.index') }}" @if(request()->routeIs('officer.schedules.*')) class="is-current" aria-current="page" @endif>Jadwal layanan</a>
                     <a href="{{ route('officer.citizens.index') }}" @if(request()->routeIs('officer.citizens.*')) class="is-current" aria-current="page" @endif>Data masyarakat</a>
+                    <a href="{{ route('officer.analytics.index') }}" @if(request()->routeIs('officer.analytics.*')) class="is-current" aria-current="page" @endif>Analitik</a>
                 @else
                     <a href="{{ route('home') }}">Beranda</a>
                     <a href="{{ route('home') }}#peta-surabaya">Puskesmas</a>

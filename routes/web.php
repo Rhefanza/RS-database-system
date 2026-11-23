@@ -2,6 +2,7 @@
 
 use App\Http\Controllers\ActivationController;
 use App\Http\Controllers\Admin\MasterDataController;
+use App\Http\Controllers\AnalyticsDashboardController;
 use App\Http\Controllers\AuthController;
 use App\Http\Controllers\CitizenQueueController;
 use App\Http\Controllers\Officer\CitizenController;
@@ -36,6 +37,8 @@ Route::middleware('auth')->group(function () {
     });
 
     Route::prefix('pengelola')->middleware('role:PETUGAS')->group(function () {
+        Route::get('/analitik', [AnalyticsDashboardController::class, 'index'])->name('officer.analytics.index');
+        Route::get('/analitik/data', [AnalyticsDashboardController::class, 'data'])->name('officer.analytics.data');
         Route::get('/jadwal', [ScheduleController::class, 'index'])->name('officer.schedules.index');
         Route::post('/jadwal', [ScheduleController::class, 'store'])->name('officer.schedules.store');
         Route::put('/jadwal/{schedule}', [ScheduleController::class, 'update'])->name('officer.schedules.update');
@@ -52,6 +55,8 @@ Route::middleware('auth')->group(function () {
 
     Route::prefix('admin')->middleware('role:ADMIN')->group(function () {
         Route::get('/', [MasterDataController::class, 'index'])->name('admin.master.index');
+        Route::get('/analitik', [AnalyticsDashboardController::class, 'index'])->name('admin.analytics.index');
+        Route::get('/analitik/data', [AnalyticsDashboardController::class, 'data'])->name('admin.analytics.data');
         Route::post('/kecamatan', [MasterDataController::class, 'storeDistrict'])->name('admin.districts.store');
         Route::put('/kecamatan/{district}', [MasterDataController::class, 'updateDistrict'])->name('admin.districts.update');
         Route::delete('/kecamatan/{district}', [MasterDataController::class, 'destroyDistrict'])->name('admin.districts.destroy');

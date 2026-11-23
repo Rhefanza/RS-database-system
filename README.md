@@ -73,6 +73,27 @@ php artisan queue:simulate --min=2 --max=9
 
 Endpoint `GET /api/antrean-live` diperiksa halaman setiap lima detik. Hanya status `WAITING`, `CALLED`, dan `SERVING` yang ditampilkan dan dihitung sebagai antrean aktif. Data `COMPLETED` dan `CANCELLED` tetap tersimpan sebagai riwayat, tetapi tidak memakai kapasitas. Simulator memproses data dummy dan membatasi antrean dummy hari berjalan hingga 300 record agar data demonstrasi tidak tumbuh tanpa batas.
 
+## Data warehouse dan dashboard analitik
+
+Dashboard analitik membaca data warehouse `puskesmasku_dw`, bukan database aplikasi. Data warehouse memakai star schema: `fact_antrean` dengan dimensi `dim_waktu`, `dim_puskesmas` (termasuk kecamatan), `dim_layanan`, dan `dim_jadwal`.
+
+- **Admin** (`/admin/analitik`): seluruh kecamatan, dengan drill-down kecamatan → puskesmas.
+- **Petugas** (`/pengelola/analitik`): otomatis dikunci ke puskesmas tempat petugas bertugas.
+
+Isi dashboard: KPI (total antrean, pasien unik, persen selesai dalam liquid chart, persen batal, utilisasi kapasitas), tren per status (roll-up harian/mingguan/bulanan), antrean per kecamatan, antrean per layanan bertumpuk menurut status, kapasitas vs utilisasi (dual-axes), hari × sesi, komposisi status (donut), serta tabel utilisasi tertinggi dan terendah. Filter tahun, bulan, kecamatan, dan layanan dikirim ke endpoint JSON (`/admin/analitik/data`, `/pengelola/analitik/data`) sehingga grafik diperbarui tanpa memuat ulang halaman. Query OLAP berada di `app/Support/WarehouseAnalytics.php`.
+
+Utilisasi dihitung dari kapasitas per slot jadwal × tanggal (bukan dijumlah per baris antrean) dan hanya mencakup slot yang memiliki antrean. Data warehouse menyimpan status akhir antrean saja, sehingga dashboard tidak menampilkan waktu tunggu.
+
+Data warehouse harus berada di server MySQL yang sama dengan database aplikasi. Nama database diatur lewat `DW_DATABASE` di `.env` (bawaan `puskesmasku_dw`). Isi atau perbarui data warehouse dengan:
+
+```bash
+php artisan dw:etl --full
+```
+
+Perintah tersebut membuat database dan tabel bila belum ada, lalu memuat seluruh antrean. Tanpa `--full`, ETL hanya memuat antrean baru dan antrean yang berubah dalam dua hari terakhir. Scheduler menjalankan `dw:etl` setiap jam (aktif bila `php artisan schedule:work` berjalan) sehingga antrean aktif sudah tercatat sebelum dibersihkan setelah 24 jam. Riwayat di data warehouse tetap tersimpan walaupun antrean sumbernya sudah terhapus.
+
+Grafik memakai GPT-Vis 1.3.2 (`@antv/gpt-vis`, lisensi MIT) yang disimpan lokal di `public/assets/vendor` sehingga dashboard tidak bergantung pada CDN.
+
 ## Batas pengembangan saat ini
 
 Versi ini belum mencakup estimasi waktu tunggu, loket, sesi antrean, riwayat snapshot, data medis, atau integrasi Mobile JKN. Nomor antrean hanya berlaku dalam lingkungan simulasi.
