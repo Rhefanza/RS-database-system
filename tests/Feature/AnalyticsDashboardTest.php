@@ -152,6 +152,38 @@ class AnalyticsDashboardTest extends TestCase
             $fact(3, 20261006, 1, 1, 101, 'COMPLETED'),
             $fact(4, 20261005, 2, 2, 103, 'WAITING'),
         ]);
+
+        // Tabel agregat dibangun dengan query yang sama seperti ETL.
+        $schema->create('agg_antrean_harian', function (Blueprint $table) {
+            foreach (['waktu_key', 'puskesmas_key', 'layanan_key', 'jadwal_key', 'jumlah_antrean', 'jumlah_selesai', 'jumlah_batal', 'kapasitas_jadwal'] as $column) {
+                $table->integer($column);
+            }
+            $table->string('status_antrean');
+        });
+        $dw->statement(
+            'INSERT INTO agg_antrean_harian
+               (waktu_key, puskesmas_key, layanan_key, jadwal_key, status_antrean,
+                jumlah_antrean, jumlah_selesai, jumlah_batal, kapasitas_jadwal)
+             SELECT waktu_key, MAX(puskesmas_key), MAX(layanan_key), jadwal_key, status_antrean,
+                    SUM(jumlah_antrean), SUM(is_completed), SUM(is_cancelled), MAX(kapasitas_jadwal)
+             FROM fact_antrean
+             GROUP BY waktu_key, jadwal_key, status_antrean'
+        );
+    }
+
+    public function test_results_are_cached_until_etl_flushes_the_cache(): void
+    {
+        $this->useWarehouse();
+        $admin = $this->account(['role' => 'ADMIN']);
+        $this->actingAs($admin)->getJson(route('admin.analytics.data'))->assertJsonPath('kpi.total', 4);
+
+        // Perubahan langsung di data warehouse belum terlihat karena hasil masih dari cache.
+        DB::connection('dw')->table('agg_antrean_harian')->where('status_antrean', 'WAITING')->update(['jumlah_antrean' => 5]);
+        $this->actingAs($admin)->getJson(route('admin.analytics.data'))->assertJsonPath('kpi.total', 4);
+
+        // Setelah ETL mengosongkan cache, angka baru terbaca.
+        \App\Support\WarehouseAnalytics::flushCache();
+        $this->actingAs($admin)->getJson(route('admin.analytics.data'))->assertJsonPath('kpi.total', 8);
     }
 
     private function account(array $attributes): User

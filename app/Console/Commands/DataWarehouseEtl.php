@@ -2,6 +2,7 @@
 
 namespace App\Console\Commands;
 
+use App\Support\WarehouseAnalytics;
 use Illuminate\Console\Command;
 use Illuminate\Database\Connection;
 use Illuminate\Support\Facades\DB;
@@ -47,6 +48,9 @@ class DataWarehouseEtl extends Command
 
             return self::FAILURE;
         }
+
+        // Data warehouse berubah: cache dashboard lama tidak dipakai lagi.
+        WarehouseAnalytics::flushCache();
 
         $this->table(['Tabel', 'Jumlah baris'], collect($counts)->map(fn ($count, $table) => [$table, $count])->values());
         $this->info(sprintf('ETL %s selesai dalam %.2f detik.', $this->option('full') ? 'penuh' : 'inkremental', microtime(true) - $started));
@@ -125,6 +129,25 @@ class DataWarehouseEtl extends Command
               FOREIGN KEY (puskesmas_key) REFERENCES dim_puskesmas(puskesmas_key),
               FOREIGN KEY (layanan_key)   REFERENCES dim_layanan(layanan_key),
               FOREIGN KEY (jadwal_key)    REFERENCES dim_jadwal(jadwal_key)
+            )
+        SQL);
+
+        // Tabel agregat (summary fact): fact_antrean yang sudah dijumlahkan per tanggal × jadwal × status.
+        // Dashboard membaca tabel ini agar tidak memindai seluruh fakta pada setiap permintaan.
+        $dw->statement(<<<'SQL'
+            CREATE TABLE IF NOT EXISTS agg_antrean_harian (
+              waktu_key        INT NOT NULL,
+              puskesmas_key    INT NOT NULL,
+              layanan_key      INT NOT NULL,
+              jadwal_key       INT NOT NULL,
+              status_antrean   VARCHAR(10) NOT NULL,
+              jumlah_antrean   INT NOT NULL,
+              jumlah_selesai   INT NOT NULL,
+              jumlah_batal     INT NOT NULL,
+              kapasitas_jadwal INT,
+              PRIMARY KEY (waktu_key, jadwal_key, status_antrean),
+              KEY idx_agg_puskesmas (puskesmas_key),
+              KEY idx_agg_layanan (layanan_key)
             )
         SQL);
 
@@ -237,9 +260,21 @@ class DataWarehouseEtl extends Command
                   status_antrean = src.status_antrean, is_completed = src.is_completed,
                   is_cancelled = src.is_cancelled, kapasitas_jadwal = src.kapasitas_jadwal
             SQL, $bindings);
+
+            // Agregat selalu dibangun ulang dari fakta agar konsisten dengan perubahan status antrean lama.
+            $dw->statement('DELETE FROM agg_antrean_harian');
+            $dw->statement(<<<'SQL'
+                INSERT INTO agg_antrean_harian
+                  (waktu_key, puskesmas_key, layanan_key, jadwal_key, status_antrean,
+                   jumlah_antrean, jumlah_selesai, jumlah_batal, kapasitas_jadwal)
+                SELECT waktu_key, MAX(puskesmas_key), MAX(layanan_key), jadwal_key, status_antrean,
+                       SUM(jumlah_antrean), SUM(is_completed), SUM(is_cancelled), MAX(kapasitas_jadwal)
+                FROM fact_antrean
+                GROUP BY waktu_key, jadwal_key, status_antrean
+            SQL);
         });
 
-        return collect(['dim_waktu', 'dim_puskesmas', 'dim_layanan', 'dim_jadwal', 'fact_antrean'])
+        return collect(['dim_waktu', 'dim_puskesmas', 'dim_layanan', 'dim_jadwal', 'fact_antrean', 'agg_antrean_harian'])
             ->mapWithKeys(fn ($table) => [$table => $dw->table($table)->count()])
             ->all();
     }

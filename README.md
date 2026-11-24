@@ -84,6 +84,8 @@ Isi dashboard: KPI (total antrean, pasien unik, persen selesai dalam liquid char
 
 Utilisasi dihitung dari kapasitas per slot jadwal × tanggal (bukan dijumlah per baris antrean) dan hanya mencakup slot yang memiliki antrean. Data warehouse menyimpan status akhir antrean saja, sehingga dashboard tidak menampilkan waktu tunggu.
 
+Agar dashboard tetap cepat, ETL juga membangun tabel agregat `agg_antrean_harian` (fakta yang sudah dijumlahkan per tanggal × jadwal × status). Hampir semua grafik membaca tabel ini; hanya "pasien unik" yang membaca `fact_antrean`. Hasil dashboard di-cache per kombinasi filter dan otomatis dikosongkan setiap kali `dw:etl` selesai.
+
 Data warehouse harus berada di server MySQL yang sama dengan database aplikasi. Nama database diatur lewat `DW_DATABASE` di `.env` (bawaan `puskesmasku_dw`). Isi atau perbarui data warehouse dengan:
 
 ```bash

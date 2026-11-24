@@ -4,6 +4,7 @@ namespace App\Support;
 
 use Carbon\Carbon;
 use Illuminate\Database\Connection;
+use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\DB;
 
 /**
@@ -17,6 +18,11 @@ use Illuminate\Support\Facades\DB;
  *   kapasitas selalu diambil MAX per (jadwal, tanggal) lalu dijumlahkan, tidak pernah di-SUM per baris.
  * - Utilisasi = antrean yang tidak dibatalkan / kapasitas slot (jadwal × tanggal) yang memiliki antrean.
  * - DW hanya menyimpan status akhir antrean, sehingga tidak ada metrik waktu tunggu.
+ *
+ * Kinerja:
+ * - Hampir semua query membaca agg_antrean_harian (fakta yang sudah dijumlahkan per tanggal × jadwal × status),
+ *   bukan fact_antrean. Hanya "pasien unik" (COUNT DISTINCT akun_id) yang tetap membaca fact_antrean.
+ * - Hasil di-cache per kombinasi filter dan dikosongkan setiap kali ETL selesai (flushCache()).
  */
 class WarehouseAnalytics
 {
@@ -35,7 +41,17 @@ class WarehouseAnalytics
 
     private const STATUS_GROUP_SQL = "CASE f.status_antrean WHEN 'COMPLETED' THEN 'Selesai' WHEN 'CANCELLED' THEN 'Dibatalkan' ELSE 'Aktif' END";
 
+    private const CACHE_VERSION_KEY = 'dw-analytics:version';
+
+    private const CACHE_TTL_SECONDS = 86400;
+
     private Connection $dw;
+
+    /** Dipanggil setelah ETL: mengganti versi cache sehingga semua hasil lama diabaikan. */
+    public static function flushCache(): void
+    {
+        Cache::forever(self::CACHE_VERSION_KEY, (string) microtime(true));
+    }
 
     /**
      * @param  array{tahun?: int|string|null, bulan?: int|string|null, kecamatan?: string|null, layanan?: int|string|null}  $filters
@@ -49,15 +65,22 @@ class WarehouseAnalytics
     /** @return array<string, mixed> */
     public function payload(): array
     {
+        return $this->remember('payload', fn () => $this->buildPayload());
+    }
+
+    /** @return array<string, mixed> */
+    private function buildPayload(): array
+    {
         [$where, $bindings] = $this->where();
-        $from = "FROM fact_antrean f
+        // Alias "f" menunjuk tabel agregat; kolomnya sejalan dengan fact_antrean.
+        $from = "FROM agg_antrean_harian f
                  JOIN dim_waktu w     ON w.waktu_key     = f.waktu_key
                  JOIN dim_puskesmas p ON p.puskesmas_key = f.puskesmas_key
                  JOIN dim_layanan l   ON l.layanan_key   = f.layanan_key
                  JOIN dim_jadwal j    ON j.jadwal_key    = f.jadwal_key
                  {$where}";
 
-        $kpi = $this->kpi($from, $bindings);
+        $kpi = $this->kpi($from, $bindings, $where);
 
         return [
             'kpi' => $kpi,
@@ -74,11 +97,17 @@ class WarehouseAnalytics
     /** @return array<string, mixed> */
     public function meta(): array
     {
+        return $this->remember('meta', fn () => $this->buildMeta());
+    }
+
+    /** @return array<string, mixed> */
+    private function buildMeta(): array
+    {
         $scope = $this->puskesmasId ? 'WHERE p.puskesmas_id = ?' : '';
         $bindings = $this->puskesmasId ? [$this->puskesmasId] : [];
         $coverage = $this->dw->selectOne(
-            "SELECT MIN(w.tanggal) AS awal, MAX(w.tanggal) AS akhir, COUNT(*) AS total
-             FROM fact_antrean f
+            "SELECT MIN(w.tanggal) AS awal, MAX(w.tanggal) AS akhir, COALESCE(SUM(f.jumlah_antrean), 0) AS total
+             FROM agg_antrean_harian f
              JOIN dim_waktu w ON w.waktu_key = f.waktu_key
              JOIN dim_puskesmas p ON p.puskesmas_key = f.puskesmas_key {$scope}",
             $bindings
@@ -133,15 +162,15 @@ class WarehouseAnalytics
     {
         return "SELECT f.jadwal_key, f.waktu_key{$extraColumns},
                        SUM(f.jumlah_antrean) AS jumlah,
-                       SUM(f.jumlah_antrean) - SUM(f.is_cancelled) AS terisi,
-                       SUM(f.is_completed) AS selesai,
-                       SUM(f.is_cancelled) AS batal,
+                       SUM(f.jumlah_antrean) - SUM(f.jumlah_batal) AS terisi,
+                       SUM(f.jumlah_selesai) AS selesai,
+                       SUM(f.jumlah_batal) AS batal,
                        MAX(f.kapasitas_jadwal) AS kapasitas
                 {$from}
                 GROUP BY f.jadwal_key, f.waktu_key{$extraGroup}";
     }
 
-    private function kpi(string $from, array $bindings): array
+    private function kpi(string $from, array $bindings, string $where): array
     {
         $row = $this->dw->selectOne(
             'SELECT COALESCE(SUM(x.jumlah), 0) AS total, COALESCE(SUM(x.terisi), 0) AS terisi,
@@ -150,7 +179,10 @@ class WarehouseAnalytics
              FROM ('.$this->slots($from).') x',
             $bindings
         );
-        $pasien = $this->dw->selectOne("SELECT COUNT(DISTINCT f.akun_id) AS jumlah {$from}", $bindings);
+        // Pasien unik tidak dapat dijumlahkan dari agregat, jadi dihitung dari fakta dengan join seperlunya saja.
+        $joins = (str_contains($where, 'w.') ? ' JOIN dim_waktu w ON w.waktu_key = f.waktu_key' : '')
+            .(str_contains($where, 'p.') ? ' JOIN dim_puskesmas p ON p.puskesmas_key = f.puskesmas_key' : '');
+        $pasien = $this->dw->selectOne("SELECT COUNT(DISTINCT f.akun_id) AS jumlah FROM fact_antrean f{$joins} {$where}", $bindings);
 
         return [
             'total' => (int) $row->total,
@@ -342,6 +374,18 @@ class WarehouseAnalytics
             'highest' => $ranked->take(10)->values()->all(),
             'lowest' => $ranked->sortBy('Utilisasi (%)')->take(10)->values()->all(),
         ];
+    }
+
+    /** Cache per jenis data, filter, dan cakupan petugas; versinya berganti setiap ETL selesai. */
+    private function remember(string $kind, \Closure $callback): array
+    {
+        $filters = collect(['tahun', 'bulan', 'kecamatan', 'layanan'])
+            ->mapWithKeys(fn ($key) => [$key => (string) ($this->filters[$key] ?? '')])
+            ->all();
+        $version = Cache::get(self::CACHE_VERSION_KEY, '0');
+        $key = 'dw-analytics:'.$version.':'.$kind.':'.md5(json_encode([$filters, $this->puskesmasId]));
+
+        return Cache::remember($key, self::CACHE_TTL_SECONDS, $callback);
     }
 
     private function percent(mixed $part, mixed $whole): float
