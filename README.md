@@ -92,7 +92,7 @@ Data warehouse harus berada di server MySQL yang sama dengan database aplikasi. 
 php artisan dw:etl --full
 ```
 
-Perintah tersebut membuat database dan tabel bila belum ada, lalu memuat seluruh antrean. Tanpa `--full`, ETL hanya memuat antrean baru dan antrean yang berubah dalam dua hari terakhir. Scheduler menjalankan `dw:etl` setiap jam (aktif bila `php artisan schedule:work` berjalan) sehingga antrean aktif sudah tercatat sebelum dibersihkan setelah 24 jam. Riwayat di data warehouse tetap tersimpan walaupun antrean sumbernya sudah terhapus.
+Perintah tersebut membuat database dan tabel bila belum ada, lalu memuat seluruh antrean. Tanpa `--full`, ETL hanya memuat antrean baru dan antrean yang berubah dalam dua hari terakhir. Scheduler menjalankan `dw:etl` sekali sehari pukul 00:05 WIB (aktif bila `php artisan schedule:work` berjalan). Pada jam tersebut seluruh antrean hari sebelumnya masih ada, karena aplikasi baru membersihkan antrean aktif 24 jam setelah jam tutup jadwal. Dashboard karena itu menampilkan data sampai hari kemarin; jalankan `php artisan dw:etl` secara manual bila perlu data terbaru, misalnya sebelum demo. Riwayat di data warehouse tetap tersimpan walaupun antrean sumbernya sudah terhapus.
 
 Grafik memakai GPT-Vis 1.3.2 (`@antv/gpt-vis`, lisensi MIT) yang disimpan lokal di `public/assets/vendor` sehingga dashboard tidak bergantung pada CDN.
 
